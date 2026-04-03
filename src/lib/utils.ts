@@ -31,16 +31,25 @@ export function formatFcfaCompact(amount: number): string {
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 
-export function formatDate(date: string | Date): string {
-  return format(new Date(date), "d MMM yyyy", { locale: fr });
+export function formatDate(date: string | Date | null | undefined): string {
+  if (!date) return "—";
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return "—";
+  return format(d, "d MMM yyyy", { locale: fr });
 }
 
-export function formatDateTime(date: string | Date): string {
-  return format(new Date(date), "d MMM yyyy 'à' HH'h'mm", { locale: fr });
+export function formatDateTime(date: string | Date | null | undefined): string {
+  if (!date) return "—";
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return "—";
+  return format(d, "d MMM yyyy 'à' HH'h'mm", { locale: fr });
 }
 
-export function formatRelative(date: string | Date): string {
-  return formatDistanceToNow(new Date(date), { addSuffix: true, locale: fr });
+export function formatRelative(date: string | Date | null | undefined): string {
+  if (!date) return "—";
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return "—";
+  return formatDistanceToNow(d, { addSuffix: true, locale: fr });
 }
 
 // ── Order status helpers ──────────────────────────────────────────────────────

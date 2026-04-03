@@ -159,7 +159,7 @@ function DeliveryRow({ d }: { d: Delivery }) {
       </td>
       <td className="px-4 py-3 hidden sm:table-cell whitespace-nowrap">
         <span className="text-xs" style={{ color: "#7c7570" }}>
-          {formatRelative(d.createdAt)}
+          {formatRelative(d.assignedAt ?? d.createdAt)}
         </span>
       </td>
     </tr>

@@ -195,7 +195,9 @@ export interface Delivery {
   deliveryAddress?: string;
   city: string;
   neighborhood?: string;
-  createdAt: string;
+  assignedAt?: string;
+  pickedUpAt?: string;
+  createdAt?: string;
   deliveredAt?: string;
   estimatedMinutes?: number;
 }
