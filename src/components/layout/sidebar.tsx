@@ -4,23 +4,28 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
+  UtensilsCrossed,
   Package,
-  Users,
-  ChefHat,
+  Truck,
   Bike,
-  TrendingUp,
+  Users,
+  Megaphone,
+  MessageSquare,
   Settings,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const navItems = [
-  { href: "/dashboard", icon: BarChart3, label: "Vue d'ensemble" },
+const NAV_ITEMS = [
+  { href: "/dashboard", icon: BarChart3, label: "Dashboard" },
+  { href: "/dashboard/restaurants", icon: UtensilsCrossed, label: "Restaurants" },
   { href: "/dashboard/orders", icon: Package, label: "Commandes" },
-  { href: "/dashboard/users", icon: Users, label: "Utilisateurs" },
-  { href: "/dashboard/cooks", icon: ChefHat, label: "Cuisinières" },
-  { href: "/dashboard/riders", icon: Bike, label: "Livreurs" },
-  { href: "/dashboard/analytics", icon: TrendingUp, label: "Analytics" },
-  { href: "/dashboard/settings", icon: Settings, label: "Paramètres" },
+  { href: "/dashboard/deliveries", icon: Truck, label: "Deliveries" },
+  { href: "/dashboard/fleet", icon: Bike, label: "Fleet" },
+  { href: "/dashboard/customers", icon: Users, label: "Customers" },
+  { href: "/dashboard/marketing", icon: Megaphone, label: "Marketing" },
+  { href: "/dashboard/support", icon: MessageSquare, label: "Support" },
+  { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
 
 interface SidebarProps {
@@ -36,38 +41,102 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   };
 
   return (
-    <div className="flex h-full flex-col" style={{ backgroundColor: "#1B4332" }}>
+    <div
+      className="flex h-full flex-col"
+      style={{ backgroundColor: "#f5f3ef" }}
+    >
       {/* Logo */}
-      <div className="flex h-16 items-center border-b border-white/10 px-6">
-        <span className="text-2xl font-black text-white tracking-tight">
-          🍽️ NYAMA
-        </span>
+      <div className="flex h-16 items-center px-5">
+        <div>
+          <p
+            className="text-xl font-bold leading-tight"
+            style={{
+              fontFamily: "var(--font-newsreader), Georgia, serif",
+              color: "#a03c00",
+            }}
+          >
+            Nyama Admin
+          </p>
+          <p
+            className="text-[9px] tracking-[0.15em] uppercase leading-none mt-0.5"
+            style={{ color: "#7c7570" }}
+          >
+            The Modern Griot&apos;s Table
+          </p>
+        </div>
       </div>
 
+      {/* Divider */}
+      <div className="mx-4 h-px" style={{ backgroundColor: "#e8e4de" }} />
+
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map(({ href, icon: Icon, label }) => (
-          <Link
-            key={href}
-            href={href}
-            onClick={onNavigate}
-            className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-              isActive(href)
-                ? "bg-white/15 text-white font-semibold"
-                : "text-white/70 hover:bg-white/5 hover:text-white"
-            )}
-          >
-            <Icon className="h-5 w-5 shrink-0" />
-            {label}
-          </Link>
-        ))}
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
+          const active = isActive(href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              onClick={onNavigate}
+              className={cn(
+                "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
+                active
+                  ? "text-[#a03c00] font-semibold"
+                  : "text-[#7c7570] hover:text-[#1b1c1a]"
+              )}
+              style={
+                active
+                  ? { backgroundColor: "rgba(160, 60, 0, 0.08)" }
+                  : undefined
+              }
+            >
+              {/* Left accent bar */}
+              {active && (
+                <span
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full"
+                  style={{ backgroundColor: "#a03c00" }}
+                />
+              )}
+              <Icon
+                className="h-4 w-4 shrink-0"
+                strokeWidth={active ? 2.5 : 2}
+                style={{ color: active ? "#a03c00" : "#7c7570" }}
+              />
+              {label}
+            </Link>
+          );
+        })}
       </nav>
 
-      {/* Footer */}
-      <div className="border-t border-white/10 px-6 py-4">
-        <p className="text-xs text-white/40">NYAMA Dashboard v1.0</p>
-        <p className="text-xs text-white/40">Douala · Yaoundé</p>
+      {/* Divider */}
+      <div className="mx-4 h-px" style={{ backgroundColor: "#e8e4de" }} />
+
+      {/* Bottom: Export + Avatar */}
+      <div className="px-3 py-4 space-y-3">
+        <button
+          className="flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          style={{
+            background: "linear-gradient(135deg, #a03c00, #c94d00)",
+          }}
+        >
+          <Download className="h-3.5 w-3.5" />
+          Export Report
+        </button>
+
+        <div className="flex items-center gap-2.5 px-1">
+          <div
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+            style={{ backgroundColor: "#a03c00" }}
+          >
+            A
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-[#1b1c1a] truncate">
+              Administrateur
+            </p>
+            <p className="text-[10px] text-[#7c7570] truncate">Super Admin</p>
+          </div>
+        </div>
       </div>
     </div>
   );

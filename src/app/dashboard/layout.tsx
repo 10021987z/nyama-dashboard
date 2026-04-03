@@ -15,25 +15,22 @@ export default function DashboardLayout({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div
+      className="flex h-screen overflow-hidden"
+      style={{ backgroundColor: "#fbf9f5" }}
+    >
       {/* Sidebar — desktop */}
-      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:shrink-0">
+      <aside className="hidden lg:flex lg:w-60 lg:flex-col lg:shrink-0">
         <Sidebar />
       </aside>
 
       {/* Mobile navigation */}
-      <MobileNav
-        open={mobileOpen}
-        onClose={() => setMobileOpen(false)}
-      />
+      <MobileNav open={mobileOpen} onClose={() => setMobileOpen(false)} />
 
       {/* Main area */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        <Header
-          user={user}
-          onMenuClick={() => setMobileOpen(true)}
-        />
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+        <Header user={user} onMenuClick={() => setMobileOpen(true)} />
+        <main className="flex-1 overflow-auto p-4 lg:p-6">{children}</main>
       </div>
     </div>
   );

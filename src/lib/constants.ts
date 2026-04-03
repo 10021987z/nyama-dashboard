@@ -1,37 +1,49 @@
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api/v1";
 
-export const NYAMA_GREEN = '#1B4332';
-export const NYAMA_GOLD = '#D4A017';
-export const NYAMA_RED = '#DC2626';
-export const NYAMA_SUCCESS = '#16A34A';
+// ── Brand colors ──────────────────────────────────────────────────────────────
+export const NYAMA_TERRACOTTA = "#a03c00";
+export const NYAMA_TERRACOTTA_CONTAINER = "#c94d00";
+export const NYAMA_LEAF = "#2c694e";
+export const NYAMA_EARTHY = "#8b4c11";
+export const NYAMA_SURFACE = "#fbf9f5";
+export const NYAMA_SURFACE_LOW = "#f5f3ef";
+export const NYAMA_ON_SURFACE = "#1b1c1a";
 
 export const CHART_COLORS = {
-  green: NYAMA_GREEN,
-  gold: NYAMA_GOLD,
-  red: NYAMA_RED,
-  success: NYAMA_SUCCESS,
-  blue: '#1565C0',
-  orange: '#F97316',
-  purple: '#7C3AED',
+  terracotta: NYAMA_TERRACOTTA,
+  terracottaLight: "#e8c4b0",
+  leaf: NYAMA_LEAF,
+  earthy: NYAMA_EARTHY,
+  blue: "#2563eb",
+  amber: "#b45309",
 };
 
+// ── Navigation ────────────────────────────────────────────────────────────────
 export const NAV_ITEMS = [
-  { href: '/dashboard', label: "Vue d'ensemble", icon: 'BarChart3' },
-  { href: '/dashboard/orders', label: 'Commandes', icon: 'Package' },
-  { href: '/dashboard/users', label: 'Utilisateurs', icon: 'Users' },
-  { href: '/dashboard/cooks', label: 'Cuisinières', icon: 'ChefHat' },
-  { href: '/dashboard/riders', label: 'Livreurs', icon: 'Bike' },
-  { href: '/dashboard/analytics', label: 'Analytics', icon: 'TrendingUp' },
-  { href: '/dashboard/settings', label: 'Paramètres', icon: 'Settings' },
+  { href: "/dashboard", label: "Dashboard", emoji: "📊" },
+  { href: "/dashboard/restaurants", label: "Restaurants", emoji: "🍽️" },
+  { href: "/dashboard/orders", label: "Commandes", emoji: "📦" },
+  { href: "/dashboard/deliveries", label: "Deliveries", emoji: "🚚" },
+  { href: "/dashboard/fleet", label: "Fleet", emoji: "🏍️" },
+  { href: "/dashboard/customers", label: "Customers", emoji: "👥" },
+  { href: "/dashboard/marketing", label: "Marketing", emoji: "📢" },
+  { href: "/dashboard/support", label: "Support", emoji: "💬" },
+  { href: "/dashboard/settings", label: "Settings", emoji: "⚙️" },
 ] as const;
 
 export const PAGE_TITLES: Record<string, string> = {
-  '/dashboard': "Vue d'ensemble",
-  '/dashboard/orders': 'Commandes & Revenus',
-  '/dashboard/users': 'Gestion utilisateurs',
-  '/dashboard/cooks': 'Performance cuisinières',
-  '/dashboard/riders': 'Performance livreurs',
-  '/dashboard/analytics': 'Analytics détaillées',
-  '/dashboard/settings': 'Paramètres',
+  "/dashboard": "Vue Exécutive",
+  "/dashboard/restaurants": "Restaurants",
+  "/dashboard/orders": "Commandes",
+  "/dashboard/deliveries": "Deliveries",
+  "/dashboard/fleet": "Fleet",
+  "/dashboard/customers": "Customers",
+  "/dashboard/users": "Utilisateurs",
+  "/dashboard/cooks": "Cuisinières",
+  "/dashboard/riders": "Livreurs",
+  "/dashboard/analytics": "Analytics",
+  "/dashboard/marketing": "Marketing",
+  "/dashboard/support": "Support",
+  "/dashboard/settings": "Settings",
 };
