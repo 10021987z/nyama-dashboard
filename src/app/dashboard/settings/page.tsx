@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { apiClient } from "@/lib/api";
 import type { SystemSettings } from "@/lib/types";
 import { formatFcfa } from "@/lib/utils";
@@ -15,12 +15,44 @@ import {
   ChevronRight, Copy, Check, Palette, LogOut, History,
 } from "lucide-react";
 
-// ── Toggle (visual only) ─────────────────────────────────────────────────────
+// ── Toast ───────────────────────────────────────────────────────────────────
 
-function Toggle({ checked }: { checked: boolean }) {
+function Toast({ message, onDone }: { message: string; onDone: () => void }) {
+  useEffect(() => {
+    const id = setTimeout(onDone, 3000);
+    return () => clearTimeout(id);
+  }, [message, onDone]);
+
   return (
     <div
-      className="relative h-6 w-11 rounded-full shrink-0 transition-colors cursor-default"
+      style={{
+        position: "fixed",
+        bottom: 32,
+        left: "50%",
+        transform: "translateX(-50%)",
+        background: "linear-gradient(135deg, #a03c00, #c95a1e)",
+        color: "#fff",
+        padding: "12px 24px",
+        borderRadius: 9999,
+        fontSize: 14,
+        fontWeight: 600,
+        zIndex: 9999,
+        boxShadow: "0 8px 24px rgba(160,60,0,0.3)",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {message}
+    </div>
+  );
+}
+
+// ── Toggle ──────────────────────────────────────────────────────────────────
+
+function Toggle({ checked, onClick }: { checked: boolean; onClick?: () => void }) {
+  return (
+    <div
+      onClick={onClick}
+      className="relative h-6 w-11 rounded-full shrink-0 transition-colors cursor-pointer"
       style={{ backgroundColor: checked ? "#a03c00" : "#e8e4de" }}
     >
       <div
@@ -31,7 +63,7 @@ function Toggle({ checked }: { checked: boolean }) {
   );
 }
 
-// ── SettingRow ────────────────────────────────────────────────────────────────
+// ── SettingRow ───────────────────────────────────────────────────────────────
 
 function SettingRow({
   label,
@@ -48,7 +80,127 @@ function SettingRow({
   );
 }
 
-// ── Main page ────────────────────────────────────────────────────────────────
+// ── Access Logs Modal ───────────────────────────────────────────────────────
+
+const ACCESS_LOGS = [
+  "2024-03-15 14:32 — 192.168.1.1 — Connexion réussie",
+  "2024-03-14 09:15 — 10.0.0.42 — Export rapport",
+  "2024-03-13 18:45 — 192.168.1.1 — Modification paramètres",
+  "2024-03-12 11:20 — 10.0.0.42 — Connexion réussie",
+  "2024-03-10 16:05 — 192.168.1.1 — Changement mot de passe",
+];
+
+function AccessLogsModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        backgroundColor: "rgba(27,28,26,0.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 9998,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          backgroundColor: "#fff",
+          borderRadius: 16,
+          padding: 24,
+          width: "90%",
+          maxWidth: 480,
+          boxShadow: "0 24px 48px rgba(0,0,0,0.15)",
+        }}
+      >
+        <h3
+          style={{
+            fontFamily: "var(--font-newsreader), Georgia, serif",
+            fontSize: 18,
+            fontWeight: 600,
+            color: "#1b1c1a",
+            marginBottom: 16,
+          }}
+        >
+          Journal d&apos;accès
+        </h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {ACCESS_LOGS.map((log, i) => (
+            <div
+              key={i}
+              style={{
+                backgroundColor: "#f5f3ef",
+                borderRadius: 12,
+                padding: "10px 14px",
+                fontSize: 13,
+                color: "#1b1c1a",
+                fontFamily: "monospace",
+              }}
+            >
+              {log}
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            marginTop: 16,
+            width: "100%",
+            height: 40,
+            borderRadius: 9999,
+            background: "linear-gradient(135deg, #a03c00, #c95a1e)",
+            color: "#fff",
+            fontSize: 14,
+            fontWeight: 600,
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          Fermer
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Editable settings shape ─────────────────────────────────────────────────
+
+interface EditableSettings {
+  cashOnDelivery: boolean;
+  minimumOrderXaf: number;
+  maxDeliveryRadiusKm: number;
+  defaultDeliveryFeeXaf: number;
+  enforceOpeningHours: boolean;
+  mfaEnabled: boolean;
+}
+
+function loadSettings(): EditableSettings | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem("nyama-settings");
+    if (raw) return JSON.parse(raw) as EditableSettings;
+  } catch { /* ignore */ }
+  return null;
+}
+
+function saveSettings(s: EditableSettings) {
+  localStorage.setItem("nyama-settings", JSON.stringify(s));
+}
+
+function settingsFromBackend(data: SystemSettings): EditableSettings {
+  return {
+    cashOnDelivery: data.payment.cashOnDelivery,
+    minimumOrderXaf: data.payment.minimumOrderXaf,
+    maxDeliveryRadiusKm: data.logistics.maxDeliveryRadiusKm,
+    defaultDeliveryFeeXaf: data.logistics.defaultDeliveryFeeXaf,
+    enforceOpeningHours: data.logistics.enforceOpeningHours,
+    mfaEnabled: data.security.mfaEnabled,
+  };
+}
+
+// ── Main page ───────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -58,12 +210,43 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // Editable settings state
+  const [settings, setSettings] = useState<EditableSettings | null>(null);
+
+  // Toast
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const showToast = useCallback((msg: string) => setToastMsg(msg), []);
+
+  // Access logs modal
+  const [showLogs, setShowLogs] = useState(false);
+
+  // Logo
+  const [logoBase64, setLogoBase64] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Load logo from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("nyama-logo");
+      if (saved) setLogoBase64(saved);
+    }
+  }, []);
+
   const fetchSettings = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const result = await apiClient.get<SystemSettings>("/admin/settings");
       setData(result);
+      // Initialize editable settings: localStorage takes priority
+      const local = loadSettings();
+      if (local) {
+        setSettings(local);
+      } else {
+        const fromBe = settingsFromBackend(result);
+        setSettings(fromBe);
+        saveSettings(fromBe);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Impossible de contacter le serveur NYAMA");
     } finally {
@@ -75,12 +258,40 @@ export default function SettingsPage() {
     fetchSettings();
   }, [fetchSettings]);
 
+  // Helper to update a setting
+  function updateSetting<K extends keyof EditableSettings>(key: K, value: EditableSettings[K]) {
+    setSettings((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, [key]: value };
+      saveSettings(next);
+      return next;
+    });
+  }
+
   function handleCopyKey() {
     if (data?.security.apiKeyMasked) {
       navigator.clipboard.writeText(data.security.apiKeyMasked);
       setCopied(true);
+      showToast("Clé API copiée ✅");
       setTimeout(() => setCopied(false), 2000);
     }
+  }
+
+  function handleLogoClick() {
+    fileInputRef.current?.click();
+  }
+
+  function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const b64 = reader.result as string;
+      setLogoBase64(b64);
+      localStorage.setItem("nyama-logo", b64);
+      showToast("Logo mis à jour ✅");
+    };
+    reader.readAsDataURL(file);
   }
 
   const BRAND_COLORS = [
@@ -92,6 +303,21 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6 pb-8 max-w-3xl">
+      {/* Toast */}
+      {toastMsg && <Toast message={toastMsg} onDone={() => setToastMsg(null)} />}
+
+      {/* Access Logs Modal */}
+      {showLogs && <AccessLogsModal onClose={() => setShowLogs(false)} />}
+
+      {/* Hidden file input for logo */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleLogoChange}
+        style={{ display: "none" }}
+      />
+
       {/* Header */}
       <div>
         <h1
@@ -176,10 +402,17 @@ export default function SettingsPage() {
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 rounded-xl" />)}
           </div>
-        ) : data ? (
+        ) : data && settings ? (
           <>
             <SettingRow label={t("settings.cashOnDelivery")}>
-              <Toggle checked={data.payment.cashOnDelivery} />
+              <Toggle
+                checked={settings.cashOnDelivery}
+                onClick={() => {
+                  const next = !settings.cashOnDelivery;
+                  updateSetting("cashOnDelivery", next);
+                  showToast(next ? "Paiement cash activé ✅" : "Paiement cash désactivé");
+                }}
+              />
             </SettingRow>
             <SettingRow label={t("settings.platformCommission")}>
               <div className="flex items-center gap-1">
@@ -196,9 +429,10 @@ export default function SettingsPage() {
             <SettingRow label={t("settings.minimumOrder")}>
               <div className="flex items-center gap-1">
                 <input
-                  type="text"
-                  value={data.payment.minimumOrderXaf.toLocaleString("fr-FR")}
-                  disabled
+                  type="number"
+                  value={settings.minimumOrderXaf}
+                  onChange={(e) => updateSetting("minimumOrderXaf", Number(e.target.value))}
+                  onBlur={() => showToast(`Montant minimum mis à jour : ${settings.minimumOrderXaf} FCFA`)}
                   className="rounded-full px-4 py-1.5 text-sm text-right w-24"
                   style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
                 />
@@ -227,31 +461,46 @@ export default function SettingsPage() {
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 rounded-xl" />)}
           </div>
-        ) : data ? (
+        ) : data && settings ? (
           <>
             <SettingRow label={t("settings.deliveryRadius")}>
               <div className="flex items-center gap-3">
-                <div className="w-32 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "#f5f3ef" }}>
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${Math.min(100, (data.logistics.maxDeliveryRadiusKm / 30) * 100)}%`,
-                      backgroundColor: "#a03c00",
-                    }}
-                  />
-                </div>
+                <input
+                  type="range"
+                  min={1}
+                  max={50}
+                  value={settings.maxDeliveryRadiusKm}
+                  onChange={(e) => updateSetting("maxDeliveryRadiusKm", Number(e.target.value))}
+                  className="w-32"
+                  style={{ accentColor: "#a03c00" }}
+                />
                 <span className="text-sm font-bold" style={{ color: "#1b1c1a" }}>
-                  {data.logistics.maxDeliveryRadiusKm} km
+                  {settings.maxDeliveryRadiusKm} km
                 </span>
               </div>
             </SettingRow>
             <SettingRow label={t("settings.defaultDeliveryFee")}>
-              <span className="text-sm font-semibold" style={{ color: "#1b1c1a" }}>
-                {formatFcfa(data.logistics.defaultDeliveryFeeXaf)}
-              </span>
+              <div className="flex items-center gap-1">
+                <input
+                  type="number"
+                  value={settings.defaultDeliveryFeeXaf}
+                  onChange={(e) => updateSetting("defaultDeliveryFeeXaf", Number(e.target.value))}
+                  onBlur={() => showToast("Frais de livraison mis à jour")}
+                  className="rounded-full px-4 py-1.5 text-sm text-right w-24"
+                  style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+                />
+                <span className="text-sm font-semibold" style={{ color: "#7c7570" }}>FCFA</span>
+              </div>
             </SettingRow>
             <SettingRow label={t("settings.enforceHours")}>
-              <Toggle checked={data.logistics.enforceOpeningHours} />
+              <Toggle
+                checked={settings.enforceOpeningHours}
+                onClick={() => {
+                  const next = !settings.enforceOpeningHours;
+                  updateSetting("enforceOpeningHours", next);
+                  showToast(next ? "Heures d'ouverture appliquées ✅" : "Heures d'ouverture désactivées");
+                }}
+              />
             </SettingRow>
           </>
         ) : null}
@@ -270,7 +519,7 @@ export default function SettingsPage() {
           >
             {t("settings.security")}
           </h2>
-          {data?.security.mfaEnabled && (
+          {settings?.mfaEnabled && (
             <span
               className="rounded-full px-2 py-0.5 text-[10px] font-bold"
               style={{ backgroundColor: "#dcfce7", color: "#166534" }}
@@ -283,13 +532,28 @@ export default function SettingsPage() {
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 rounded-xl" />)}
           </div>
-        ) : data ? (
+        ) : data && settings ? (
           <>
-            <div className="flex items-center justify-between py-3 cursor-pointer hover:bg-[#fbf9f5] -mx-2 px-2 rounded-xl transition-colors" style={{ borderBottom: "1px solid #f5f3ef" }}>
+            <div
+              onClick={() => {
+                const action = settings.mfaEnabled ? "désactiver" : "activer";
+                if (window.confirm(`Voulez-vous ${action} l'authentification multi-facteurs ?`)) {
+                  const next = !settings.mfaEnabled;
+                  updateSetting("mfaEnabled", next);
+                  showToast(next ? "MFA activé ✅" : "MFA désactivé");
+                }
+              }}
+              className="flex items-center justify-between py-3 cursor-pointer hover:bg-[#fbf9f5] -mx-2 px-2 rounded-xl transition-colors"
+              style={{ borderBottom: "1px solid #f5f3ef" }}
+            >
               <span className="text-sm" style={{ color: "#1b1c1a" }}>{t("settings.mfa")}</span>
               <ChevronRight className="h-4 w-4" style={{ color: "#b8b3ad" }} />
             </div>
-            <div className="flex items-center justify-between py-3 cursor-pointer hover:bg-[#fbf9f5] -mx-2 px-2 rounded-xl transition-colors" style={{ borderBottom: "1px solid #f5f3ef" }}>
+            <div
+              onClick={() => setShowLogs(true)}
+              className="flex items-center justify-between py-3 cursor-pointer hover:bg-[#fbf9f5] -mx-2 px-2 rounded-xl transition-colors"
+              style={{ borderBottom: "1px solid #f5f3ef" }}
+            >
               <span className="text-sm" style={{ color: "#1b1c1a" }}>{t("settings.accessLogs")}</span>
               <ChevronRight className="h-4 w-4" style={{ color: "#b8b3ad" }} />
             </div>
@@ -342,15 +606,43 @@ export default function SettingsPage() {
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#7c7570" }}>{t("settings.currentLogo")}</p>
             <div
-              className="flex h-[100px] w-[100px] items-center justify-center rounded-2xl"
-              style={{ backgroundColor: "#f5f3ef" }}
+              onClick={handleLogoClick}
+              className="flex h-[100px] w-[100px] items-center justify-center rounded-2xl cursor-pointer overflow-hidden"
+              style={{ backgroundColor: "#f5f3ef", position: "relative" }}
             >
-              <span
-                className="text-lg font-bold italic"
-                style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#a03c00" }}
+              {logoBase64 ? (
+                <img
+                  src={logoBase64}
+                  alt="Logo"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : (
+                <span
+                  className="text-lg font-bold italic"
+                  style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#a03c00" }}
+                >
+                  NYAMA
+                </span>
+              )}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "rgba(27,28,26,0.5)",
+                  opacity: 0,
+                  transition: "opacity 0.2s",
+                  borderRadius: 16,
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.opacity = "1"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.opacity = "0"; }}
               >
-                NYAMA
-              </span>
+                <span style={{ color: "#fff", fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", textAlign: "center", lineHeight: 1.3 }}>
+                  Cliquez pour changer
+                </span>
+              </div>
             </div>
           </div>
           {/* Colors */}

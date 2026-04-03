@@ -407,51 +407,127 @@ function QuartierChart({ data }: { data: DashboardData["revenueByQuarter"] }) {
   );
 }
 
-function DeliveryDensity() {
+function DeliveryDensity({
+  revenueByQuarter,
+}: {
+  revenueByQuarter?: DashboardData["revenueByQuarter"];
+}) {
   const { t } = useLanguage();
+  const [showMap, setShowMap] = useState(false);
 
   return (
-    <div
-      className="relative rounded-2xl overflow-hidden p-8 min-h-[200px]"
-      style={{ backgroundColor: "#1b1c1a" }}
-    >
+    <>
       <div
-        className="absolute inset-0 opacity-[0.07]"
-        style={{
-          backgroundImage: "radial-gradient(circle, #a03c00 1.5px, transparent 1.5px)",
-          backgroundSize: "28px 28px",
-        }}
-      />
-      <div className="absolute right-24 top-8 h-28 w-28 rounded-full blur-2xl opacity-30" style={{ backgroundColor: "#a03c00" }} />
-      <div className="absolute right-40 bottom-8 h-20 w-20 rounded-full blur-xl opacity-20" style={{ backgroundColor: "#c94d00" }} />
-      <div className="absolute right-12 bottom-12 h-16 w-16 rounded-full blur-xl opacity-25" style={{ backgroundColor: "#a03c00" }} />
-      <div className="absolute right-64 top-12 h-12 w-12 rounded-full blur-lg opacity-15" style={{ backgroundColor: "#8b4c11" }} />
+        className="relative rounded-2xl overflow-hidden p-8 min-h-[200px]"
+        style={{ backgroundColor: "#1b1c1a" }}
+      >
+        <div
+          className="absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage: "radial-gradient(circle, #a03c00 1.5px, transparent 1.5px)",
+            backgroundSize: "28px 28px",
+          }}
+        />
+        <div className="absolute right-24 top-8 h-28 w-28 rounded-full blur-2xl opacity-30" style={{ backgroundColor: "#a03c00" }} />
+        <div className="absolute right-40 bottom-8 h-20 w-20 rounded-full blur-xl opacity-20" style={{ backgroundColor: "#c94d00" }} />
+        <div className="absolute right-12 bottom-12 h-16 w-16 rounded-full blur-xl opacity-25" style={{ backgroundColor: "#a03c00" }} />
+        <div className="absolute right-64 top-12 h-12 w-12 rounded-full blur-lg opacity-15" style={{ backgroundColor: "#8b4c11" }} />
 
-      <div className="relative z-10">
-        <div className="flex items-center gap-2 mb-2">
-          <Activity className="h-4 w-4" style={{ color: "#a03c00" }} />
-          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.5)" }}>
-            {t("dashboard.realtime")}
-          </span>
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-2">
+            <Activity className="h-4 w-4" style={{ color: "#a03c00" }} />
+            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.5)" }}>
+              {t("dashboard.realtime")}
+            </span>
+          </div>
+          <h2
+            className="text-2xl font-semibold text-white mb-2"
+            style={{ fontFamily: "var(--font-newsreader), Georgia, serif" }}
+          >
+            {t("dashboard.deliveryDensity")}
+          </h2>
+          <p className="text-sm max-w-lg mb-5" style={{ color: "rgba(255,255,255,0.55)" }}>
+            {t("dashboard.deliveryDensityDesc")}
+          </p>
+          <button
+            onClick={() => setShowMap(true)}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold transition-opacity hover:opacity-80"
+            style={{ color: "#e8c4b0" }}
+          >
+            {t("dashboard.seeDetailedMap")}
+          </button>
         </div>
-        <h2
-          className="text-2xl font-semibold text-white mb-2"
-          style={{ fontFamily: "var(--font-newsreader), Georgia, serif" }}
-        >
-          {t("dashboard.deliveryDensity")}
-        </h2>
-        <p className="text-sm max-w-lg mb-5" style={{ color: "rgba(255,255,255,0.55)" }}>
-          {t("dashboard.deliveryDensityDesc")}
-        </p>
-        <a
-          href="#"
-          className="inline-flex items-center gap-1.5 text-sm font-semibold transition-opacity hover:opacity-80"
-          style={{ color: "#e8c4b0" }}
-        >
-          {t("dashboard.seeDetailedMap")}
-        </a>
       </div>
-    </div>
+
+      {/* Full-screen delivery density map dialog */}
+      {showMap && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col"
+          style={{ backgroundColor: "#1b1c1a" }}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-8 py-5">
+            <h2
+              className="text-2xl font-semibold text-white"
+              style={{ fontFamily: "var(--font-newsreader), Georgia, serif" }}
+            >
+              Carte de Densit&eacute; des Livraisons
+            </h2>
+            <button
+              onClick={() => setShowMap(false)}
+              className="rounded-full border border-white/30 px-5 py-1.5 text-sm font-semibold text-white transition-opacity hover:opacity-80"
+            >
+              Fermer
+            </button>
+          </div>
+
+          {/* Simulated map area */}
+          <div className="flex-1 relative mx-8 mb-8 rounded-2xl overflow-hidden" style={{ backgroundColor: "#141513" }}>
+            {/* Dot pattern background */}
+            <div
+              className="absolute inset-0 opacity-[0.05]"
+              style={{
+                backgroundImage: "radial-gradient(circle, #a03c00 1px, transparent 1px)",
+                backgroundSize: "20px 20px",
+              }}
+            />
+
+            {/* Density blobs */}
+            {(revenueByQuarter ?? []).map((q, i) => {
+              const positions = [
+                { top: "20%", left: "25%" },
+                { top: "35%", left: "60%" },
+                { top: "55%", left: "40%" },
+                { top: "70%", left: "70%" },
+                { top: "30%", left: "80%" },
+              ];
+              const pos = positions[i % positions.length];
+              const size = Math.max(60, Math.min(160, q.revenueM * 20));
+              return (
+                <div key={q.quarter} className="absolute flex flex-col items-center" style={{ top: pos.top, left: pos.left, transform: "translate(-50%, -50%)" }}>
+                  <div
+                    className="rounded-full blur-xl"
+                    style={{
+                      width: size,
+                      height: size,
+                      background: `radial-gradient(circle, rgba(201,77,0,0.6), rgba(160,60,0,0.2))`,
+                    }}
+                  />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+                    <div
+                      className="h-3 w-3 rounded-full mb-1"
+                      style={{ background: "linear-gradient(135deg, #c94d00, #a03c00)" }}
+                    />
+                    <span className="text-white text-xs font-semibold whitespace-nowrap">{q.quarter}</span>
+                    <span className="text-white/60 text-[10px]">{q.revenueM}M FCFA</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -536,7 +612,7 @@ export default function DashboardPage() {
       )}
 
       {/* Delivery density map */}
-      <DeliveryDensity />
+      <DeliveryDensity revenueByQuarter={data?.revenueByQuarter} />
 
       {/* Footer */}
       <p

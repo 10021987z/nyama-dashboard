@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/use-language";
+import { apiClient } from "@/lib/api";
+import type { DashboardData } from "@/lib/types";
 
 const NAV_ITEMS = [
   { href: "/dashboard", icon: BarChart3, labelKey: "nav.dashboard" },
@@ -116,6 +118,36 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       {/* Bottom: Export + Avatar */}
       <div className="px-3 py-4 space-y-3">
         <button
+          onClick={async () => {
+            try {
+              const d = await apiClient.get<DashboardData>("/admin/dashboard");
+              const rows = [
+                ["Métrique", "Valeur"],
+                ["Commandes aujourd'hui", String(d.ordersToday ?? 0)],
+                ["Commandes semaine", String(d.ordersThisWeek ?? 0)],
+                ["CA du jour", String(d.revenueToday ?? 0)],
+                ["CA mois", String(d.revenueThisMonth ?? 0)],
+                ["Utilisateurs totaux", String(d.totalUsers ?? 0)],
+                ["Cuisinières actives", String(d.totalCooks ?? 0)],
+                ["Panier moyen", String(d.avgBasketXaf ?? 0)],
+                ["Taux succès paiement", `${d.paymentSuccessRate ?? 0}%`],
+              ];
+              const csv = rows.map((r) => r.join(",")).join("\n");
+              const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              const date = new Date().toISOString().slice(0, 10);
+              a.href = url;
+              a.download = `nyama-rapport-${date}.csv`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+              window.alert("Rapport exporté avec succès !");
+            } catch {
+              window.alert("Erreur lors de l'export du rapport.");
+            }
+          }}
           className="flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
           style={{
             background: "linear-gradient(135deg, #a03c00, #c94d00)",

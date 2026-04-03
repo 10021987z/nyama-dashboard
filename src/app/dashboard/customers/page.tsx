@@ -9,7 +9,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { useLanguage } from "@/hooks/use-language";
 import {
   Users, Zap, UserPlus, ShieldCheck, Search, RotateCcw,
-  ChevronLeft, ChevronRight, Eye, Pencil, Download,
+  ChevronLeft, ChevronRight, Eye, Pencil, Download, X,
 } from "lucide-react";
 
 const LIMIT = 20;
@@ -33,9 +33,30 @@ function avatarColor(id?: string | null): string {
 }
 
 function quarterDisplay(quarter: Customer["quarter"]): string {
-  if (!quarter) return "—";
+  if (!quarter) return "\u2014";
   if (typeof quarter === "string") return quarter;
   return `${quarter.name}, ${quarter.city}`;
+}
+
+function quarterDisplayCsv(quarter: Customer["quarter"]): string {
+  if (!quarter) return "";
+  if (typeof quarter === "string") return quarter;
+  return `${quarter.name} ${quarter.city}`;
+}
+
+function downloadCsv(customers: Customer[]) {
+  const header = "Nom,T\u00e9l\u00e9phone,Quartier,Commandes,Total D\u00e9pens\u00e9 (FCFA),Statut\n";
+  const rows = customers.map(c => {
+    const q = quarterDisplayCsv(c.quarter);
+    return `"${c.name}","${c.phone}","${q}",${c.totalOrders},${c.totalSpentXaf},"${c.status}"`;
+  }).join("\n");
+  const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `nyama-clients-export-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ── StatCard ─────────────────────────────────────────────────────────────────
@@ -101,6 +122,219 @@ function StatCard({
   );
 }
 
+// ── Toast ────────────────────────────────────────────────────────────────────
+
+function Toast({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+  useEffect(() => {
+    const timer = setTimeout(onDismiss, 3000);
+    return () => clearTimeout(timer);
+  }, [onDismiss]);
+
+  return (
+    <div
+      className="fixed bottom-6 right-6 z-[9999] rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-lg"
+      style={{ backgroundColor: "#1b1c1a" }}
+    >
+      {message}
+    </div>
+  );
+}
+
+// ── View Client Dialog ──────────────────────────────────────────────────────
+
+function ViewClientDialog({ client, onClose }: { client: Customer; onClose: () => void }) {
+  const color = avatarColor(client.id);
+
+  const rows: { label: string; value: string }[] = [
+    { label: "Nom", value: client.name },
+    { label: "T\u00e9l\u00e9phone", value: client.phone },
+    { label: "Quartier", value: quarterDisplay(client.quarter) },
+    { label: "Inscrit le", value: formatDate(client.createdAt) },
+    { label: "Commandes", value: String(client.totalOrders) },
+    { label: "Total d\u00e9pens\u00e9", value: formatFcfa(client.totalSpentXaf) },
+    { label: "Derni\u00e8re commande", value: client.lastOrderAt ? formatRelative(client.lastOrderAt) : "\u2014" },
+    { label: "Statut", value: client.status },
+  ];
+
+  return (
+    <div
+      className="fixed inset-0 z-[9000] flex items-center justify-center"
+      style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-md rounded-2xl p-6"
+        style={{ backgroundColor: "#ffffff", boxShadow: "0 8px 40px rgba(0,0,0,0.15)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[#f5f3ef] transition-colors"
+        >
+          <X className="h-4 w-4" style={{ color: "#7c7570" }} />
+        </button>
+
+        <div className="flex items-center gap-4 mb-6">
+          <div
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white"
+            style={{ backgroundColor: color }}
+          >
+            {initials(client.name)}
+          </div>
+          <div>
+            <h2
+              className="text-xl font-semibold italic"
+              style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            >
+              {client.name}
+            </h2>
+            <p className="text-xs" style={{ color: "#7c7570" }}>Fiche client</p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {rows.map((r) => (
+            <div key={r.label} className="flex items-center justify-between py-2" style={{ borderBottom: "1px solid #f5f3ef" }}>
+              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#7c7570" }}>{r.label}</span>
+              <span className="text-sm font-medium" style={{ color: "#1b1c1a" }}>{r.value}</span>
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={onClose}
+          className="mt-6 w-full rounded-full py-2.5 text-sm font-semibold transition-colors"
+          style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+        >
+          Fermer
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Edit Client Dialog ──────────────────────────────────────────────────────
+
+function EditClientDialog({
+  client,
+  onClose,
+  onSave,
+  onToggleStatus,
+}: {
+  client: Customer;
+  onClose: () => void;
+  onSave: (id: string, updates: Partial<Customer>) => void;
+  onToggleStatus: (id: string, newStatus: Customer["status"]) => void;
+}) {
+  const [name, setName] = useState(client.name);
+  const [quarter, setQuarter] = useState(
+    typeof client.quarter === "object" && client.quarter
+      ? `${client.quarter.name}, ${client.quarter.city}`
+      : typeof client.quarter === "string"
+        ? client.quarter
+        : ""
+  );
+  const color = avatarColor(client.id);
+
+  return (
+    <div
+      className="fixed inset-0 z-[9000] flex items-center justify-center"
+      style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-md rounded-2xl p-6"
+        style={{ backgroundColor: "#ffffff", boxShadow: "0 8px 40px rgba(0,0,0,0.15)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[#f5f3ef] transition-colors"
+        >
+          <X className="h-4 w-4" style={{ color: "#7c7570" }} />
+        </button>
+
+        <div className="flex items-center gap-4 mb-6">
+          <div
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white"
+            style={{ backgroundColor: color }}
+          >
+            {initials(client.name)}
+          </div>
+          <div>
+            <h2
+              className="text-xl font-semibold italic"
+              style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            >
+              Modifier le client
+            </h2>
+            <p className="text-xs" style={{ color: "#7c7570" }}>{client.phone}</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "#7c7570" }}>
+              Nom
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
+              style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a", border: "1.5px solid transparent" }}
+              onFocus={(e) => (e.target.style.borderColor = "#a03c00")}
+              onBlur={(e) => (e.target.style.borderColor = "transparent")}
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "#7c7570" }}>
+              Quartier
+            </label>
+            <input
+              type="text"
+              value={quarter}
+              onChange={(e) => setQuarter(e.target.value)}
+              className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
+              style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a", border: "1.5px solid transparent" }}
+              onFocus={(e) => (e.target.style.borderColor = "#a03c00")}
+              onBlur={(e) => (e.target.style.borderColor = "transparent")}
+            />
+          </div>
+        </div>
+
+        <div className="mt-6 flex gap-3">
+          <button
+            onClick={() => {
+              onSave(client.id, { name, quarter: quarter || undefined });
+              onClose();
+            }}
+            className="flex-1 rounded-full py-2.5 text-sm font-semibold text-white transition-colors"
+            style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+          >
+            Sauvegarder
+          </button>
+          <button
+            onClick={() => {
+              const newStatus = client.status === "ACTIF" ? "INACTIF" : "ACTIF";
+              onToggleStatus(client.id, newStatus);
+              onClose();
+            }}
+            className="rounded-full px-5 py-2.5 text-sm font-semibold transition-colors"
+            style={
+              client.status === "ACTIF"
+                ? { backgroundColor: "#fee2e2", color: "#991b1b" }
+                : { backgroundColor: "#dcfce7", color: "#166534" }
+            }
+          >
+            {client.status === "ACTIF" ? "Suspendre" : "R\u00e9activer"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export default function CustomersPage() {
@@ -113,6 +347,12 @@ export default function CustomersPage() {
   const [data, setData] = useState<CustomersResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Feature states
+  const [viewClient, setViewClient] = useState<Customer | null>(null);
+  const [editClient, setEditClient] = useState<Customer | null>(null);
+  const [localOverrides, setLocalOverrides] = useState<Record<string, Partial<Customer>>>({});
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
@@ -148,6 +388,28 @@ export default function CustomersPage() {
     ? [...new Set((data.data ?? []).map((c) => (typeof c.quarter === "object" && c.quarter ? c.quarter.name : typeof c.quarter === "string" ? c.quarter : "")).filter(Boolean))]
     : [];
 
+  // Merge local overrides into customer data for rendering
+  const getCustomer = (c: Customer): Customer => {
+    const overrides = localOverrides[c.id];
+    return overrides ? { ...c, ...overrides } : c;
+  };
+
+  const handleSave = (id: string, updates: Partial<Customer>) => {
+    setLocalOverrides((prev) => ({
+      ...prev,
+      [id]: { ...prev[id], ...updates },
+    }));
+    setToast("Client mis \u00e0 jour \u2705");
+  };
+
+  const handleToggleStatus = (id: string, newStatus: Customer["status"]) => {
+    setLocalOverrides((prev) => ({
+      ...prev,
+      [id]: { ...prev[id], status: newStatus },
+    }));
+    setToast(newStatus === "ACTIF" ? "Client r\u00e9activ\u00e9 \u2705" : "Client suspendu \u2705");
+  };
+
   return (
     <div className="space-y-5 pb-8">
       {/* Header */}
@@ -164,6 +426,9 @@ export default function CustomersPage() {
           </p>
         </div>
         <button
+          onClick={() => {
+            if (data?.data) downloadCsv(data.data.map(getCustomer));
+          }}
           className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors"
           style={{ border: "1.5px solid #a03c00", color: "#a03c00", backgroundColor: "transparent" }}
         >
@@ -177,7 +442,7 @@ export default function CustomersPage() {
         <StatCard
           icon={<Users className="h-5 w-5" style={{ color: "#a03c00" }} />}
           label={t("customers.totalClients")}
-          value={stats?.totalClients.toLocaleString("fr-FR") ?? "—"}
+          value={stats?.totalClients.toLocaleString("fr-FR") ?? "\u2014"}
           badge="+8%"
           badgeColor="#dcfce7"
           loading={loading}
@@ -185,7 +450,7 @@ export default function CustomersPage() {
         <StatCard
           icon={<Zap className="h-5 w-5" style={{ color: "#b45309" }} />}
           label={t("customers.activeClients")}
-          value={stats?.activeClients30d.toLocaleString("fr-FR") ?? "—"}
+          value={stats?.activeClients30d.toLocaleString("fr-FR") ?? "\u2014"}
           loading={loading}
           sub={
             stats ? (
@@ -209,13 +474,13 @@ export default function CustomersPage() {
         <StatCard
           icon={<UserPlus className="h-5 w-5" style={{ color: "#2c694e" }} />}
           label={t("customers.newThisMonth")}
-          value={stats?.newClientsThisMonth.toLocaleString("fr-FR") ?? "—"}
+          value={stats?.newClientsThisMonth.toLocaleString("fr-FR") ?? "\u2014"}
           loading={loading}
         />
         <StatCard
           icon={<ShieldCheck className="h-5 w-5" style={{ color: "#2563eb" }} />}
           label={t("customers.retention")}
-          value={stats ? `${stats.retentionRate}%` : "—"}
+          value={stats ? `${stats.retentionRate}%` : "\u2014"}
           badge={stats ? (stats.retentionRate > 70 ? t("customers.performing") : t("customers.toImprove")) : undefined}
           badgeColor={stats && stats.retentionRate > 70 ? "#dcfce7" : "#ffedd5"}
           loading={loading}
@@ -313,7 +578,8 @@ export default function CustomersPage() {
                       </td>
                     </tr>
                   ) : (
-                    data?.data.map((c) => {
+                    data?.data.map((raw) => {
+                      const c = getCustomer(raw);
                       const color = avatarColor(c.id);
                       return (
                         <tr key={c.id} className="hover:bg-[#fbf9f5] transition-colors">
@@ -345,7 +611,7 @@ export default function CustomersPage() {
                           </td>
                           <td className="px-4 py-3 hidden sm:table-cell">
                             <span className="text-xs" style={{ color: "#7c7570" }}>
-                              {c.lastOrderAt ? formatRelative(c.lastOrderAt) : "—"}
+                              {c.lastOrderAt ? formatRelative(c.lastOrderAt) : "\u2014"}
                             </span>
                           </td>
                           <td className="px-4 py-3">
@@ -363,14 +629,16 @@ export default function CustomersPage() {
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-1">
                               <button
+                                onClick={() => setViewClient(c)}
                                 className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#f5f3ef]"
                                 title="Voir"
                               >
                                 <Eye className="h-3.5 w-3.5" style={{ color: "#7c7570" }} />
                               </button>
                               <button
+                                onClick={() => setEditClient(c)}
                                 className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#f5f3ef]"
-                                title="Éditer"
+                                title="\u00c9diter"
                               >
                                 <Pencil className="h-3.5 w-3.5" style={{ color: "#7c7570" }} />
                               </button>
@@ -453,6 +721,24 @@ export default function CustomersPage() {
       >
         {t("footer")}
       </p>
+
+      {/* View Client Dialog */}
+      {viewClient && (
+        <ViewClientDialog client={viewClient} onClose={() => setViewClient(null)} />
+      )}
+
+      {/* Edit Client Dialog */}
+      {editClient && (
+        <EditClientDialog
+          client={editClient}
+          onClose={() => setEditClient(null)}
+          onSave={handleSave}
+          onToggleStatus={handleToggleStatus}
+        />
+      )}
+
+      {/* Toast */}
+      {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
     </div>
   );
 }

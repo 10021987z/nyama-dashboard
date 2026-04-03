@@ -7,7 +7,7 @@ import { formatFcfaCompact } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { useLanguage } from "@/hooks/use-language";
-import { Search, Star, Package, TrendingUp, ChefHat, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Star, Package, TrendingUp, ChefHat, RotateCcw, ChevronLeft, ChevronRight, Eye, Pencil, Ban, X } from "lucide-react";
 
 const LIMIT = 20;
 
@@ -97,11 +97,24 @@ function StatCard({
 
 // ── RestaurantCard ─────────────────────────────────────────────────────────────
 
-function RestaurantCard({ r }: { r: Restaurant }) {
+function displayName(r: Restaurant): string {
+  return r.name || `Restaurant #${(r.id ?? "").slice(0, 4)}`;
+}
+
+function RestaurantCard({
+  r,
+  onView,
+  onEdit,
+}: {
+  r: Restaurant;
+  onView: (r: Restaurant) => void;
+  onEdit: (r: Restaurant) => void;
+}) {
   const { t } = useLanguage();
   const specs = parseSpecialties(r.specialty);
   const color = avatarColor(r.id);
   const pct = Math.min(100, ((r.avgRating ?? 0) / 5) * 100);
+  const name = displayName(r);
 
   return (
     <div
@@ -117,18 +130,18 @@ function RestaurantCard({ r }: { r: Restaurant }) {
           className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-sm font-bold text-white"
           style={{ backgroundColor: color }}
         >
-          {initials(r.name)}
+          {initials(name)}
         </div>
         <div className="flex-1 min-w-0">
           <p
             className="text-base font-semibold leading-tight truncate"
             style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
           >
-            {r.name ?? "Sans nom"}
+            {name}
           </p>
           <p className="text-xs truncate" style={{ color: "#7c7570" }}>
             {r.neighborhood ? `${r.neighborhood}, ` : ""}
-            {r.city ?? "—"}
+            {r.city ?? "\u2014"}
           </p>
         </div>
         <div
@@ -198,6 +211,28 @@ function RestaurantCard({ r }: { r: Restaurant }) {
           </span>
         </div>
       </div>
+
+      {/* Action buttons */}
+      <div className="flex items-center gap-2 pt-1">
+        <button
+          onClick={() => onView(r)}
+          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-1.5 text-xs font-semibold transition-colors"
+          style={{ backgroundColor: "#f5f3ef", color: "#7c7570" }}
+          title="Voir"
+        >
+          <Eye className="h-3.5 w-3.5" />
+          Voir
+        </button>
+        <button
+          onClick={() => onEdit(r)}
+          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-1.5 text-xs font-semibold transition-colors"
+          style={{ backgroundColor: "#fdf3ee", color: "#a03c00" }}
+          title="Modifier"
+        >
+          <Pencil className="h-3.5 w-3.5" />
+          Modifier
+        </button>
+      </div>
     </div>
   );
 }
@@ -225,6 +260,244 @@ function RestaurantCardSkeleton() {
   );
 }
 
+// ── Toast ─────────────────────────────────────────────────────────────────────
+
+function Toast({ message, onDone }: { message: string; onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 2500);
+    return () => clearTimeout(t);
+  }, [onDone]);
+
+  return (
+    <div
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] rounded-2xl px-5 py-3 text-sm font-semibold text-white shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-300"
+      style={{ backgroundColor: "#a03c00" }}
+    >
+      {message}
+    </div>
+  );
+}
+
+// ── View Dialog ───────────────────────────────────────────────────────────────
+
+function ViewDialog({ r, onClose }: { r: Restaurant; onClose: () => void }) {
+  const specs = parseSpecialties(r.specialty);
+  const name = displayName(r);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: "rgba(27,28,26,0.45)" }}
+      onClick={onClose}
+    >
+      <div
+        className="rounded-2xl w-full max-w-md p-6 space-y-4 relative"
+        style={{ backgroundColor: "#ffffff", boxShadow: "0 8px 40px rgba(160,60,0,0.12)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 rounded-full p-1 transition-colors"
+          style={{ color: "#7c7570" }}
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        <div className="flex items-center gap-3">
+          <div
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-lg font-bold text-white"
+            style={{ backgroundColor: avatarColor(r.id) }}
+          >
+            {initials(name)}
+          </div>
+          <div>
+            <p
+              className="text-lg font-semibold"
+              style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            >
+              {name}
+            </p>
+            <p className="text-xs" style={{ color: "#7c7570" }}>
+              {r.neighborhood ? `${r.neighborhood}, ` : ""}{r.city ?? "\u2014"}
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-2.5">
+          {specs.length > 0 && (
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "#7c7570" }}>
+                Sp\u00e9cialit\u00e9s
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {specs.map((s) => (
+                  <span
+                    key={s}
+                    className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                    style={{ backgroundColor: "#f0fdf4", color: "#2c694e" }}
+                  >
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <InfoRow label="Note moyenne" value={`${(r.avgRating ?? 0).toFixed(1)} / 5`} />
+            <InfoRow label="Commandes" value={(r.totalOrders ?? 0).toLocaleString("fr-FR")} />
+            <InfoRow label="Chiffre d\u2019affaires" value={formatFcfaCompact(r.totalRevenue)} />
+            <InfoRow label="T\u00e9l\u00e9phone" value={r.phone || "\u2014"} />
+          </div>
+
+          <div className="flex items-center gap-2 pt-1">
+            <span
+              className="h-2.5 w-2.5 rounded-full"
+              style={{ backgroundColor: r.isActive ? "#16a34a" : "#e5e7eb" }}
+            />
+            <span className="text-sm font-semibold" style={{ color: r.isActive ? "#16a34a" : "#7c7570" }}>
+              {r.isActive ? "Actif" : "Inactif"}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#7c7570" }}>
+        {label}
+      </p>
+      <p className="text-sm font-semibold" style={{ color: "#1b1c1a" }}>{value}</p>
+    </div>
+  );
+}
+
+// ── Edit Dialog ───────────────────────────────────────────────────────────────
+
+function EditDialog({
+  r,
+  onClose,
+  onSave,
+  onToggleActive,
+}: {
+  r: Restaurant;
+  onClose: () => void;
+  onSave: (id: string, patch: Partial<Restaurant>) => void;
+  onToggleActive: (id: string, currentlyActive: boolean) => void;
+}) {
+  const [editName, setEditName] = useState(r.name || "");
+  const [editSpecialty, setEditSpecialty] = useState(
+    (() => {
+      const specs = parseSpecialties(r.specialty);
+      return specs.join(", ");
+    })()
+  );
+
+  const handleSave = () => {
+    const patch: Partial<Restaurant> = {};
+    if (editName !== (r.name || "")) patch.name = editName;
+    if (editSpecialty !== parseSpecialties(r.specialty).join(", ")) patch.specialty = editSpecialty;
+    onSave(r.id, patch);
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: "rgba(27,28,26,0.45)" }}
+      onClick={onClose}
+    >
+      <div
+        className="rounded-2xl w-full max-w-md p-6 space-y-5 relative"
+        style={{ backgroundColor: "#ffffff", boxShadow: "0 8px 40px rgba(160,60,0,0.12)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 rounded-full p-1 transition-colors"
+          style={{ color: "#7c7570" }}
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        <p
+          className="text-lg font-semibold"
+          style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+        >
+          Modifier le restaurant
+        </p>
+
+        <div className="space-y-3">
+          <div>
+            <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: "#7c7570" }}>
+              Nom
+            </label>
+            <input
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              className="w-full rounded-xl px-3.5 py-2 text-sm outline-none"
+              style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+            />
+          </div>
+
+          <div>
+            <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: "#7c7570" }}>
+              Sp\u00e9cialit\u00e9s (s\u00e9par\u00e9es par des virgules)
+            </label>
+            <input
+              type="text"
+              value={editSpecialty}
+              onChange={(e) => setEditSpecialty(e.target.value)}
+              className="w-full rounded-xl px-3.5 py-2 text-sm outline-none"
+              style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+            />
+          </div>
+
+          <div>
+            <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: "#7c7570" }}>
+              Statut
+            </label>
+            <div className="flex items-center gap-2">
+              <span
+                className="h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: r.isActive ? "#16a34a" : "#e5e7eb" }}
+              />
+              <span className="text-sm font-semibold" style={{ color: r.isActive ? "#16a34a" : "#7c7570" }}>
+                {r.isActive ? "Actif" : "Inactif"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 pt-1">
+          <button
+            onClick={handleSave}
+            className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white transition-colors"
+            style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+          >
+            Sauvegarder
+          </button>
+          <button
+            onClick={() => onToggleActive(r.id, r.isActive)}
+            className="flex items-center justify-center gap-1.5 rounded-xl py-2.5 px-4 text-sm font-semibold transition-colors"
+            style={{
+              backgroundColor: r.isActive ? "#fef2f2" : "#f0fdf4",
+              color: r.isActive ? "#dc2626" : "#16a34a",
+            }}
+          >
+            <Ban className="h-3.5 w-3.5" />
+            {r.isActive ? "Suspendre" : "R\u00e9activer"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main page ──────────────────────────────────────────────────────────────────
 
 export default function RestaurantsPage() {
@@ -237,6 +510,54 @@ export default function RestaurantsPage() {
   const [data, setData] = useState<RestaurantsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Dialog state
+  const [viewRestaurant, setViewRestaurant] = useState<Restaurant | null>(null);
+  const [editRestaurant, setEditRestaurant] = useState<Restaurant | null>(null);
+
+  // Local overrides for edited restaurants
+  const [localOverrides, setLocalOverrides] = useState<Map<string, Partial<Restaurant>>>(new Map());
+
+  // Toast state
+  const [toast, setToast] = useState<string | null>(null);
+  const toastCb = useCallback(() => setToast(null), []);
+
+  // Merge a restaurant with its local overrides
+  const mergeOverrides = useCallback(
+    (r: Restaurant): Restaurant => {
+      const overrides = localOverrides.get(r.id);
+      if (!overrides) return r;
+      return { ...r, ...overrides };
+    },
+    [localOverrides],
+  );
+
+  const handleSave = useCallback(
+    (id: string, patch: Partial<Restaurant>) => {
+      setLocalOverrides((prev) => {
+        const next = new Map(prev);
+        next.set(id, { ...(prev.get(id) ?? {}), ...patch });
+        return next;
+      });
+      setEditRestaurant(null);
+      setToast("Profil mis \u00e0 jour \u2705");
+    },
+    [],
+  );
+
+  const handleToggleActive = useCallback(
+    (id: string, currentlyActive: boolean) => {
+      const newActive = !currentlyActive;
+      setLocalOverrides((prev) => {
+        const next = new Map(prev);
+        next.set(id, { ...(prev.get(id) ?? {}), isActive: newActive });
+        return next;
+      });
+      setEditRestaurant(null);
+      setToast(newActive ? "Restaurant r\u00e9activ\u00e9" : "Restaurant suspendu");
+    },
+    [],
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
@@ -392,9 +713,17 @@ export default function RestaurantsPage() {
       ) : (
         <>
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {data?.data.map((r) => (
-              <RestaurantCard key={r.id} r={r} />
-            ))}
+            {data?.data.map((r) => {
+              const merged = mergeOverrides(r);
+              return (
+                <RestaurantCard
+                  key={r.id}
+                  r={merged}
+                  onView={setViewRestaurant}
+                  onEdit={setEditRestaurant}
+                />
+              );
+            })}
           </div>
 
           {/* Pagination */}
@@ -443,6 +772,24 @@ export default function RestaurantsPage() {
       >
         {t("footer")}
       </p>
+
+      {/* View Dialog */}
+      {viewRestaurant && (
+        <ViewDialog r={viewRestaurant} onClose={() => setViewRestaurant(null)} />
+      )}
+
+      {/* Edit Dialog */}
+      {editRestaurant && (
+        <EditDialog
+          r={editRestaurant}
+          onClose={() => setEditRestaurant(null)}
+          onSave={handleSave}
+          onToggleActive={handleToggleActive}
+        />
+      )}
+
+      {/* Toast */}
+      {toast && <Toast message={toast} onDone={toastCb} />}
     </div>
   );
 }

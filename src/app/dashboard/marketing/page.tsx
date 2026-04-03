@@ -152,13 +152,16 @@ function InfluencerCard({ inf }: { inf: Influencer }) {
 
 // -- CalendarCard -------------------------------------------------------------
 
-function CalendarCard({ event }: { event: CalendarEvent }) {
+function CalendarCard({ event, onClick }: { event: CalendarEvent; onClick?: () => void }) {
   const d = new Date(event.date);
   const month = d.toLocaleDateString("fr-FR", { month: "short" }).toUpperCase();
   const day = d.getDate();
 
   return (
-    <div className="flex items-start gap-3">
+    <div
+      className="flex items-start gap-3 cursor-pointer rounded-xl p-2 -m-2 transition-colors hover:bg-[#fbf9f5]"
+      onClick={onClick}
+    >
       <div
         className="flex flex-col items-center justify-center rounded-xl px-3 py-2 shrink-0"
         style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
@@ -244,6 +247,126 @@ function CampaignRow({ c }: { c: Campaign }) {
   );
 }
 
+// -- Toast --------------------------------------------------------------------
+
+function Toast({ message, onDone }: { message: string; onDone: () => void }) {
+  useEffect(() => {
+    const timer = setTimeout(onDone, 3000);
+    return () => clearTimeout(timer);
+  }, [onDone]);
+
+  return (
+    <div
+      className="fixed bottom-6 right-6 z-[100] rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-lg animate-in fade-in slide-in-from-bottom-4"
+      style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+    >
+      {message}
+    </div>
+  );
+}
+
+// -- Dialog Overlay -----------------------------------------------------------
+
+function DialogOverlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div
+        className="relative w-full max-w-md rounded-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+        style={{ backgroundColor: "#ffffff" }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function DialogTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h3
+      className="text-xl font-semibold italic"
+      style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+    >
+      {children}
+    </h3>
+  );
+}
+
+function DialogInput({
+  label, value, onChange, type = "text", placeholder,
+}: {
+  label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string;
+}) {
+  return (
+    <div className="space-y-1">
+      <label className="text-xs font-semibold" style={{ color: "#7c7570" }}>{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-xl px-3 py-2.5 text-sm outline-none border-0"
+        style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+      />
+    </div>
+  );
+}
+
+function DialogTextarea({
+  label, value, onChange, placeholder,
+}: {
+  label: string; value: string; onChange: (v: string) => void; placeholder?: string;
+}) {
+  return (
+    <div className="space-y-1">
+      <label className="text-xs font-semibold" style={{ color: "#7c7570" }}>{label}</label>
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        rows={3}
+        className="w-full rounded-xl px-3 py-2.5 text-sm outline-none border-0 resize-none"
+        style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+      />
+    </div>
+  );
+}
+
+function DialogSelect({
+  label, value, onChange, options,
+}: {
+  label: string; value: string; onChange: (v: string) => void; options: { value: string; label: string }[];
+}) {
+  return (
+    <div className="space-y-1">
+      <label className="text-xs font-semibold" style={{ color: "#7c7570" }}>{label}</label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-xl px-3 py-2.5 text-sm outline-none border-0 appearance-none"
+        style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function DialogButton({ children, onClick, disabled }: { children: React.ReactNode; onClick: () => void; disabled?: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="w-full rounded-full py-2.5 text-sm font-semibold text-white transition-all disabled:opacity-50"
+      style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+    >
+      {children}
+    </button>
+  );
+}
+
 // -- Main page ----------------------------------------------------------------
 
 export default function MarketingPage() {
@@ -251,6 +374,39 @@ export default function MarketingPage() {
   const [data, setData] = useState<MarketingOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Local state arrays
+  const [localCampaigns, setLocalCampaigns] = useState<Campaign[]>([]);
+  const [localInfluencers, setLocalInfluencers] = useState<Influencer[]>([]);
+  const [localEvents, setLocalEvents] = useState<CalendarEvent[]>([]);
+
+  // Dialog visibility
+  const [showNewCampaign, setShowNewCampaign] = useState(false);
+  const [showNewInfluencer, setShowNewInfluencer] = useState(false);
+  const [showNewEvent, setShowNewEvent] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+
+  // Toast
+  const [toast, setToast] = useState<string | null>(null);
+
+  // New campaign form
+  const [campName, setCampName] = useState("");
+  const [campMessage, setCampMessage] = useState("");
+  const [campAudience, setCampAudience] = useState("Tous");
+  const [campDate, setCampDate] = useState("");
+  const [campType, setCampType] = useState("Push");
+
+  // New influencer form
+  const [infName, setInfName] = useState("");
+  const [infCode, setInfCode] = useState(() => `INF-${Math.random().toString(36).slice(2, 8).toUpperCase()}`);
+  const [infCommission, setInfCommission] = useState("");
+  const [infDuration, setInfDuration] = useState("");
+
+  // New event form
+  const [evTitle, setEvTitle] = useState("");
+  const [evDate, setEvDate] = useState("");
+  const [evCode, setEvCode] = useState("");
+  const [evDescription, setEvDescription] = useState("");
 
   const fetchMarketing = useCallback(async () => {
     setLoading(true);
@@ -271,6 +427,61 @@ export default function MarketingPage() {
 
   const stats = data?.stats;
 
+  // Merged data
+  const allCampaigns = [...(data?.campaigns ?? []), ...localCampaigns];
+  const allInfluencers = [...(data?.influencers ?? []), ...localInfluencers];
+  const allEvents = [...(data?.calendarEvents ?? []), ...localEvents];
+
+  // Handlers
+  const handleCreateCampaign = () => {
+    if (!campName.trim() || !campMessage.trim()) return;
+    const audienceMap: Record<string, number> = { Tous: 15000, Douala: 8500, "Yaound\u00e9": 6500 };
+    const newCampaign: Campaign = {
+      id: `local-camp-${Date.now()}`,
+      date: campDate || new Date().toISOString(),
+      message: `[${campType}] ${campName}: ${campMessage}`,
+      audience: audienceMap[campAudience] ?? 10000,
+      openRate: 0,
+    };
+    setLocalCampaigns((prev) => [...prev, newCampaign]);
+    setShowNewCampaign(false);
+    setCampName(""); setCampMessage(""); setCampAudience("Tous"); setCampDate(""); setCampType("Push");
+    setToast("Campagne cr\u00e9\u00e9e \u2705");
+  };
+
+  const handleCreateInfluencer = () => {
+    if (!infName.trim()) return;
+    const newInf: Influencer = {
+      id: `local-inf-${Date.now()}`,
+      name: infName,
+      type: "Influenceur",
+      code: infCode,
+      uses: 0,
+      revenue: 0,
+      trend: 0,
+    };
+    setLocalInfluencers((prev) => [...prev, newInf]);
+    setShowNewInfluencer(false);
+    setInfName(""); setInfCode(`INF-${Math.random().toString(36).slice(2, 8).toUpperCase()}`);
+    setInfCommission(""); setInfDuration("");
+    setToast("Code influenceur cr\u00e9\u00e9 \u2705");
+  };
+
+  const handleCreateEvent = () => {
+    if (!evTitle.trim() || !evDate) return;
+    const newEvent: CalendarEvent = {
+      id: `local-ev-${Date.now()}`,
+      date: evDate,
+      title: evTitle,
+      code: evCode || undefined,
+      action: evDescription || undefined,
+    };
+    setLocalEvents((prev) => [...prev, newEvent]);
+    setShowNewEvent(false);
+    setEvTitle(""); setEvDate(""); setEvCode(""); setEvDescription("");
+    setToast("\u00c9v\u00e9nement ajout\u00e9 \u2705");
+  };
+
   return (
     <div className="space-y-6 pb-8">
       {/* Header */}
@@ -290,7 +501,8 @@ export default function MarketingPage() {
           </p>
         </div>
         <button
-          className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-all"
+          onClick={() => setShowNewCampaign(true)}
+          className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90"
           style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
         >
           <Plus className="h-4 w-4" />
@@ -346,7 +558,8 @@ export default function MarketingPage() {
               {t("marketing.influencers")}
             </h2>
             <button
-              className="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition-colors"
+              onClick={() => setShowNewInfluencer(true)}
+              className="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition-colors hover:opacity-80"
               style={{ border: "1.5px solid #a03c00", color: "#a03c00" }}
             >
               <Plus className="h-3.5 w-3.5" />
@@ -361,10 +574,10 @@ export default function MarketingPage() {
             </div>
           ) : (
             <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
-              {(data?.influencers ?? []).map((inf) => (
+              {allInfluencers.map((inf) => (
                 <InfluencerCard key={inf.code} inf={inf} />
               ))}
-              {(!data?.influencers || data.influencers.length === 0) && (
+              {allInfluencers.length === 0 && (
                 <div className="col-span-2 flex flex-col items-center py-12">
                   <Users className="h-8 w-8 mb-2" style={{ color: "#e8e4de" }} />
                   <p className="text-sm" style={{ color: "#7c7570" }}>{t("marketing.noInfluencer")}</p>
@@ -395,9 +608,9 @@ export default function MarketingPage() {
                   <Skeleton key={i} className="h-14 rounded-xl" />
                 ))}
               </div>
-            ) : data?.calendarEvents && data.calendarEvents.length > 0 ? (
-              (data.calendarEvents ?? []).map((ev, i) => (
-                <CalendarCard key={i} event={ev} />
+            ) : allEvents.length > 0 ? (
+              allEvents.map((ev, i) => (
+                <CalendarCard key={i} event={ev} onClick={() => setSelectedEvent(ev)} />
               ))
             ) : (
               <div className="flex flex-col items-center py-8">
@@ -406,7 +619,8 @@ export default function MarketingPage() {
               </div>
             )}
             <button
-              className="w-full rounded-full py-2 text-xs font-semibold transition-colors"
+              onClick={() => setShowNewEvent(true)}
+              className="w-full rounded-full py-2 text-xs font-semibold transition-colors hover:opacity-80"
               style={{ border: "1.5px solid #e8e4de", color: "#7c7570" }}
             >
               {t("marketing.addEvent")}
@@ -466,7 +680,7 @@ export default function MarketingPage() {
                   <Skeleton key={i} className="h-10 rounded-xl" />
                 ))}
               </div>
-            ) : data?.campaigns && data.campaigns.length > 0 ? (
+            ) : allCampaigns.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -478,7 +692,7 @@ export default function MarketingPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(data.campaigns ?? []).map((c, i) => (
+                    {allCampaigns.map((c, i) => (
                       <CampaignRow key={i} c={c} />
                     ))}
                   </tbody>
@@ -535,6 +749,104 @@ export default function MarketingPage() {
       >
         {t("footer")}
       </p>
+
+      {/* -- New Campaign Dialog -- */}
+      {showNewCampaign && (
+        <DialogOverlay onClose={() => setShowNewCampaign(false)}>
+          <DialogTitle>Nouvelle Campagne</DialogTitle>
+          <DialogInput label="Nom campagne" value={campName} onChange={setCampName} placeholder="Ex: Promo Ramadan" />
+          <DialogTextarea label="Message" value={campMessage} onChange={setCampMessage} placeholder="Contenu du message..." />
+          <DialogSelect
+            label="Audience cible"
+            value={campAudience}
+            onChange={setCampAudience}
+            options={[
+              { value: "Tous", label: "Tous" },
+              { value: "Douala", label: "Douala" },
+              { value: "Yaound\u00e9", label: "Yaound\u00e9" },
+            ]}
+          />
+          <DialogInput label="Date d'envoi" value={campDate} onChange={setCampDate} type="date" />
+          <DialogSelect
+            label="Type"
+            value={campType}
+            onChange={setCampType}
+            options={[
+              { value: "Push", label: "Push" },
+              { value: "SMS", label: "SMS" },
+              { value: "Email", label: "Email" },
+            ]}
+          />
+          <DialogButton onClick={handleCreateCampaign} disabled={!campName.trim() || !campMessage.trim()}>
+            Cr\u00e9er
+          </DialogButton>
+        </DialogOverlay>
+      )}
+
+      {/* -- New Influencer Code Dialog -- */}
+      {showNewInfluencer && (
+        <DialogOverlay onClose={() => setShowNewInfluencer(false)}>
+          <DialogTitle>Nouveau Code Influenceur</DialogTitle>
+          <DialogInput label="Nom influenceur" value={infName} onChange={setInfName} placeholder="Ex: Chef Awa" />
+          <DialogInput label="Code promo" value={infCode} onChange={setInfCode} />
+          <DialogInput label="Commission (%)" value={infCommission} onChange={setInfCommission} type="number" placeholder="10" />
+          <DialogInput label="Dur\u00e9e validit\u00e9 (jours)" value={infDuration} onChange={setInfDuration} type="number" placeholder="30" />
+          <DialogButton onClick={handleCreateInfluencer} disabled={!infName.trim()}>
+            Cr\u00e9er
+          </DialogButton>
+        </DialogOverlay>
+      )}
+
+      {/* -- New Event Dialog -- */}
+      {showNewEvent && (
+        <DialogOverlay onClose={() => setShowNewEvent(false)}>
+          <DialogTitle>Ajouter un \u00e9v\u00e9nement</DialogTitle>
+          <DialogInput label="Titre \u00e9v\u00e9nement" value={evTitle} onChange={setEvTitle} placeholder="Ex: Festival du Ndol\u00e9" />
+          <DialogInput label="Date" value={evDate} onChange={setEvDate} type="date" />
+          <DialogInput label="Code promo (optionnel)" value={evCode} onChange={setEvCode} placeholder="Ex: NDOLE25" />
+          <DialogTextarea label="Description" value={evDescription} onChange={setEvDescription} placeholder="D\u00e9tails de l'\u00e9v\u00e9nement..." />
+          <DialogButton onClick={handleCreateEvent} disabled={!evTitle.trim() || !evDate}>
+            Ajouter
+          </DialogButton>
+        </DialogOverlay>
+      )}
+
+      {/* -- Event Detail Dialog -- */}
+      {selectedEvent && (
+        <DialogOverlay onClose={() => setSelectedEvent(null)}>
+          <DialogTitle>{selectedEvent.title}</DialogTitle>
+          <div className="space-y-3">
+            <div className="rounded-xl px-3 py-2" style={{ backgroundColor: "#f5f3ef" }}>
+              <p className="text-[10px] font-semibold uppercase" style={{ color: "#7c7570" }}>Date</p>
+              <p className="text-sm font-semibold" style={{ color: "#1b1c1a" }}>
+                {new Date(selectedEvent.date).toLocaleDateString("fr-FR", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+              </p>
+            </div>
+            {selectedEvent.code && (
+              <div className="rounded-xl px-3 py-2" style={{ backgroundColor: "#f5f3ef" }}>
+                <p className="text-[10px] font-semibold uppercase" style={{ color: "#7c7570" }}>Code promo</p>
+                <p className="text-sm font-mono font-bold" style={{ color: "#a03c00" }}>{selectedEvent.code}</p>
+              </div>
+            )}
+            {selectedEvent.action && (
+              <div className="rounded-xl px-3 py-2" style={{ backgroundColor: "#f5f3ef" }}>
+                <p className="text-[10px] font-semibold uppercase" style={{ color: "#7c7570" }}>Description</p>
+                <p className="text-sm" style={{ color: "#1b1c1a" }}>{selectedEvent.action}</p>
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => setSelectedEvent(null)}
+            className="w-full rounded-full py-2.5 text-sm font-semibold transition-colors"
+            style={{ border: "1.5px solid #e8e4de", color: "#7c7570" }}
+          >
+            Fermer
+          </button>
+        </DialogOverlay>
+      )}
+
+      {/* -- Toast -- */}
+      {toast && <Toast message={toast} onDone={() => setToast(null)} />}
     </div>
   );
 }

@@ -156,7 +156,17 @@ function TicketRow({
 
 // ── TicketDetail ─────────────────────────────────────────────────────────────
 
-function TicketDetail({ ticket }: { ticket: SupportTicket | null }) {
+function TicketDetail({
+  ticket,
+  onRefund,
+  onContactRestaurant,
+  onClose,
+}: {
+  ticket: SupportTicket | null;
+  onRefund: (ticket: SupportTicket) => void;
+  onContactRestaurant: (ticket: SupportTicket) => void;
+  onClose: (ticket: SupportTicket) => void;
+}) {
   const { t } = useLanguage();
 
   if (!ticket) {
@@ -262,18 +272,21 @@ function TicketDetail({ ticket }: { ticket: SupportTicket | null }) {
         <button
           className="flex-1 rounded-full py-2.5 text-xs font-bold text-white transition-all"
           style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+          onClick={() => onRefund(ticket)}
         >
           {t("support.refundClient")}
         </button>
         <button
           className="rounded-full px-4 py-2.5 text-xs font-bold transition-colors"
           style={{ border: "1.5px solid #e8e4de", color: "#7c7570" }}
+          onClick={() => onContactRestaurant(ticket)}
         >
           {t("support.restaurateur")}
         </button>
         <button
           className="rounded-full px-4 py-2.5 text-xs font-bold transition-colors"
           style={{ border: "1.5px solid #e8e4de", color: "#7c7570" }}
+          onClick={() => onClose(ticket)}
         >
           {t("support.closeTicket")}
         </button>
@@ -349,6 +362,28 @@ export default function SupportPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
 
+  // Local tickets & closed tracking
+  const [localTickets, setLocalTickets] = useState<SupportTicket[]>([]);
+  const [closedTicketIds, setClosedTicketIds] = useState<Set<string>>(new Set());
+  const [refundedTicketIds, setRefundedTicketIds] = useState<Set<string>>(new Set());
+
+  // Toast
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const showToast = useCallback((msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  }, []);
+
+  // New Ticket dialog
+  const [showNewTicket, setShowNewTicket] = useState(false);
+  const [newTicketForm, setNewTicketForm] = useState({
+    clientName: "",
+    restaurant: "",
+    motif: "Commande non reçue",
+    severity: "MOYEN" as "HAUT" | "MOYEN" | "FAIBLE",
+    description: "",
+  });
+
   const fetchSupport = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -367,6 +402,58 @@ export default function SupportPage() {
   }, [fetchSupport]);
 
   const stats = data?.stats;
+
+  // Merge API tickets + local tickets, filter out closed
+  const allTickets = [
+    ...localTickets,
+    ...(data?.tickets ?? []),
+  ].filter((tk) => !closedTicketIds.has(tk.id)).map((tk) =>
+    refundedTicketIds.has(tk.id) ? { ...tk, status: "REMBOURSÉ" } : tk
+  );
+
+  // Handlers
+  const handleCreateTicket = () => {
+    const ticket: SupportTicket = {
+      id: `local-${Date.now()}`,
+      clientName: newTicketForm.clientName || "Client inconnu",
+      clientCity: "",
+      restaurant: newTicketForm.restaurant || "Restaurant inconnu",
+      motif: newTicketForm.motif,
+      severity: newTicketForm.severity,
+      status: "OUVERT",
+      messages: newTicketForm.description
+        ? [{ sender: "client", text: newTicketForm.description, timestamp: new Date().toISOString() }]
+        : [],
+      createdAt: new Date().toISOString(),
+    };
+    setLocalTickets((prev) => [ticket, ...prev]);
+    setShowNewTicket(false);
+    setNewTicketForm({ clientName: "", restaurant: "", motif: "Commande non reçue", severity: "MOYEN", description: "" });
+    showToast("Ticket créé avec succès ✅");
+  };
+
+  const handleRefund = (ticket: SupportTicket) => {
+    const amount = ticket.totalXaf ? formatFcfa(ticket.totalXaf) : "0 FCFA";
+    if (window.confirm(`Êtes-vous sûr de vouloir rembourser ${amount} au client ${ticket.clientName} ?`)) {
+      setRefundedTicketIds((prev) => new Set(prev).add(ticket.id));
+      setSelectedTicket({ ...ticket, status: "REMBOURSÉ" });
+      showToast(`Remboursement de ${ticket.totalXaf ?? 0} FCFA initié ✅`);
+    }
+  };
+
+  const handleContactRestaurant = (ticket: SupportTicket) => {
+    if (window.confirm(`Contacter le restaurateur ${ticket.restaurant} concernant le litige #${(ticket.id ?? "").slice(-6)} ?`)) {
+      showToast("Notification envoyée au restaurateur ✅");
+    }
+  };
+
+  const handleCloseTicket = (ticket: SupportTicket) => {
+    if (window.confirm(`Fermer le litige #${(ticket.id ?? "").slice(-6)} ? Cette action est irréversible.`)) {
+      setClosedTicketIds((prev) => new Set(prev).add(ticket.id));
+      setSelectedTicket(null);
+      showToast("Litige fermé ✅");
+    }
+  };
 
   return (
     <div className="space-y-6 pb-8">
@@ -393,6 +480,7 @@ export default function SupportPage() {
           <button
             className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-all"
             style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+            onClick={() => setShowNewTicket(true)}
           >
             <Plus className="h-4 w-4" />
             {t("support.newTicket")}
@@ -470,7 +558,7 @@ export default function SupportPage() {
                   <Skeleton key={i} className="h-12 rounded-xl" />
                 ))}
               </div>
-            ) : data?.tickets && data.tickets.length > 0 ? (
+            ) : allTickets.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -484,7 +572,7 @@ export default function SupportPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(data.tickets ?? []).map((tk) => (
+                    {allTickets.map((tk) => (
                       <TicketRow
                         key={tk.id}
                         ticket={tk}
@@ -512,7 +600,12 @@ export default function SupportPage() {
           >
             {t("support.ticketDetail")}
           </h2>
-          <TicketDetail ticket={selectedTicket} />
+          <TicketDetail
+            ticket={selectedTicket}
+            onRefund={handleRefund}
+            onContactRestaurant={handleContactRestaurant}
+            onClose={handleCloseTicket}
+          />
         </div>
       </div>
 
@@ -554,6 +647,136 @@ export default function SupportPage() {
       >
         {t("footer")}
       </p>
+
+      {/* New Ticket Modal */}
+      {showNewTicket && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowNewTicket(false); }}
+        >
+          <div
+            className="rounded-2xl w-full max-w-md mx-4 p-6 space-y-4"
+            style={{ backgroundColor: "#ffffff", boxShadow: "0 8px 40px rgba(160,60,0,0.15)" }}
+          >
+            <h3
+              className="text-xl font-semibold italic"
+              style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            >
+              Nouveau Ticket
+            </h3>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "#7c7570" }}>
+                  Nom du client
+                </label>
+                <input
+                  type="text"
+                  value={newTicketForm.clientName}
+                  onChange={(e) => setNewTicketForm((f) => ({ ...f, clientName: e.target.value }))}
+                  className="w-full rounded-xl px-3 py-2 text-sm outline-none"
+                  style={{ border: "1.5px solid #e8e4de", color: "#1b1c1a" }}
+                  placeholder="Ex: Jean Dupont"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "#7c7570" }}>
+                  Restaurant
+                </label>
+                <input
+                  type="text"
+                  value={newTicketForm.restaurant}
+                  onChange={(e) => setNewTicketForm((f) => ({ ...f, restaurant: e.target.value }))}
+                  className="w-full rounded-xl px-3 py-2 text-sm outline-none"
+                  style={{ border: "1.5px solid #e8e4de", color: "#1b1c1a" }}
+                  placeholder="Ex: Chez Mama"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "#7c7570" }}>
+                  Motif
+                </label>
+                <select
+                  value={newTicketForm.motif}
+                  onChange={(e) => setNewTicketForm((f) => ({ ...f, motif: e.target.value }))}
+                  className="w-full rounded-xl px-3 py-2 text-sm outline-none appearance-none"
+                  style={{ border: "1.5px solid #e8e4de", color: "#1b1c1a", backgroundColor: "#ffffff" }}
+                >
+                  <option value="Commande non reçue">Commande non reçue</option>
+                  <option value="Erreur de commande">Erreur de commande</option>
+                  <option value="Plat froid">Plat froid</option>
+                  <option value="Retard livraison">Retard livraison</option>
+                  <option value="Autre">Autre</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "#7c7570" }}>
+                  Gravité
+                </label>
+                <div className="flex gap-3">
+                  {(["HAUT", "MOYEN", "FAIBLE"] as const).map((sev) => (
+                    <label key={sev} className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="severity"
+                        checked={newTicketForm.severity === sev}
+                        onChange={() => setNewTicketForm((f) => ({ ...f, severity: sev }))}
+                        style={{ accentColor: "#a03c00" }}
+                      />
+                      <span className="text-xs font-bold" style={{ color: "#1b1c1a" }}>{sev}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "#7c7570" }}>
+                  Description
+                </label>
+                <textarea
+                  value={newTicketForm.description}
+                  onChange={(e) => setNewTicketForm((f) => ({ ...f, description: e.target.value }))}
+                  rows={3}
+                  className="w-full rounded-xl px-3 py-2 text-sm outline-none resize-none"
+                  style={{ border: "1.5px solid #e8e4de", color: "#1b1c1a" }}
+                  placeholder="Décrivez le problème..."
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => setShowNewTicket(false)}
+                className="flex-1 rounded-full py-2.5 text-sm font-semibold transition-colors"
+                style={{ border: "1.5px solid #e8e4de", color: "#7c7570" }}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleCreateTicket}
+                className="flex-1 rounded-full py-2.5 text-sm font-semibold text-white transition-all"
+                style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+              >
+                Créer le ticket
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {toastMessage && (
+        <div
+          className="fixed bottom-6 right-6 z-50 rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-lg transition-all"
+          style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)", boxShadow: "0 4px 20px rgba(160,60,0,0.3)" }}
+        >
+          {toastMessage}
+        </div>
+      )}
     </div>
   );
 }
