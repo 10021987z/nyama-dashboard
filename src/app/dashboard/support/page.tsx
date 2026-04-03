@@ -220,7 +220,7 @@ function TicketDetail({ ticket }: { ticket: SupportTicket | null }) {
       {/* Chat messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[350px]">
         {ticket.messages && ticket.messages.length > 0 ? (
-          ticket.messages.map((msg, i) => {
+          (ticket.messages ?? []).map((msg, i) => {
             const isClient = msg.sender === "client";
             return (
               <div key={i} className={`flex ${isClient ? "justify-start" : "justify-end"}`}>
@@ -478,7 +478,7 @@ export default function SupportPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.tickets.map((t) => (
+                    {(data.tickets ?? []).map((t) => (
                       <TicketRow
                         key={t.id}
                         ticket={t}
@@ -526,7 +526,7 @@ export default function SupportPage() {
           </div>
         ) : data?.criticalReviews && data.criticalReviews.length > 0 ? (
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {data.criticalReviews.map((r) => (
+            {(data.criticalReviews ?? []).map((r) => (
               <ReviewCard key={r.id} review={r} />
             ))}
           </div>

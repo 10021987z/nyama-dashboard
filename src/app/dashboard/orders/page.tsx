@@ -145,7 +145,7 @@ function OrderDetailDialog({
                     </tr>
                   </thead>
                   <tbody>
-                    {order.items.map((item, i) => (
+                    {(order.items ?? []).map((item, i) => (
                       <tr key={i} className="border-t">
                         <td className="px-3 py-2">{item.menuItemName}</td>
                         <td className="px-2 py-2 text-center">{item.quantity}</td>

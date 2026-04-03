@@ -143,7 +143,7 @@ export default function CustomersPage() {
 
   // Collect unique quarters for filter dropdown
   const quarters = data?.data
-    ? [...new Set(data.data.map((c) => (typeof c.quarter === "object" && c.quarter ? c.quarter.name : typeof c.quarter === "string" ? c.quarter : "")).filter(Boolean))]
+    ? [...new Set((data.data ?? []).map((c) => (typeof c.quarter === "object" && c.quarter ? c.quarter.name : typeof c.quarter === "string" ? c.quarter : "")).filter(Boolean))]
     : [];
 
   return (

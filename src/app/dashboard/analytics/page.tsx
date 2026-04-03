@@ -148,7 +148,7 @@ export default function AnalyticsPage() {
   const stats = data?.stats;
 
   // Prepare pie data with colors
-  const pieData = data?.paymentBreakdown.map((p) => ({
+  const pieData = (data?.paymentBreakdown ?? []).map((p) => ({
     ...p,
     fill: getPaymentColor(p.method, p.color),
   })) ?? [];
@@ -398,7 +398,7 @@ export default function AnalyticsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.topRestaurants.map((r) => (
+                    {(data.topRestaurants ?? []).map((r) => (
                       <tr key={r.id} className="hover:bg-[#fbf9f5] transition-colors">
                         <td className="px-4 py-3">
                           <span className="text-sm font-semibold" style={{ color: "#1b1c1a" }}>{r.displayName}</span>
