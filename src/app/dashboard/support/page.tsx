@@ -13,12 +13,14 @@ import {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function initials(name: string): string {
-  return name.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+function initials(name?: string | null): string {
+  if (!name) return "?";
+  return name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
 }
 
 const AVATAR_COLORS = ["#a03c00", "#2c694e", "#8b4c11", "#c94d00", "#b45309", "#2563eb", "#7c3aed", "#db2777"];
-function avatarColor(name: string): string {
+function avatarColor(name?: string | null): string {
+  if (!name) return AVATAR_COLORS[0];
   const n = name.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
   return AVATAR_COLORS[n % AVATAR_COLORS.length];
 }
@@ -120,7 +122,7 @@ function TicketRow({
     >
       <td className="px-4 py-3">
         <span className="font-mono text-xs font-bold" style={{ color: "#a03c00" }}>
-          #{ticket.id.slice(-6).toUpperCase()}
+          #{(ticket.id ?? "").slice(-6).toUpperCase()}
         </span>
       </td>
       <td className="px-4 py-3">
@@ -184,7 +186,7 @@ function TicketDetail({ ticket }: { ticket: SupportTicket | null }) {
             {sev.label}
           </span>
           <span className="text-xs font-mono" style={{ color: "#7c7570" }}>
-            ID: {ticket.id.slice(-8).toUpperCase()}
+            ID: {(ticket.id ?? "").slice(-8).toUpperCase()}
           </span>
         </div>
       </div>
@@ -193,7 +195,7 @@ function TicketDetail({ ticket }: { ticket: SupportTicket | null }) {
       {ticket.orderId && (
         <div className="px-4 pt-3">
           <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#7c7570" }}>
-            COMMANDE #{ticket.orderId.slice(-6).toUpperCase()}
+            COMMANDE #{(ticket.orderId ?? "").slice(-6).toUpperCase()}
           </p>
           <div
             className="rounded-xl p-3 flex items-center justify-between"

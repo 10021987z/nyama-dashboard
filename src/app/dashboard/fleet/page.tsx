@@ -32,17 +32,14 @@ function riderStatusConfig(rider: FleetRider): {
   }
 }
 
-function initials(name: string): string {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
+function initials(name?: string | null): string {
+  if (!name) return "?";
+  return name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
 }
 
 const AVATAR_PALETTE = ["#a03c00", "#2c694e", "#8b4c11", "#c94d00", "#b45309", "#2563eb"];
-function avatarBg(id: string): string {
+function avatarBg(id?: string | null): string {
+  if (!id) return AVATAR_PALETTE[0];
   const n = id.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
   return AVATAR_PALETTE[n % AVATAR_PALETTE.length];
 }
@@ -52,7 +49,7 @@ function avatarBg(id: string): string {
 function RiderCard({ rider }: { rider: FleetRider }) {
   const cfg = riderStatusConfig(rider);
   const bg = avatarBg(rider.id);
-  const ratingPct = Math.min(100, (rider.avgRating / 5) * 100);
+  const ratingPct = Math.min(100, ((rider.avgRating ?? 0) / 5) * 100);
 
   return (
     <div
@@ -122,7 +119,7 @@ function RiderCard({ rider }: { rider: FleetRider }) {
       <div className="flex items-center gap-2">
         <Star className="h-3.5 w-3.5 shrink-0" style={{ color: "#b45309" }} strokeWidth={2} />
         <span className="text-sm font-bold" style={{ color: "#1b1c1a" }}>
-          {rider.avgRating.toFixed(1)}
+          {(rider.avgRating ?? 0).toFixed(1)}
         </span>
         <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "#f5f3ef" }}>
           <div
@@ -139,7 +136,7 @@ function RiderCard({ rider }: { rider: FleetRider }) {
       >
         <div>
           <p className="text-xs font-bold" style={{ color: "#1b1c1a" }}>
-            {rider.totalTrips.toLocaleString("fr-FR")}
+            {(rider.totalTrips ?? 0).toLocaleString("fr-FR")}
           </p>
           <p className="text-[10px]" style={{ color: "#7c7570" }}>Courses</p>
         </div>
@@ -444,15 +441,15 @@ export default function FleetPage() {
             <p className="text-xs mt-1 leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
               Note moyenne de la flotte :{" "}
               <span className="font-bold text-white">
-                {(data.data.reduce((a, r) => a + r.avgRating, 0) / data.data.length).toFixed(1)}/5
+                {(data.data.reduce((a, r) => a + (r.avgRating ?? 0), 0) / data.data.length).toFixed(1)}/5
               </span>
               {" · "}Gains totaux cumulés :{" "}
               <span className="font-bold text-white">
-                {formatFcfaCompact(data.data.reduce((a, r) => a + r.totalEarnings, 0))}
+                {formatFcfaCompact(data.data.reduce((a, r) => a + (r.totalEarnings ?? 0), 0))}
               </span>
               {" · "}Courses totales :{" "}
               <span className="font-bold text-white">
-                {data.data.reduce((a, r) => a + r.totalTrips, 0).toLocaleString("fr-FR")}
+                {data.data.reduce((a, r) => a + (r.totalTrips ?? 0), 0).toLocaleString("fr-FR")}
               </span>
             </p>
           </div>

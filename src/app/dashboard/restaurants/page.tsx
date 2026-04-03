@@ -25,13 +25,9 @@ function parseSpecialties(raw: unknown): string[] {
   }
 }
 
-function initials(name: string): string {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
+function initials(name?: string | null): string {
+  if (!name) return "?";
+  return name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
 }
 
 const AVATAR_COLORS = [
@@ -39,7 +35,8 @@ const AVATAR_COLORS = [
   "#b45309", "#2563eb", "#7c3aed", "#db2777",
 ];
 
-function avatarColor(id: string): string {
+function avatarColor(id?: string | null): string {
+  if (!id) return AVATAR_COLORS[0];
   const n = id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
   return AVATAR_COLORS[n % AVATAR_COLORS.length];
 }
@@ -102,7 +99,7 @@ function StatCard({
 function RestaurantCard({ r }: { r: Restaurant }) {
   const specs = parseSpecialties(r.specialty);
   const color = avatarColor(r.id);
-  const pct = Math.min(100, (r.avgRating / 5) * 100);
+  const pct = Math.min(100, ((r.avgRating ?? 0) / 5) * 100);
 
   return (
     <div
@@ -125,11 +122,11 @@ function RestaurantCard({ r }: { r: Restaurant }) {
             className="text-base font-semibold leading-tight truncate"
             style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
           >
-            {r.name}
+            {r.name ?? "Sans nom"}
           </p>
           <p className="text-xs truncate" style={{ color: "#7c7570" }}>
             {r.neighborhood ? `${r.neighborhood}, ` : ""}
-            {r.city}
+            {r.city ?? "—"}
           </p>
         </div>
         <div
@@ -170,7 +167,7 @@ function RestaurantCard({ r }: { r: Restaurant }) {
       <div className="flex items-center gap-2">
         <Star className="h-3.5 w-3.5 shrink-0" style={{ color: "#b45309" }} strokeWidth={2} />
         <span className="text-sm font-bold" style={{ color: "#1b1c1a" }}>
-          {r.avgRating.toFixed(1)}
+          {(r.avgRating ?? 0).toFixed(1)}
         </span>
         <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "#f5f3ef" }}>
           <div
@@ -188,7 +185,7 @@ function RestaurantCard({ r }: { r: Restaurant }) {
         <div className="flex items-center gap-1.5">
           <Package className="h-3.5 w-3.5" style={{ color: "#a03c00" }} strokeWidth={2} />
           <span className="text-xs font-semibold" style={{ color: "#1b1c1a" }}>
-            {r.totalOrders.toLocaleString("fr-FR")}
+            {(r.totalOrders ?? 0).toLocaleString("fr-FR")}
           </span>
           <span className="text-[10px]" style={{ color: "#7c7570" }}>cmd</span>
         </div>
@@ -269,9 +266,9 @@ export default function RestaurantsPage() {
   const totalActive = data?.data.filter((r) => r.isActive).length ?? 0;
   const avgRating =
     data?.data.length
-      ? (data.data.reduce((acc, r) => acc + r.avgRating, 0) / data.data.length).toFixed(1)
+      ? (data.data.reduce((acc, r) => acc + (r.avgRating ?? 0), 0) / data.data.length).toFixed(1)
       : "—";
-  const totalRevenue = data?.data.reduce((acc, r) => acc + r.totalRevenue, 0) ?? 0;
+  const totalRevenue = data?.data.reduce((acc, r) => acc + (r.totalRevenue ?? 0), 0) ?? 0;
 
   return (
     <div className="space-y-5 pb-8">

@@ -21,12 +21,14 @@ function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
 }
 
-function initials(name: string): string {
-  return name.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+function initials(name?: string | null): string {
+  if (!name) return "?";
+  return name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
 }
 
 const AVATAR_COLORS = ["#a03c00", "#2c694e", "#8b4c11", "#c94d00", "#b45309", "#2563eb", "#7c3aed", "#db2777"];
-function avatarColor(id: string): string {
+function avatarColor(id?: string | null): string {
+  if (!id) return AVATAR_COLORS[0];
   const n = id.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
   return AVATAR_COLORS[n % AVATAR_COLORS.length];
 }

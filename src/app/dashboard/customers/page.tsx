@@ -15,13 +15,9 @@ const LIMIT = 20;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function initials(name: string): string {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
+function initials(name?: string | null): string {
+  if (!name) return "?";
+  return name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
 }
 
 const AVATAR_COLORS = [
@@ -29,7 +25,8 @@ const AVATAR_COLORS = [
   "#b45309", "#2563eb", "#7c3aed", "#db2777",
 ];
 
-function avatarColor(id: string): string {
+function avatarColor(id?: string | null): string {
+  if (!id) return AVATAR_COLORS[0];
   const n = id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
   return AVATAR_COLORS[n % AVATAR_COLORS.length];
 }

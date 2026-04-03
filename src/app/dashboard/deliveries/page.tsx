@@ -105,7 +105,7 @@ function DeliveryRow({ d }: { d: Delivery }) {
     <tr className="hover:bg-[#fbf9f5] transition-colors">
       <td className="px-4 py-3">
         <span className="font-mono text-xs" style={{ color: "#7c7570" }}>
-          #{d.orderId.slice(-6).toUpperCase()}
+          #{(d.orderId ?? "").slice(-6).toUpperCase()}
         </span>
       </td>
       <td className="px-4 py-3">

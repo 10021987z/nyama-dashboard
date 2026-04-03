@@ -16,17 +16,16 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search } from "lucide-react";
 
-function parseSpecialties(raw?: string): string[] {
+function parseSpecialties(raw: unknown): string[] {
   if (!raw) return [];
+  if (Array.isArray(raw)) return raw.map(String);
+  if (typeof raw !== "string") return [String(raw)];
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) return parsed.map(String);
     return [String(parsed)];
   } catch {
-    return raw
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    return raw.split(",").map((s: string) => s.trim()).filter(Boolean);
   }
 }
 
@@ -35,7 +34,7 @@ function RatingBar({ value, max = 5 }: { value: number; max?: number }) {
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs font-semibold tabular-nums w-6">
-        {value.toFixed(1)}
+        {(value ?? 0).toFixed(1)}
       </span>
       <div className="h-1.5 w-20 rounded-full bg-gray-200 overflow-hidden">
         <div
@@ -70,16 +69,16 @@ function TopCookCard({ cook, rank }: { cook: Cook; rank: number }) {
       </div>
       <div className="flex items-center gap-1.5 text-sm">
         <span>⭐</span>
-        <span className="font-semibold">{cook.avgRating.toFixed(1)}</span>
+        <span className="font-semibold">{(cook.avgRating ?? 0).toFixed(1)}</span>
         <div className="ml-1 h-1.5 flex-1 rounded-full bg-gray-200 overflow-hidden">
           <div
             className="h-full rounded-full bg-amber-400"
-            style={{ width: `${(cook.avgRating / 5) * 100}%` }}
+            style={{ width: `${((cook.avgRating ?? 0) / 5) * 100}%` }}
           />
         </div>
       </div>
       <p className="text-xs text-muted-foreground">
-        {cook.totalOrders.toLocaleString("fr-FR")} commandes
+        {(cook.totalOrders ?? 0).toLocaleString("fr-FR")} commandes
       </p>
       {(cook.neighborhood || cook.city) && (
         <p className="text-xs text-muted-foreground">
@@ -112,7 +111,7 @@ export default function CooksPage() {
   const filtered = useMemo(() => {
     if (!search.trim()) return sorted;
     const q = search.toLowerCase();
-    return sorted.filter((c) => c.name.toLowerCase().includes(q));
+    return sorted.filter((c) => (c.name ?? "").toLowerCase().includes(q));
   }, [sorted, search]);
 
   return (
@@ -236,7 +235,7 @@ export default function CooksPage() {
                           <RatingBar value={cook.avgRating} />
                         </TableCell>
                         <TableCell className="hidden sm:table-cell">
-                          {cook.totalOrders.toLocaleString("fr-FR")}
+                          {(cook.totalOrders ?? 0).toLocaleString("fr-FR")}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1.5">

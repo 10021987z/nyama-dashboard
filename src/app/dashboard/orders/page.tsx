@@ -67,7 +67,7 @@ function OrderDetailDialog({
           <>
             <DialogHeader>
               <DialogTitle>
-                Commande #{order.id.slice(-8).toUpperCase()}
+                Commande #{(order.id ?? "").slice(-8).toUpperCase()}
               </DialogTitle>
             </DialogHeader>
 
@@ -381,7 +381,7 @@ export default function OrdersPage() {
                       onClick={() => setSelectedOrder(order)}
                     >
                       <TableCell className="hidden sm:table-cell font-mono text-xs text-muted-foreground">
-                        #{order.id.slice(-6).toUpperCase()}
+                        #{(order.id ?? "").slice(-6).toUpperCase()}
                       </TableCell>
                       <TableCell className="font-medium whitespace-nowrap">
                         {order.clientName}
