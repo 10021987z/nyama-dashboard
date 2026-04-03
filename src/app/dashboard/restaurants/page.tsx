@@ -12,14 +12,16 @@ const LIMIT = 20;
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-function parseSpecialties(raw?: string): string[] {
+function parseSpecialties(raw: unknown): string[] {
   if (!raw) return [];
+  if (Array.isArray(raw)) return raw.map(String);
+  if (typeof raw !== "string") return [String(raw)];
   try {
-    const p = JSON.parse(raw);
-    if (Array.isArray(p)) return p.map(String);
-    return [String(p)];
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed.map(String);
+    return [String(parsed)];
   } catch {
-    return raw.split(",").map((s) => s.trim()).filter(Boolean);
+    return raw.split(",").map((s: string) => s.trim()).filter(Boolean);
   }
 }
 
