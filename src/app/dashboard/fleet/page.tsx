@@ -6,6 +6,7 @@ import type { FleetRider, FleetResponse, RiderStatus } from "@/lib/types";
 import { formatFcfaCompact, formatDate } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
+import { useLanguage } from "@/hooks/use-language";
 import {
   Bike, Star, TrendingUp, Search, ChevronLeft, ChevronRight, MapPin,
 } from "lucide-react";
@@ -14,7 +15,10 @@ const LIMIT = 20;
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-function riderStatusConfig(rider: FleetRider): {
+function riderStatusConfig(
+  rider: FleetRider,
+  t: (key: string) => string,
+): {
   label: string;
   dotColor: string;
   bg: string;
@@ -23,12 +27,12 @@ function riderStatusConfig(rider: FleetRider): {
   const status: RiderStatus = rider.status ?? (rider.isOnline ? "online" : "offline");
   switch (status) {
     case "online":
-      return { label: "En ligne", dotColor: "#16a34a", bg: "#dcfce7", textColor: "#166534" };
+      return { label: t("fleet.statusOnline"), dotColor: "#16a34a", bg: "#dcfce7", textColor: "#166534" };
     case "delivering":
-      return { label: "En livraison", dotColor: "#a03c00", bg: "#fdf3ee", textColor: "#a03c00" };
+      return { label: t("fleet.statusDelivering"), dotColor: "#a03c00", bg: "#fdf3ee", textColor: "#a03c00" };
     case "offline":
     default:
-      return { label: "Hors ligne", dotColor: "#9ca3af", bg: "#f3f4f6", textColor: "#6b7280" };
+      return { label: t("fleet.statusOffline"), dotColor: "#9ca3af", bg: "#f3f4f6", textColor: "#6b7280" };
   }
 }
 
@@ -47,7 +51,8 @@ function avatarBg(id?: string | null): string {
 // ── RiderCard ──────────────────────────────────────────────────────────────────
 
 function RiderCard({ rider }: { rider: FleetRider }) {
-  const cfg = riderStatusConfig(rider);
+  const { t } = useLanguage();
+  const cfg = riderStatusConfig(rider, t);
   const bg = avatarBg(rider.id);
   const ratingPct = Math.min(100, ((rider.avgRating ?? 0) / 5) * 100);
 
@@ -138,19 +143,19 @@ function RiderCard({ rider }: { rider: FleetRider }) {
           <p className="text-xs font-bold" style={{ color: "#1b1c1a" }}>
             {(rider.totalTrips ?? 0).toLocaleString("fr-FR")}
           </p>
-          <p className="text-[10px]" style={{ color: "#7c7570" }}>Courses</p>
+          <p className="text-[10px]" style={{ color: "#7c7570" }}>{t("fleet.deliveries")}</p>
         </div>
         <div>
           <p className="text-xs font-bold" style={{ color: "#1b1c1a" }}>
             {formatFcfaCompact(rider.totalEarnings)}
           </p>
-          <p className="text-[10px]" style={{ color: "#7c7570" }}>Gains</p>
+          <p className="text-[10px]" style={{ color: "#7c7570" }}>{t("fleet.earnings")}</p>
         </div>
       </div>
 
       {/* Inscrit le */}
       <p className="text-[10px]" style={{ color: "#b8b3ad" }}>
-        Inscrit le {formatDate(rider.createdAt)}
+        {t("fleet.registeredAt")} {formatDate(rider.createdAt)}
       </p>
     </div>
   );
@@ -185,6 +190,7 @@ function SummaryBanner({
   data: FleetResponse | null;
   loading: boolean;
 }) {
+  const { t } = useLanguage();
   const total = data?.total ?? 0;
   const online = data?.online ?? data?.data.filter((r) => r.isOnline).length ?? 0;
   const delivering =
@@ -197,17 +203,17 @@ function SummaryBanner({
     0;
 
   const stats = [
-    { label: "Total livreurs", value: total, dot: null },
-    { label: "En ligne", value: online, dot: "#16a34a" },
-    { label: "En livraison", value: delivering, dot: "#a03c00" },
-    { label: "Hors ligne", value: offline, dot: "#9ca3af" },
+    { key: "total", label: t("fleet.totalRiders"), value: total, dot: null },
+    { key: "online", label: t("fleet.onlineRiders"), value: online, dot: "#16a34a" },
+    { key: "delivering", label: t("fleet.occupancy"), value: delivering, dot: "#a03c00" },
+    { key: "offline", label: t("fleet.avgRevenue"), value: offline, dot: "#9ca3af" },
   ];
 
   return (
     <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-      {stats.map(({ label, value, dot }) => (
+      {stats.map(({ key, label, value, dot }) => (
         <div
-          key={label}
+          key={key}
           className="rounded-2xl p-4 flex items-center gap-3"
           style={{
             backgroundColor: "#ffffff",
@@ -216,7 +222,7 @@ function SummaryBanner({
         >
           {dot && (
             <span className="relative flex h-3 w-3 shrink-0">
-              {label === "En livraison" && (
+              {key === "delivering" && (
                 <span
                   className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60"
                   style={{ backgroundColor: dot }}
@@ -261,6 +267,7 @@ function SummaryBanner({
 // ── Main page ──────────────────────────────────────────────────────────────────
 
 export default function FleetPage() {
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -270,8 +277,8 @@ export default function FleetPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search), 300);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
   }, [search]);
 
   const fetchFleet = useCallback(async () => {
@@ -306,10 +313,10 @@ export default function FleetPage() {
           className="text-[1.8rem] font-semibold italic leading-tight"
           style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
         >
-          Gestion de la Flotte
+          {t("fleet.title")}
         </h1>
         <p className="mt-1 text-sm" style={{ color: "#7c7570" }}>
-          Livreurs actifs et tracking en temps réel
+          {t("fleet.subtitle")}
         </p>
       </div>
 
@@ -330,7 +337,7 @@ export default function FleetPage() {
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            placeholder="Rechercher un livreur..."
+            placeholder={t("fleet.searchPlaceholder")}
             className="flex-1 bg-transparent text-sm outline-none"
             style={{ color: "#1b1c1a" }}
           />
@@ -342,10 +349,10 @@ export default function FleetPage() {
           style={{ backgroundColor: "#f5f3ef" }}
         >
           {[
-            { value: "", label: "Tous" },
-            { value: "online", label: "En ligne" },
-            { value: "delivering", label: "En livraison" },
-            { value: "offline", label: "Hors ligne" },
+            { value: "", label: t("fleet.all") },
+            { value: "online", label: t("fleet.available") },
+            { value: "delivering", label: t("fleet.delivering") },
+            { value: "offline", label: t("fleet.offline") },
           ].map((opt) => (
             <button
               key={opt.value}
@@ -376,7 +383,7 @@ export default function FleetPage() {
         <div className="flex flex-col items-center justify-center py-20 gap-3">
           <Bike className="h-10 w-10" style={{ color: "#e8e4de" }} />
           <p className="text-sm" style={{ color: "#7c7570" }}>
-            Aucun livreur trouvé
+            {t("fleet.noRider")}
           </p>
         </div>
       ) : (
@@ -391,7 +398,7 @@ export default function FleetPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">
               <p className="text-sm" style={{ color: "#7c7570" }}>
-                Page {page} sur {totalPages} &bull;{" "}
+                {t("common.page")} {page} {t("common.of")} {totalPages} &bull;{" "}
                 <span className="font-medium" style={{ color: "#1b1c1a" }}>
                   {data?.total.toLocaleString("fr-FR")} livreurs
                 </span>
@@ -404,7 +411,7 @@ export default function FleetPage() {
                   style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
-                  Précédent
+                  {t("common.previous")}
                 </button>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
@@ -415,7 +422,7 @@ export default function FleetPage() {
                     color: page >= totalPages ? "#7c7570" : "#fff",
                   }}
                 >
-                  Suivant
+                  {t("common.next")}
                   <ChevronRight className="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -436,18 +443,18 @@ export default function FleetPage() {
               className="text-sm font-semibold"
               style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#ffffff" }}
             >
-              Performance de la flotte
+              {t("fleet.fleetPerformance")}
             </p>
             <p className="text-xs mt-1 leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
-              Note moyenne de la flotte :{" "}
+              {t("fleet.avgFleetRating")}{" "}
               <span className="font-bold text-white">
                 {(data.data.reduce((a, r) => a + (r.avgRating ?? 0), 0) / data.data.length).toFixed(1)}/5
               </span>
-              {" · "}Gains totaux cumulés :{" "}
+              {" · "}{t("fleet.totalEarnings")}{" "}
               <span className="font-bold text-white">
                 {formatFcfaCompact(data.data.reduce((a, r) => a + (r.totalEarnings ?? 0), 0))}
               </span>
-              {" · "}Courses totales :{" "}
+              {" · "}{t("fleet.totalTrips")}{" "}
               <span className="font-bold text-white">
                 {data.data.reduce((a, r) => a + (r.totalTrips ?? 0), 0).toLocaleString("fr-FR")}
               </span>
@@ -461,7 +468,7 @@ export default function FleetPage() {
         className="text-center text-[10px] font-medium tracking-[0.12em] uppercase pt-2"
         style={{ color: "#b8b3ad" }}
       >
-        NYAMA TECH SYSTEMS &copy; 2026 &bull; PROPULSION DE L&apos;EXCELLENCE CULINAIRE CAMEROUNAISE
+        {t("footer")}
       </p>
     </div>
   );

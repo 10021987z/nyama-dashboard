@@ -15,17 +15,18 @@ import {
   Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/hooks/use-language";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", icon: BarChart3, label: "Dashboard" },
-  { href: "/dashboard/restaurants", icon: UtensilsCrossed, label: "Restaurants" },
-  { href: "/dashboard/orders", icon: Package, label: "Commandes" },
-  { href: "/dashboard/deliveries", icon: Truck, label: "Deliveries" },
-  { href: "/dashboard/fleet", icon: Bike, label: "Fleet" },
-  { href: "/dashboard/customers", icon: Users, label: "Customers" },
-  { href: "/dashboard/marketing", icon: Megaphone, label: "Marketing" },
-  { href: "/dashboard/support", icon: MessageSquare, label: "Support" },
-  { href: "/dashboard/settings", icon: Settings, label: "Settings" },
+  { href: "/dashboard", icon: BarChart3, labelKey: "nav.dashboard" },
+  { href: "/dashboard/restaurants", icon: UtensilsCrossed, labelKey: "nav.restaurants" },
+  { href: "/dashboard/orders", icon: Package, labelKey: "nav.orders" },
+  { href: "/dashboard/deliveries", icon: Truck, labelKey: "nav.deliveries" },
+  { href: "/dashboard/fleet", icon: Bike, labelKey: "nav.fleet" },
+  { href: "/dashboard/customers", icon: Users, labelKey: "nav.customers" },
+  { href: "/dashboard/marketing", icon: Megaphone, labelKey: "nav.marketing" },
+  { href: "/dashboard/support", icon: MessageSquare, labelKey: "nav.support" },
+  { href: "/dashboard/settings", icon: Settings, labelKey: "nav.settings" },
 ];
 
 interface SidebarProps {
@@ -34,6 +35,7 @@ interface SidebarProps {
 
 export function Sidebar({ onNavigate }: SidebarProps) {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
@@ -71,7 +73,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
+        {NAV_ITEMS.map(({ href, icon: Icon, labelKey }) => {
           const active = isActive(href);
           return (
             <Link
@@ -102,7 +104,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                 strokeWidth={active ? 2.5 : 2}
                 style={{ color: active ? "#a03c00" : "#7c7570" }}
               />
-              {label}
+              {t(labelKey)}
             </Link>
           );
         })}
@@ -120,7 +122,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           }}
         >
           <Download className="h-3.5 w-3.5" />
-          Export Report
+          {t("nav.exportReport")}
         </button>
 
         <div className="flex items-center gap-2.5 px-1">

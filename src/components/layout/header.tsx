@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search, Settings, Menu } from "lucide-react";
+import { Bell, Search, Settings, Menu, Globe } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +9,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { logout } from "@/lib/auth";
+import { useLanguage } from "@/hooks/use-language";
 import type { AuthUser } from "@/lib/types";
+import type { Locale } from "@/lib/i18n";
+
+const LANG_OPTIONS: { value: Locale; label: string; flag: string }[] = [
+  { value: "fr", label: "FR", flag: "\uD83C\uDDEB\uD83C\uDDF7" },
+  { value: "en", label: "EN", flag: "\uD83C\uDDEC\uD83C\uDDE7" },
+  { value: "pidgin", label: "PID", flag: "\uD83C\uDDE8\uD83C\uDDF2" },
+];
 
 interface HeaderProps {
   user: AuthUser | null;
@@ -17,6 +25,8 @@ interface HeaderProps {
 }
 
 export function Header({ user, onMenuClick }: HeaderProps) {
+  const { locale, setLocale, t } = useLanguage();
+
   return (
     <header
       className="flex h-14 items-center gap-4 px-4 lg:px-6"
@@ -40,13 +50,38 @@ export function Header({ user, onMenuClick }: HeaderProps) {
         >
           <Search className="h-3.5 w-3.5 shrink-0" style={{ color: "#7c7570" }} />
           <span className="text-sm" style={{ color: "#7c7570" }}>
-            Rechercher des données...
+            {t("common.search")}
           </span>
         </div>
       </div>
 
       {/* Right actions */}
       <div className="ml-auto flex items-center gap-2">
+        {/* Language selector */}
+        <DropdownMenu>
+          <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 transition-colors hover:bg-[#f5f3ef] outline-none">
+            <Globe className="h-4 w-4" style={{ color: "#7c7570" }} />
+            <span className="text-xs font-semibold" style={{ color: "#1b1c1a" }}>
+              {LANG_OPTIONS.find((l) => l.value === locale)?.flag}{" "}
+              {LANG_OPTIONS.find((l) => l.value === locale)?.label}
+            </span>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-36">
+            {LANG_OPTIONS.map((lang) => (
+              <DropdownMenuItem
+                key={lang.value}
+                className="text-xs gap-2 cursor-pointer"
+                onClick={() => setLocale(lang.value)}
+              >
+                <span>{lang.flag}</span>
+                <span className={locale === lang.value ? "font-bold" : ""}>
+                  {lang.label}
+                </span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         {/* Notifications */}
         <button
           className="relative flex items-center justify-center rounded-xl p-2 transition-colors hover:bg-[#f5f3ef]"
@@ -62,7 +97,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
         {/* Settings shortcut */}
         <button
           className="hidden sm:flex items-center justify-center rounded-xl p-2 transition-colors hover:bg-[#f5f3ef]"
-          aria-label="Paramètres"
+          aria-label={t("nav.settings")}
         >
           <Settings className="h-5 w-5" style={{ color: "#7c7570" }} />
         </button>
@@ -94,7 +129,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
               className="text-red-600 focus:text-red-600 text-xs"
               onClick={() => logout()}
             >
-              Déconnexion
+              {t("common.logout")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

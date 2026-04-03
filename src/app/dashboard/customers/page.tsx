@@ -6,6 +6,7 @@ import type { Customer, CustomersResponse } from "@/lib/types";
 import { formatFcfa, formatDate, formatRelative } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
+import { useLanguage } from "@/hooks/use-language";
 import {
   Users, Zap, UserPlus, ShieldCheck, Search, RotateCcw,
   ChevronLeft, ChevronRight, Eye, Pencil, Download,
@@ -103,6 +104,7 @@ function StatCard({
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export default function CustomersPage() {
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [quarterFilter, setQuarterFilter] = useState("");
@@ -113,8 +115,8 @@ export default function CustomersPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search), 300);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
   }, [search]);
 
   const fetchCustomers = useCallback(async () => {
@@ -155,10 +157,10 @@ export default function CustomersPage() {
             className="text-[2rem] font-semibold italic leading-tight"
             style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
           >
-            Gestion des Clients
+            {t("customers.title")}
           </h1>
           <p className="mt-1 text-sm" style={{ color: "#7c7570" }}>
-            {stats ? `${stats.totalClients.toLocaleString("fr-FR")} clients enregistrés dans l'écosystème Savor Cameroon` : "Chargement..."}
+            {stats ? `${stats.totalClients.toLocaleString("fr-FR")} ${t("customers.subtitle")}` : "Chargement..."}
           </p>
         </div>
         <button
@@ -166,7 +168,7 @@ export default function CustomersPage() {
           style={{ border: "1.5px solid #a03c00", color: "#a03c00", backgroundColor: "transparent" }}
         >
           <Download className="h-4 w-4" />
-          Exporter la liste
+          {t("customers.exportList")}
         </button>
       </div>
 
@@ -174,7 +176,7 @@ export default function CustomersPage() {
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={<Users className="h-5 w-5" style={{ color: "#a03c00" }} />}
-          label="Total Clients"
+          label={t("customers.totalClients")}
           value={stats?.totalClients.toLocaleString("fr-FR") ?? "—"}
           badge="+8%"
           badgeColor="#dcfce7"
@@ -182,7 +184,7 @@ export default function CustomersPage() {
         />
         <StatCard
           icon={<Zap className="h-5 w-5" style={{ color: "#b45309" }} />}
-          label="Clients Actifs (30j)"
+          label={t("customers.activeClients")}
           value={stats?.activeClients30d.toLocaleString("fr-FR") ?? "—"}
           loading={loading}
           sub={
@@ -206,15 +208,15 @@ export default function CustomersPage() {
         />
         <StatCard
           icon={<UserPlus className="h-5 w-5" style={{ color: "#2c694e" }} />}
-          label="Nouveaux ce Mois"
+          label={t("customers.newThisMonth")}
           value={stats?.newClientsThisMonth.toLocaleString("fr-FR") ?? "—"}
           loading={loading}
         />
         <StatCard
           icon={<ShieldCheck className="h-5 w-5" style={{ color: "#2563eb" }} />}
-          label="Taux de Rétention"
+          label={t("customers.retention")}
           value={stats ? `${stats.retentionRate}%` : "—"}
-          badge={stats ? (stats.retentionRate > 70 ? "Performant" : "À améliorer") : undefined}
+          badge={stats ? (stats.retentionRate > 70 ? t("customers.performing") : t("customers.toImprove")) : undefined}
           badgeColor={stats && stats.retentionRate > 70 ? "#dcfce7" : "#ffedd5"}
           loading={loading}
         />
@@ -234,7 +236,7 @@ export default function CustomersPage() {
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            placeholder="Rechercher par nom ou téléphone..."
+            placeholder={t("customers.searchPlaceholder")}
             className="flex-1 bg-transparent text-sm outline-none"
             style={{ color: "#1b1c1a" }}
           />
@@ -246,7 +248,7 @@ export default function CustomersPage() {
           className="rounded-full px-4 py-2 text-sm outline-none cursor-pointer"
           style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
         >
-          <option value="">Tous les Quartiers</option>
+          <option value="">{t("customers.allQuarters")}</option>
           {quarters.map((q) => (
             <option key={q} value={q}>{q}</option>
           ))}
@@ -258,9 +260,9 @@ export default function CustomersPage() {
           className="rounded-full px-4 py-2 text-sm outline-none cursor-pointer"
           style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
         >
-          <option value="">Statut: Tous</option>
-          <option value="ACTIF">Actif</option>
-          <option value="INACTIF">Inactif</option>
+          <option value="">{t("customers.allStatus")}</option>
+          <option value="ACTIF">{t("customers.activeFilter")}</option>
+          <option value="INACTIF">{t("customers.inactiveFilter")}</option>
         </select>
 
         <button
@@ -269,7 +271,7 @@ export default function CustomersPage() {
           style={{ backgroundColor: "#f5f3ef", color: "#7c7570" }}
         >
           <RotateCcw className="h-3.5 w-3.5" />
-          Réinitialiser
+          {t("common.reset")}
         </button>
       </div>
 
@@ -292,14 +294,14 @@ export default function CustomersPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ backgroundColor: "#fbf9f5" }}>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>Client</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden md:table-cell" style={{ color: "#7c7570" }}>Quartier</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden lg:table-cell" style={{ color: "#7c7570" }}>Inscrit le</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>Commandes</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>Total dépensé</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden sm:table-cell" style={{ color: "#7c7570" }}>Dernière commande</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("customers.name")}</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden md:table-cell" style={{ color: "#7c7570" }}>{t("customers.quarter")}</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden lg:table-cell" style={{ color: "#7c7570" }}>{t("customers.registeredAt")}</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("customers.totalOrders")}</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("customers.totalSpent")}</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden sm:table-cell" style={{ color: "#7c7570" }}>{t("customers.lastOrder")}</th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>Statut</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>Actions</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("customers.actions")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -307,7 +309,7 @@ export default function CustomersPage() {
                     <tr>
                       <td colSpan={8} className="px-4 py-16 text-center">
                         <Users className="h-8 w-8 mx-auto mb-2" style={{ color: "#e8e4de" }} />
-                        <p className="text-sm" style={{ color: "#7c7570" }}>Aucun client trouvé</p>
+                        <p className="text-sm" style={{ color: "#7c7570" }}>{t("customers.noClient")}</p>
                       </td>
                     </tr>
                   ) : (
@@ -389,7 +391,7 @@ export default function CustomersPage() {
                 style={{ borderTop: "1px solid #f5f3ef" }}
               >
                 <p className="text-sm" style={{ color: "#7c7570" }}>
-                  Page {page} / {totalPages} &bull;{" "}
+                  {t("common.page")} {page} / {totalPages} &bull;{" "}
                   <span className="font-medium" style={{ color: "#1b1c1a" }}>
                     {data?.total.toLocaleString("fr-FR")} clients
                   </span>
@@ -449,7 +451,7 @@ export default function CustomersPage() {
         className="text-center text-[10px] font-medium tracking-[0.12em] uppercase pt-2"
         style={{ color: "#b8b3ad" }}
       >
-        NYAMA TECH SYSTEMS &copy; 2026 &bull; PROPULSION DE L&apos;EXCELLENCE CULINAIRE CAMEROUNAISE
+        {t("footer")}
       </p>
     </div>
   );

@@ -14,16 +14,11 @@ import {
   TrendingUp, Banknote, ShoppingCart, Target, Download,
   ArrowUpRight, ArrowDownRight, ShoppingBag, ChevronRight,
 } from "lucide-react";
+import { useLanguage } from "@/hooks/use-language";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 type Period = "7d" | "30d" | "year";
-
-const PERIOD_LABELS: { value: Period; label: string }[] = [
-  { value: "7d", label: "7 jours" },
-  { value: "30d", label: "30 jours" },
-  { value: "year", label: "Année" },
-];
 
 const PAYMENT_COLORS: Record<string, string> = {
   ORANGE_MONEY: "#FF6600",
@@ -123,10 +118,17 @@ function StatCard({
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export default function AnalyticsPage() {
+  const { t } = useLanguage();
   const [period, setPeriod] = useState<Period>("30d");
   const [data, setData] = useState<RevenueAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const PERIOD_LABELS: { value: Period; label: string }[] = [
+    { value: "7d", label: t("common.week") },
+    { value: "30d", label: t("common.month") },
+    { value: "year", label: t("common.year") },
+  ];
 
   const fetchRevenue = useCallback(async () => {
     setLoading(true);
@@ -162,10 +164,10 @@ export default function AnalyticsPage() {
             className="text-[2rem] font-semibold italic leading-tight"
             style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
           >
-            Analyse des Revenus
+            {t("analytics.title")}
           </h1>
           <p className="mt-1 text-sm" style={{ color: "#7c7570" }}>
-            Suivi financier et performance des ventes de la plateforme.
+            {t("analytics.subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -191,14 +193,14 @@ export default function AnalyticsPage() {
             style={{ border: "1.5px solid #e8e4de", color: "#7c7570" }}
           >
             <Download className="h-3.5 w-3.5" />
-            Export CSV
+            {t("analytics.exportCsv")}
           </button>
           <button
             className="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-white"
             style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
           >
             <Download className="h-3.5 w-3.5" />
-            Export PDF
+            {t("analytics.exportPdf")}
           </button>
         </div>
       </div>
@@ -209,28 +211,28 @@ export default function AnalyticsPage() {
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={<TrendingUp className="h-5 w-5" style={{ color: "#a03c00" }} />}
-          label="CA Total"
+          label={t("analytics.totalRevenue")}
           value={stats ? formatFcfa(stats.totalRevenueXaf) : "—"}
           trend={stats?.revenueTrend}
           loading={loading}
         />
         <StatCard
           icon={<Banknote className="h-5 w-5" style={{ color: "#2c694e" }} />}
-          label="Net Plateforme"
+          label={t("analytics.netPlatform")}
           value={stats ? formatFcfa(stats.netPlatformXaf) : "—"}
-          sub="Commission moyenne de 15%"
+          sub={t("analytics.avgCommission")}
           loading={loading}
         />
         <StatCard
           icon={<ShoppingCart className="h-5 w-5" style={{ color: "#b45309" }} />}
-          label="Volume Transactions"
+          label={t("analytics.transactions")}
           value={stats?.totalTransactions.toLocaleString("fr-FR") ?? "—"}
-          sub="Commandes finalisées"
+          sub={t("analytics.completedOrders")}
           loading={loading}
         />
         <StatCard
           icon={<Target className="h-5 w-5" style={{ color: "#2563eb" }} />}
-          label="Taux de Conversion"
+          label={t("analytics.conversionRate")}
           value={stats ? `${stats.conversionRate}%` : "—"}
           progress={stats?.conversionRate}
           loading={loading}
@@ -249,16 +251,16 @@ export default function AnalyticsPage() {
               className="text-lg font-semibold italic"
               style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
             >
-              Évolution des Revenus
+              {t("analytics.revenueEvolution")}
             </h2>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#a03c00" }} />
-                <span className="text-[10px] font-semibold" style={{ color: "#7c7570" }}>Revenu Brut</span>
+                <span className="text-[10px] font-semibold" style={{ color: "#7c7570" }}>{t("analytics.grossRevenue")}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#e8c4b0" }} />
-                <span className="text-[10px] font-semibold" style={{ color: "#7c7570" }}>Commission</span>
+                <span className="text-[10px] font-semibold" style={{ color: "#7c7570" }}>{t("analytics.commission")}</span>
               </div>
             </div>
           </div>
@@ -284,7 +286,7 @@ export default function AnalyticsPage() {
                   contentStyle={tooltipStyle}
                   formatter={(value, name) => [
                     formatFcfa(Number(value)),
-                    name === "grossXaf" ? "Revenu Brut" : "Commission",
+                    name === "grossXaf" ? t("analytics.grossRevenue") : t("analytics.commission"),
                   ]}
                 />
                 <Bar dataKey="grossXaf" stackId="a" fill="#a03c00" radius={[0, 0, 0, 0]} />
@@ -293,7 +295,7 @@ export default function AnalyticsPage() {
             </ResponsiveContainer>
           ) : (
             <div className="h-[260px] flex items-center justify-center">
-              <p className="text-sm" style={{ color: "#7c7570" }}>Aucune donnée de revenus</p>
+              <p className="text-sm" style={{ color: "#7c7570" }}>{t("analytics.noRevenueData")}</p>
             </div>
           )}
         </div>
@@ -307,7 +309,7 @@ export default function AnalyticsPage() {
             className="text-lg font-semibold italic mb-4"
             style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
           >
-            Paiement par Méthode
+            {t("analytics.paymentMethod")}
           </h2>
           {loading ? (
             <Skeleton className="h-[260px] rounded-xl" />
@@ -334,10 +336,10 @@ export default function AnalyticsPage() {
                   100%
                 </text>
                 <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-[10px]" fill="#b8b3ad">
-                  TOTAL
+                  {t("analytics.total")}
                 </text>
                 <Tooltip
-                  formatter={(value) => [`${value}%`, "Part"]}
+                  formatter={(value) => [`${value}%`, t("analytics.part")]}
                   contentStyle={tooltipStyle}
                 />
                 <Legend
@@ -354,7 +356,7 @@ export default function AnalyticsPage() {
             </ResponsiveContainer>
           ) : (
             <div className="h-[260px] flex items-center justify-center">
-              <p className="text-sm" style={{ color: "#7c7570" }}>Aucune donnée de paiement</p>
+              <p className="text-sm" style={{ color: "#7c7570" }}>{t("analytics.noPaymentData")}</p>
             </div>
           )}
         </div>
@@ -369,10 +371,10 @@ export default function AnalyticsPage() {
               className="text-lg font-semibold italic"
               style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
             >
-              Top Restaurants par Revenus
+              {t("analytics.topRestaurants")}
             </h2>
             <button className="text-xs font-semibold flex items-center gap-1" style={{ color: "#a03c00" }}>
-              Voir tout <ChevronRight className="h-3.5 w-3.5" />
+              {t("common.seeAll")} <ChevronRight className="h-3.5 w-3.5" />
             </button>
           </div>
           <div
@@ -391,10 +393,10 @@ export default function AnalyticsPage() {
                   <thead>
                     <tr style={{ backgroundColor: "#fbf9f5" }}>
                       <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>Restaurant</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden md:table-cell" style={{ color: "#7c7570" }}>Quartier</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>Commandes</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>Revenus</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden lg:table-cell" style={{ color: "#7c7570" }}>Commission</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden md:table-cell" style={{ color: "#7c7570" }}>{t("analytics.quarterCol")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("analytics.ordersCol")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("analytics.revenueCol")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden lg:table-cell" style={{ color: "#7c7570" }}>{t("analytics.commissionCol")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -423,7 +425,7 @@ export default function AnalyticsPage() {
             ) : (
               <div className="p-8 flex flex-col items-center">
                 <ShoppingBag className="h-8 w-8 mb-2" style={{ color: "#e8e4de" }} />
-                <p className="text-sm" style={{ color: "#7c7570" }}>Aucun restaurant</p>
+                <p className="text-sm" style={{ color: "#7c7570" }}>{t("analytics.noRestaurant")}</p>
               </div>
             )}
           </div>
@@ -435,7 +437,7 @@ export default function AnalyticsPage() {
             className="text-lg font-semibold italic"
             style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
           >
-            Analyse Hebdomadaire
+            {t("analytics.weeklyAnalysis")}
           </h2>
 
           {/* Insight card */}
@@ -444,23 +446,23 @@ export default function AnalyticsPage() {
             style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
           >
             <p className="text-sm leading-relaxed text-white/90">
-              Les weekends à Akwa affichent la croissance la plus élevée{" "}
-              <span className="font-bold text-white">(+22%)</span> ce mois-ci.
+              {t("analytics.insightText")}{" "}
+              <span className="font-bold text-white">(+22%)</span> {t("analytics.insightMonth")}
             </p>
             <div
               className="rounded-xl p-3"
               style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
             >
               <p className="text-xs text-white/80 leading-relaxed">
-                <span className="font-bold text-white">Recommandation :</span>{" "}
-                Augmenter la visibilité des restaurants de ce secteur entre 18h et 21h les vendredis.
+                <span className="font-bold text-white">{t("analytics.recommendation")}</span>{" "}
+                {t("analytics.recommendationText")}
               </p>
             </div>
             <a
               href="#"
               className="inline-block text-xs font-semibold text-white underline underline-offset-2"
             >
-              Voir les détails de l&apos;insight &rarr;
+              {t("analytics.insightDetailLink")} &rarr;
             </a>
           </div>
 
@@ -477,7 +479,7 @@ export default function AnalyticsPage() {
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.6)" }}>
-                Panier Moyen
+                {t("analytics.avgBasket")}
               </p>
               {loading ? (
                 <Skeleton className="h-8 w-28 mt-1" />
@@ -499,7 +501,7 @@ export default function AnalyticsPage() {
         className="text-center text-[10px] font-medium tracking-[0.12em] uppercase pt-2"
         style={{ color: "#b8b3ad" }}
       >
-        NYAMA TECH SYSTEMS &copy; 2026 &bull; PROPULSION DE L&apos;EXCELLENCE CULINAIRE CAMEROUNAISE
+        {t("footer")}
       </p>
     </div>
   );

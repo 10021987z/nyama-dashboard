@@ -15,6 +15,7 @@ import type { DashboardData } from "@/lib/types";
 import { formatFcfa, formatFcfaCompact } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
+import { useLanguage } from "@/hooks/use-language";
 import {
   ShoppingBag,
   Package,
@@ -31,7 +32,7 @@ import {
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
-const PERIODS = ["Aujourd'hui", "7 jours", "30 jours"] as const;
+const PERIOD_KEYS = ["today", "week", "month"] as const;
 
 function PeriodFilter({
   selected,
@@ -40,18 +41,26 @@ function PeriodFilter({
   selected: string;
   onChange: (v: string) => void;
 }) {
+  const { t } = useLanguage();
+
+  const periodLabels: Record<string, string> = {
+    today: t("common.today"),
+    week: t("common.week"),
+    month: t("common.month"),
+  };
+
   return (
     <div
       className="flex items-center gap-1 rounded-full p-1"
       style={{ backgroundColor: "#f5f3ef" }}
     >
-      {PERIODS.map((p) => (
+      {PERIOD_KEYS.map((key) => (
         <button
-          key={p}
-          onClick={() => onChange(p)}
+          key={key}
+          onClick={() => onChange(key)}
           className="rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all"
           style={
-            selected === p
+            selected === key
               ? {
                   background: "linear-gradient(135deg, #a03c00, #c94d00)",
                   color: "#fff",
@@ -59,7 +68,7 @@ function PeriodFilter({
               : { color: "#7c7570" }
           }
         >
-          {p}
+          {periodLabels[key]}
         </button>
       ))}
     </div>
@@ -67,6 +76,7 @@ function PeriodFilter({
 }
 
 function AlertBanner({ data }: { data: DashboardData | null }) {
+  const { t } = useLanguage();
   const rate = data?.paymentSuccessRate ?? 0;
   return (
     <div
@@ -75,14 +85,14 @@ function AlertBanner({ data }: { data: DashboardData | null }) {
     >
       <CheckCircle className="h-5 w-5 shrink-0" style={{ color: "#2c694e" }} />
       <p className="flex-1 text-sm font-medium" style={{ color: "#1b4d38" }}>
-        Alertes Opérations : Le taux de succès des paiements est actuellement
-        à {rate > 0 ? `${rate}%` : "un niveau record"}.
+        {t("dashboard.alertOps")} {t("dashboard.alertMessage")}{" "}
+        {rate > 0 ? `${rate}%` : t("dashboard.atRecordLevel")}.
       </p>
       <span
         className="shrink-0 rounded-full px-3 py-0.5 text-xs font-bold text-white"
         style={{ backgroundColor: "#2c694e" }}
       >
-        NORMAL
+        {t("dashboard.alertNormal")}
       </span>
     </div>
   );
@@ -99,79 +109,79 @@ interface KpiDef {
   featured?: boolean;
 }
 
-function buildKpis(d: DashboardData): KpiDef[] {
+function buildKpis(d: DashboardData, t: (key: string) => string): KpiDef[] {
   const ordersTrend = d.ordersTrend ?? 0;
   const revenueTrend = d.revenueTrend ?? 0;
 
   return [
     {
-      title: "COMMANDES AUJOURD'HUI",
+      title: t("dashboard.ordersToday").toUpperCase(),
       value: (d.ordersToday ?? 0).toLocaleString("fr-FR"),
       trend: ordersTrend !== 0
         ? { label: `${ordersTrend >= 0 ? "+" : ""}${ordersTrend}%`, positive: ordersTrend >= 0 }
         : "stable",
-      subtext: "VS WEEK-1",
+      subtext: t("dashboard.vsWeek"),
       icon: ShoppingBag,
       iconColor: "#f97316",
       iconBg: "#fff7ed",
     },
     {
-      title: "COMMANDES SEMAINE",
+      title: t("dashboard.ordersWeek").toUpperCase(),
       value: (d.ordersThisWeek ?? 0).toLocaleString("fr-FR"),
-      subtext: "CETTE SEMAINE",
+      subtext: t("dashboard.thisWeek"),
       icon: Package,
       iconColor: "#2c694e",
       iconBg: "#f0fdf4",
     },
     {
-      title: "CA DU JOUR",
+      title: t("dashboard.revenueToday").toUpperCase(),
       value: formatFcfa(d.revenueToday ?? 0),
       trend: revenueTrend !== 0
         ? { label: `${revenueTrend >= 0 ? "+" : ""}${revenueTrend}%`, positive: revenueTrend >= 0 }
         : "stable",
-      subtext: "VS VEILLE",
+      subtext: t("dashboard.vsYesterday"),
       icon: TrendingUp,
       iconColor: revenueTrend >= 0 ? "#16a34a" : "#ef4444",
       iconBg: revenueTrend >= 0 ? "#f0fdf4" : "#fff1f2",
     },
     {
-      title: "CA CUMULÉ DU MOIS",
+      title: t("dashboard.revenueMonth").toUpperCase(),
       value: formatFcfaCompact(d.revenueThisMonth ?? 0),
-      subtext: "PROJECTION MENSUELLE",
+      subtext: t("dashboard.monthProjection"),
       icon: CreditCard,
       iconColor: "#ffffff",
       iconBg: "rgba(255,255,255,0.15)",
       featured: true,
     },
     {
-      title: "UTILISATEURS",
+      title: t("dashboard.users").toUpperCase(),
       value: (d.totalUsers ?? 0).toLocaleString("fr-FR"),
-      subtext: "TOTAL INSCRITS",
+      subtext: t("dashboard.totalRegistered"),
       icon: Users,
       iconColor: "#2563eb",
       iconBg: "#eff6ff",
     },
     {
-      title: "CUISINIÈRES ACTIVES",
+      title: t("dashboard.activeCooks").toUpperCase(),
       value: String(d.totalCooks ?? 0),
-      subtext: "PARTENAIRES",
+      subtext: t("dashboard.partners"),
       icon: ChefHat,
       iconColor: "#2c694e",
       iconBg: "#f0fdf4",
     },
     {
-      title: "PANIER MOYEN",
+      title: t("dashboard.avgBasket").toUpperCase(),
       value: formatFcfa(d.avgBasketXaf ?? 0),
       trend: "stable",
-      subtext: "VS SEMAINE DERNIÈRE",
+      subtext: t("dashboard.vsLastWeek"),
       icon: ShoppingBag,
       iconColor: "#b45309",
       iconBg: "#fef3c7",
     },
     {
-      title: "SUCCÈS PAIEMENT",
+      title: t("dashboard.paymentSuccess").toUpperCase(),
       value: `${d.paymentSuccessRate ?? 0}%`,
-      subtext: "MOBILE MONEY CAMEROON",
+      subtext: t("dashboard.mobileMoney"),
       icon: CheckCircle,
       iconColor: "#16a34a",
       iconBg: "#f0fdf4",
@@ -268,6 +278,8 @@ const tooltipStyle = {
 };
 
 function VolumeChart({ data }: { data: DashboardData["hourlyOrders"] }) {
+  const { t } = useLanguage();
+
   return (
     <div
       className="rounded-2xl p-5"
@@ -278,7 +290,7 @@ function VolumeChart({ data }: { data: DashboardData["hourlyOrders"] }) {
           className="text-lg font-semibold"
           style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
         >
-          Volume des Commandes
+          {t("dashboard.volumeTitle")}
         </h2>
         <div className="flex items-center gap-1.5">
           <span className="relative flex h-2 w-2">
@@ -286,7 +298,7 @@ function VolumeChart({ data }: { data: DashboardData["hourlyOrders"] }) {
             <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: "#2c694e" }} />
           </span>
           <span className="text-[10px] font-bold tracking-wider" style={{ color: "#2c694e" }}>
-            LIVE UPDATES
+            {t("dashboard.liveUpdates")}
           </span>
         </div>
       </div>
@@ -306,7 +318,7 @@ function VolumeChart({ data }: { data: DashboardData["hourlyOrders"] }) {
           <Tooltip
             cursor={{ fill: "rgba(160,60,0,0.04)" }}
             contentStyle={tooltipStyle}
-            formatter={(value) => [Number(value), "Commandes"]}
+            formatter={(value) => [Number(value), t("dashboard.ordersLabel")]}
           />
           <Bar dataKey="count" radius={[6, 6, 0, 0]}>
             {data.map((entry, i) => (
@@ -329,6 +341,8 @@ function VolumeChart({ data }: { data: DashboardData["hourlyOrders"] }) {
 }
 
 function QuartierChart({ data }: { data: DashboardData["revenueByQuarter"] }) {
+  const { t } = useLanguage();
+
   return (
     <div
       className="rounded-2xl p-5 flex flex-col"
@@ -338,7 +352,7 @@ function QuartierChart({ data }: { data: DashboardData["revenueByQuarter"] }) {
         className="text-lg font-semibold mb-4"
         style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
       >
-        Revenus par Quartier
+        {t("dashboard.revenueByQuarter")}
       </h2>
       <ResponsiveContainer width="100%" height={160}>
         <BarChart
@@ -364,7 +378,7 @@ function QuartierChart({ data }: { data: DashboardData["revenueByQuarter"] }) {
           <Tooltip
             cursor={{ fill: "rgba(160,60,0,0.04)" }}
             contentStyle={tooltipStyle}
-            formatter={(v) => [`${v}M FCFA`, "Revenus"]}
+            formatter={(v) => [`${v}M FCFA`, t("dashboard.revenueLabel")]}
           />
           <Bar dataKey="revenueM" fill="#a03c00" radius={[0, 6, 6, 0]} />
         </BarChart>
@@ -379,12 +393,12 @@ function QuartierChart({ data }: { data: DashboardData["revenueByQuarter"] }) {
           <Zap className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "rgba(255,255,255,0.8)" }} />
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-white/60 mb-1">
-              INSIGHT IA
+              {t("dashboard.insightAI")}
             </p>
             <p className="text-xs text-white leading-relaxed">
               {data.length > 0
-                ? `${data[0].quarter} génère le plus de CA. Augmenter la flotte dans cette zone pourrait booster les revenus de 15%.`
-                : "Analyse en cours..."}
+                ? t("dashboard.insightText").replace("{quarter}", data[0].quarter)
+                : t("dashboard.analysisInProgress")}
             </p>
           </div>
         </div>
@@ -394,6 +408,8 @@ function QuartierChart({ data }: { data: DashboardData["revenueByQuarter"] }) {
 }
 
 function DeliveryDensity() {
+  const { t } = useLanguage();
+
   return (
     <div
       className="relative rounded-2xl overflow-hidden p-8 min-h-[200px]"
@@ -415,25 +431,24 @@ function DeliveryDensity() {
         <div className="flex items-center gap-2 mb-2">
           <Activity className="h-4 w-4" style={{ color: "#a03c00" }} />
           <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.5)" }}>
-            Temps réel
+            {t("dashboard.realtime")}
           </span>
         </div>
         <h2
           className="text-2xl font-semibold text-white mb-2"
           style={{ fontFamily: "var(--font-newsreader), Georgia, serif" }}
         >
-          Densité des Livraisons
+          {t("dashboard.deliveryDensity")}
         </h2>
         <p className="text-sm max-w-lg mb-5" style={{ color: "rgba(255,255,255,0.55)" }}>
-          Cartographie des zones de livraison actives à Douala et Yaoundé.
-          Les hotspots terracotta indiquent les quartiers à forte demande.
+          {t("dashboard.deliveryDensityDesc")}
         </p>
         <a
           href="#"
           className="inline-flex items-center gap-1.5 text-sm font-semibold transition-opacity hover:opacity-80"
           style={{ color: "#e8c4b0" }}
         >
-          Voir la carte détaillée →
+          {t("dashboard.seeDetailedMap")}
         </a>
       </div>
     </div>
@@ -443,7 +458,8 @@ function DeliveryDensity() {
 // ── Main page ──────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const [period, setPeriod] = useState<string>("Aujourd'hui");
+  const { t } = useLanguage();
+  const [period, setPeriod] = useState<string>("today");
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -465,7 +481,7 @@ export default function DashboardPage() {
     fetchDashboard();
   }, [fetchDashboard]);
 
-  const kpis = data ? buildKpis(data) : [];
+  const kpis = data ? buildKpis(data, t) : [];
 
   return (
     <div className="space-y-5 pb-8">
@@ -476,10 +492,10 @@ export default function DashboardPage() {
             className="text-[2rem] font-semibold italic leading-tight"
             style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
           >
-            Tableau de Bord Exécutif
+            {t("dashboard.title")}
           </h1>
           <p className="mt-1 text-sm" style={{ color: "#7c7570" }}>
-            Vue d&apos;ensemble des opérations Nyama &bull; Savor Cameroon
+            {t("dashboard.subtitle")}
           </p>
         </div>
         <PeriodFilter selected={period} onChange={setPeriod} />
@@ -527,7 +543,7 @@ export default function DashboardPage() {
         className="text-center text-[10px] font-medium tracking-[0.12em] uppercase pt-2"
         style={{ color: "#b8b3ad" }}
       >
-        NYAMA TECH SYSTEMS &copy; 2026 &bull; PROPULSION DE L&apos;EXCELLENCE CULINAIRE CAMEROUNAISE
+        {t("footer")}
       </p>
     </div>
   );

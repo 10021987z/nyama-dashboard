@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { apiClient } from "@/lib/api";
 import type { Order, OrdersResponse } from "@/lib/types";
 import { formatFcfa, formatDateTime, formatRelative, statusLabel, statusColor } from "@/lib/utils";
+import { useLanguage } from "@/hooks/use-language";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -31,16 +32,6 @@ import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
 import { ChevronLeft, ChevronRight, Filter, RotateCcw } from "lucide-react";
 
-const STATUS_OPTIONS = [
-  { value: "", label: "Tous les statuts" },
-  { value: "pending", label: "En attente" },
-  { value: "preparing", label: "En préparation" },
-  { value: "ready", label: "Prête" },
-  { value: "delivering", label: "En livraison" },
-  { value: "delivered", label: "Livrée" },
-  { value: "cancelled", label: "Annulée" },
-];
-
 const LIMIT = 20;
 
 // ── Order Detail Dialog ────────────────────────────────────────────────────────
@@ -52,6 +43,8 @@ function OrderDetailDialog({
   order: Order | null;
   onClose: () => void;
 }) {
+  const { t } = useLanguage();
+
   return (
     <Dialog
       open={!!order}
@@ -67,7 +60,7 @@ function OrderDetailDialog({
           <>
             <DialogHeader>
               <DialogTitle>
-                Commande #{(order.id ?? "").slice(-8).toUpperCase()}
+                {t("orders.orderDetail")} #{(order.id ?? "").slice(-8).toUpperCase()}
               </DialogTitle>
             </DialogHeader>
 
@@ -83,19 +76,19 @@ function OrderDetailDialog({
             {/* Client */}
             <section>
               <h3 className="text-xs font-semibold uppercase text-muted-foreground tracking-wide mb-2">
-                Client
+                {t("orders.client")}
               </h3>
               <div className="rounded-lg border p-3 space-y-1 text-sm">
                 <p>
-                  <span className="text-muted-foreground">Nom : </span>
+                  <span className="text-muted-foreground">{t("orders.name")}</span>
                   <span className="font-medium">{order.clientName}</span>
                 </p>
                 <p>
-                  <span className="text-muted-foreground">Téléphone : </span>
+                  <span className="text-muted-foreground">{t("orders.phone")}</span>
                   {order.clientPhone}
                 </p>
                 <p>
-                  <span className="text-muted-foreground">Ville : </span>
+                  <span className="text-muted-foreground">{t("orders.city")}</span>
                   {order.city}
                 </p>
               </div>
@@ -104,20 +97,20 @@ function OrderDetailDialog({
             {/* Cook / Rider */}
             <section>
               <h3 className="text-xs font-semibold uppercase text-muted-foreground tracking-wide mb-2">
-                Partenaires
+                {t("orders.partners")}
               </h3>
               <div className="rounded-lg border p-3 space-y-1 text-sm">
                 <p>
-                  <span className="text-muted-foreground">Cuisinière : </span>
+                  <span className="text-muted-foreground">{t("orders.cook")}</span>
                   <span className="font-medium">{order.cookName}</span>
                 </p>
                 <p>
-                  <span className="text-muted-foreground">Livreur : </span>
+                  <span className="text-muted-foreground">{t("orders.rider")}</span>
                   {order.riderName ? (
                     <span className="font-medium">{order.riderName}</span>
                   ) : (
                     <span className="text-muted-foreground italic">
-                      Non assigné
+                      {t("orders.notAssigned")}
                     </span>
                   )}
                 </p>
@@ -127,20 +120,20 @@ function OrderDetailDialog({
             {/* Articles */}
             <section>
               <h3 className="text-xs font-semibold uppercase text-muted-foreground tracking-wide mb-2">
-                Articles
+                {t("orders.articles")}
               </h3>
               <div className="rounded-lg border overflow-hidden">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/40">
                     <tr>
                       <th className="text-left px-3 py-2 font-medium text-muted-foreground">
-                        Article
+                        {t("orders.article")}
                       </th>
                       <th className="text-center px-2 py-2 font-medium text-muted-foreground">
-                        Qté
+                        {t("orders.qty")}
                       </th>
                       <th className="text-right px-3 py-2 font-medium text-muted-foreground">
-                        P.U.
+                        {t("orders.unitPrice")}
                       </th>
                     </tr>
                   </thead>
@@ -162,15 +155,15 @@ function OrderDetailDialog({
             {/* Totals */}
             <section className="rounded-lg border p-3 space-y-1 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Sous-total</span>
+                <span className="text-muted-foreground">{t("orders.subtotal")}</span>
                 <span>{formatFcfa(order.totalXaf - order.deliveryFeeXaf)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Frais de livraison</span>
+                <span className="text-muted-foreground">{t("orders.deliveryFees")}</span>
                 <span>{formatFcfa(order.deliveryFeeXaf)}</span>
               </div>
               <div className="flex justify-between font-bold border-t pt-1">
-                <span>Total</span>
+                <span>{t("orders.total")}</span>
                 <span>{formatFcfa(order.totalXaf)}</span>
               </div>
             </section>
@@ -178,7 +171,7 @@ function OrderDetailDialog({
             {/* Timeline */}
             <section>
               <h3 className="text-xs font-semibold uppercase text-muted-foreground tracking-wide mb-3">
-                Timeline
+                {t("orders.timeline")}
               </h3>
               <div className="relative pl-5 space-y-4">
                 {/* vertical line */}
@@ -187,7 +180,7 @@ function OrderDetailDialog({
                 <div className="relative flex items-start gap-3">
                   <div className="absolute -left-5 mt-0.5 h-3 w-3 rounded-full bg-green-500 ring-2 ring-white" />
                   <div>
-                    <p className="text-sm font-medium">Commande passée</p>
+                    <p className="text-sm font-medium">{t("orders.orderPlaced")}</p>
                     <p className="text-xs text-muted-foreground">
                       {formatDateTime(order.createdAt)}
                     </p>
@@ -198,7 +191,7 @@ function OrderDetailDialog({
                   <div className="relative flex items-start gap-3">
                     <div className="absolute -left-5 mt-0.5 h-3 w-3 rounded-full bg-green-700 ring-2 ring-white" />
                     <div>
-                      <p className="text-sm font-medium">Livrée</p>
+                      <p className="text-sm font-medium">{t("orders.delivered")}</p>
                       <p className="text-xs text-muted-foreground">
                         {formatDateTime(order.deliveredAt)}
                       </p>
@@ -211,7 +204,7 @@ function OrderDetailDialog({
                     <div className="absolute -left-5 mt-0.5 h-3 w-3 rounded-full bg-red-500 ring-2 ring-white" />
                     <div>
                       <p className="text-sm font-medium text-red-600">
-                        Annulée
+                        {t("orders.cancelled")}
                       </p>
                     </div>
                   </div>
@@ -228,6 +221,7 @@ function OrderDetailDialog({
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function OrdersPage() {
+  const { t } = useLanguage();
   const [status, setStatus] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -236,6 +230,19 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  const statusOptions = useMemo(
+    () => [
+      { value: "", label: t("orders.allStatuses") },
+      { value: "pending", label: t("orders.pending") },
+      { value: "preparing", label: t("orders.preparing") },
+      { value: "ready", label: t("orders.ready") },
+      { value: "delivering", label: t("orders.pickedUp") },
+      { value: "delivered", label: t("orders.delivered") },
+      { value: "cancelled", label: t("orders.cancelled") },
+    ],
+    [t]
+  );
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -275,14 +282,14 @@ export default function OrdersPage() {
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex flex-col gap-1.5 min-w-[160px]">
               <label className="text-xs font-medium text-muted-foreground">
-                Statut
+                {t("orders.status")}
               </label>
               <Select value={status} onValueChange={(val: string | null) => { setStatus(val ?? ""); setPage(1); }}>
                 <SelectTrigger className="h-9 w-full">
-                  <SelectValue placeholder="Tous les statuts" />
+                  <SelectValue placeholder={t("orders.allStatuses")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {STATUS_OPTIONS.map((opt) => (
+                  {statusOptions.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
                     </SelectItem>
@@ -293,7 +300,7 @@ export default function OrdersPage() {
 
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-muted-foreground">
-                Du
+                {t("orders.from")}
               </label>
               <input
                 type="date"
@@ -305,7 +312,7 @@ export default function OrdersPage() {
 
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-muted-foreground">
-                Au
+                {t("orders.to")}
               </label>
               <input
                 type="date"
@@ -317,7 +324,7 @@ export default function OrdersPage() {
 
             <Button variant="outline" size="sm" onClick={handleReset} className="h-9 gap-1.5">
               <RotateCcw className="h-3.5 w-3.5" />
-              Réinitialiser
+              {t("common.reset")}
             </Button>
           </div>
         </CardContent>
@@ -328,11 +335,10 @@ export default function OrdersPage() {
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-bold flex items-center gap-2">
             <Filter className="h-4 w-4" />
-            Commandes
+            {t("orders.title")}
             {data && (
               <span className="ml-auto text-sm font-normal text-muted-foreground">
-                {data.total.toLocaleString("fr-FR")} résultat
-                {data.total > 1 ? "s" : ""}
+                {data.total.toLocaleString("fr-FR")} {t("orders.results")}
               </span>
             )}
           </CardTitle>
@@ -351,16 +357,16 @@ export default function OrdersPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="hidden sm:table-cell">ID</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead className="hidden lg:table-cell">Téléphone</TableHead>
-                    <TableHead className="hidden md:table-cell">Cuisinière</TableHead>
-                    <TableHead className="hidden lg:table-cell">Livreur</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead className="hidden lg:table-cell">Frais liv.</TableHead>
-                    <TableHead className="hidden md:table-cell">Ville</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead className="hidden sm:table-cell">Date</TableHead>
+                    <TableHead className="hidden sm:table-cell">{t("orders.id")}</TableHead>
+                    <TableHead>{t("orders.client")}</TableHead>
+                    <TableHead className="hidden lg:table-cell">{t("orders.phone")}</TableHead>
+                    <TableHead className="hidden md:table-cell">{t("orders.cook")}</TableHead>
+                    <TableHead className="hidden lg:table-cell">{t("orders.rider")}</TableHead>
+                    <TableHead>{t("orders.total")}</TableHead>
+                    <TableHead className="hidden lg:table-cell">{t("orders.deliveryFee")}</TableHead>
+                    <TableHead className="hidden md:table-cell">{t("orders.city")}</TableHead>
+                    <TableHead>{t("orders.status")}</TableHead>
+                    <TableHead className="hidden sm:table-cell">{t("orders.date")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -370,7 +376,7 @@ export default function OrdersPage() {
                         colSpan={10}
                         className="text-center text-muted-foreground py-12"
                       >
-                        Aucune commande trouvée
+                        {t("orders.noOrder")}
                       </TableCell>
                     </TableRow>
                   )}
@@ -423,7 +429,7 @@ export default function OrdersPage() {
           {!loading && data && totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t">
               <p className="text-sm text-muted-foreground">
-                Page {page} sur {totalPages}
+                {t("common.page")} {page} {t("common.of")} {totalPages}
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -434,7 +440,7 @@ export default function OrdersPage() {
                   className="gap-1"
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Précédent
+                  {t("common.previous")}
                 </Button>
                 <Button
                   variant="outline"
@@ -443,7 +449,7 @@ export default function OrdersPage() {
                   disabled={page >= totalPages}
                   className="gap-1"
                 >
-                  Suivant
+                  {t("common.next")}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -462,7 +468,7 @@ export default function OrdersPage() {
         className="text-center text-[10px] font-medium tracking-[0.12em] uppercase pt-2"
         style={{ color: "#b8b3ad" }}
       >
-        NYAMA TECH SYSTEMS &copy; 2026 &bull; PROPULSION DE L&apos;EXCELLENCE CULINAIRE CAMEROUNAISE
+        {t("footer")}
       </p>
     </div>
   );

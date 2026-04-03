@@ -6,6 +6,7 @@ import type { SupportOverview, SupportTicket, CriticalReview } from "@/lib/types
 import { formatFcfa, formatRelative } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
+import { useLanguage } from "@/hooks/use-language";
 import {
   AlertTriangle, Clock, ThumbsUp, Banknote, Plus, Star,
   MessageCircle, ChevronRight, Send,
@@ -25,15 +26,15 @@ function avatarColor(name?: string | null): string {
   return AVATAR_COLORS[n % AVATAR_COLORS.length];
 }
 
-function severityConfig(s: string): { bg: string; color: string; label: string } {
+function severityConfig(s: string, t: (key: string) => string): { bg: string; color: string; label: string } {
   switch (s) {
     case "HAUT":
-      return { bg: "#fee2e2", color: "#991b1b", label: "HAUT" };
+      return { bg: "#fee2e2", color: "#991b1b", label: t("support.high") };
     case "MOYEN":
-      return { bg: "#ffedd5", color: "#9a3412", label: "MOYEN" };
+      return { bg: "#ffedd5", color: "#9a3412", label: t("support.medium") };
     case "FAIBLE":
     default:
-      return { bg: "#dcfce7", color: "#166534", label: "FAIBLE" };
+      return { bg: "#dcfce7", color: "#166534", label: t("support.low") };
   }
 }
 
@@ -111,7 +112,8 @@ function TicketRow({
   selected: boolean;
   onClick: () => void;
 }) {
-  const sev = severityConfig(ticket.severity);
+  const { t } = useLanguage();
+  const sev = severityConfig(ticket.severity, t);
   return (
     <tr
       className="cursor-pointer transition-colors"
@@ -155,6 +157,8 @@ function TicketRow({
 // ── TicketDetail ─────────────────────────────────────────────────────────────
 
 function TicketDetail({ ticket }: { ticket: SupportTicket | null }) {
+  const { t } = useLanguage();
+
   if (!ticket) {
     return (
       <div
@@ -163,13 +167,13 @@ function TicketDetail({ ticket }: { ticket: SupportTicket | null }) {
       >
         <MessageCircle className="h-10 w-10 mb-3" style={{ color: "#e8e4de" }} />
         <p className="text-sm" style={{ color: "#7c7570" }}>
-          Sélectionnez un litige pour voir les détails
+          {t("support.selectTicket")}
         </p>
       </div>
     );
   }
 
-  const sev = severityConfig(ticket.severity);
+  const sev = severityConfig(ticket.severity, t);
 
   return (
     <div
@@ -202,14 +206,14 @@ function TicketDetail({ ticket }: { ticket: SupportTicket | null }) {
             style={{ backgroundColor: "#fbf9f5" }}
           >
             <div>
-              <p className="text-xs" style={{ color: "#7c7570" }}>Total commande</p>
+              <p className="text-xs" style={{ color: "#7c7570" }}>{t("support.orderTotal")}</p>
               <p className="text-sm font-bold" style={{ color: "#1b1c1a" }}>
                 {ticket.totalXaf ? formatFcfa(ticket.totalXaf) : "—"}
               </p>
             </div>
             {ticket.paymentMethod && (
               <div className="text-right">
-                <p className="text-xs" style={{ color: "#7c7570" }}>Paiement</p>
+                <p className="text-xs" style={{ color: "#7c7570" }}>{t("support.paymentMethod")}</p>
                 <p className="text-sm font-semibold" style={{ color: "#1b1c1a" }}>{ticket.paymentMethod}</p>
               </div>
             )}
@@ -248,7 +252,7 @@ function TicketDetail({ ticket }: { ticket: SupportTicket | null }) {
         ) : (
           <div className="flex flex-col items-center py-8">
             <Send className="h-6 w-6 mb-2" style={{ color: "#e8e4de" }} />
-            <p className="text-xs" style={{ color: "#7c7570" }}>Aucun message dans ce litige</p>
+            <p className="text-xs" style={{ color: "#7c7570" }}>{t("support.noMessage")}</p>
           </div>
         )}
       </div>
@@ -259,19 +263,19 @@ function TicketDetail({ ticket }: { ticket: SupportTicket | null }) {
           className="flex-1 rounded-full py-2.5 text-xs font-bold text-white transition-all"
           style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
         >
-          Rembourser Client (Full)
+          {t("support.refundClient")}
         </button>
         <button
           className="rounded-full px-4 py-2.5 text-xs font-bold transition-colors"
           style={{ border: "1.5px solid #e8e4de", color: "#7c7570" }}
         >
-          Restaurateur
+          {t("support.restaurateur")}
         </button>
         <button
           className="rounded-full px-4 py-2.5 text-xs font-bold transition-colors"
           style={{ border: "1.5px solid #e8e4de", color: "#7c7570" }}
         >
-          Fermer Litige
+          {t("support.closeTicket")}
         </button>
       </div>
     </div>
@@ -281,6 +285,7 @@ function TicketDetail({ ticket }: { ticket: SupportTicket | null }) {
 // ── ReviewCard ───────────────────────────────────────────────────────────────
 
 function ReviewCard({ review }: { review: CriticalReview }) {
+  const { t } = useLanguage();
   const color = avatarColor(review.clientName);
   return (
     <div
@@ -321,13 +326,13 @@ function ReviewCard({ review }: { review: CriticalReview }) {
             className="rounded-full px-3 py-1.5 text-[10px] font-bold transition-colors"
             style={{ border: "1.5px solid #a03c00", color: "#a03c00" }}
           >
-            Ouvrir Ticket
+            {t("support.openTicketBtn")}
           </button>
           <button
             className="rounded-full px-3 py-1.5 text-[10px] font-bold text-white"
             style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
           >
-            Répondre
+            {t("support.reply")}
           </button>
         </div>
       </div>
@@ -338,6 +343,7 @@ function ReviewCard({ review }: { review: CriticalReview }) {
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export default function SupportPage() {
+  const { t } = useLanguage();
   const [data, setData] = useState<SupportOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -371,10 +377,10 @@ export default function SupportPage() {
             className="text-[2rem] font-semibold italic leading-tight"
             style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
           >
-            Centre de Litiges
+            {t("support.title")}
           </h1>
           <p className="mt-1 text-sm" style={{ color: "#7c7570" }}>
-            Gestion et résolution des réclamations clients — Yaoundé & Douala
+            {t("support.subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -382,14 +388,14 @@ export default function SupportPage() {
             className="flex items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-semibold transition-colors"
             style={{ border: "1.5px solid #e8e4de", color: "#7c7570" }}
           >
-            Filtrer
+            {t("common.filter")}
           </button>
           <button
             className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-all"
             style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
           >
             <Plus className="h-4 w-4" />
-            Nouveau Ticket
+            {t("support.newTicket")}
           </button>
         </div>
       </div>
@@ -400,7 +406,7 @@ export default function SupportPage() {
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={<AlertTriangle className="h-5 w-5" style={{ color: "#ef4444" }} />}
-          label="Réclamations Ouvertes"
+          label={t("support.openTickets")}
           value={stats?.openTickets ?? "—"}
           badge="+12% vs hier"
           badgeColor={{ bg: "#fee2e2", text: "#991b1b" }}
@@ -408,15 +414,15 @@ export default function SupportPage() {
         />
         <StatCard
           icon={<Clock className="h-5 w-5" style={{ color: "#b45309" }} />}
-          label="Résolution Moyenne"
-          value={stats ? `${stats.avgResolutionHours} heures` : "—"}
+          label={t("support.avgResolution")}
+          value={stats ? `${stats.avgResolutionHours} ${t("support.hours")}` : "—"}
           badge="-15 min"
           badgeColor={{ bg: "#dcfce7", text: "#166534" }}
           loading={loading}
         />
         <StatCard
           icon={<ThumbsUp className="h-5 w-5" style={{ color: "#2c694e" }} />}
-          label="Satisfaction Support"
+          label={t("support.satisfaction")}
           value={stats ? `${stats.satisfactionRate}%` : "—"}
           badge="Stable"
           badgeColor={{ bg: "#f5f3ef", text: "#7c7570" }}
@@ -424,9 +430,9 @@ export default function SupportPage() {
         />
         <StatCard
           icon={<Banknote className="h-5 w-5" style={{ color: "#a03c00" }} />}
-          label="Remboursements"
+          label={t("support.refunds")}
           value={stats ? formatFcfa(stats.refundsXaf) : "—"}
-          badge="Mois en cours"
+          badge={t("support.monthInProgress")}
           badgeColor={{ bg: "#fdf3ee", text: "#a03c00" }}
           loading={loading}
         />
@@ -441,7 +447,7 @@ export default function SupportPage() {
               className="text-lg font-semibold italic"
               style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
             >
-              Litiges en cours
+              {t("support.currentTickets")}
             </h2>
             <div className="flex items-center gap-1.5 rounded-full px-3 py-1" style={{ backgroundColor: "#dcfce7" }}>
               <span className="relative flex h-2 w-2">
@@ -449,7 +455,7 @@ export default function SupportPage() {
                 <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: "#16a34a" }} />
               </span>
               <span className="text-[10px] font-bold" style={{ color: "#166534" }}>
-                Mise à jour: Il y a 2 min
+                {t("support.updateInfo")}
               </span>
             </div>
           </div>
@@ -469,21 +475,21 @@ export default function SupportPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr style={{ backgroundColor: "#fbf9f5" }}>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>ID Litige</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>Client</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden md:table-cell" style={{ color: "#7c7570" }}>Restaurant</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden lg:table-cell" style={{ color: "#7c7570" }}>Motif</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>Gravité</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("support.ticketId")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("support.client")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden md:table-cell" style={{ color: "#7c7570" }}>{t("support.restaurant")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden lg:table-cell" style={{ color: "#7c7570" }}>{t("support.motif")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("support.severity")}</th>
                       <th className="px-4 py-3 w-8"></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {(data.tickets ?? []).map((t) => (
+                    {(data.tickets ?? []).map((tk) => (
                       <TicketRow
-                        key={t.id}
-                        ticket={t}
-                        selected={selectedTicket?.id === t.id}
-                        onClick={() => setSelectedTicket(t)}
+                        key={tk.id}
+                        ticket={tk}
+                        selected={selectedTicket?.id === tk.id}
+                        onClick={() => setSelectedTicket(tk)}
                       />
                     ))}
                   </tbody>
@@ -492,7 +498,7 @@ export default function SupportPage() {
             ) : (
               <div className="p-8 flex flex-col items-center">
                 <AlertTriangle className="h-8 w-8 mb-2" style={{ color: "#e8e4de" }} />
-                <p className="text-sm" style={{ color: "#7c7570" }}>Aucun litige en cours</p>
+                <p className="text-sm" style={{ color: "#7c7570" }}>{t("support.noTicket")}</p>
               </div>
             )}
           </div>
@@ -504,7 +510,7 @@ export default function SupportPage() {
             className="text-lg font-semibold italic mb-3"
             style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
           >
-            Détails du Litige
+            {t("support.ticketDetail")}
           </h2>
           <TicketDetail ticket={selectedTicket} />
         </div>
@@ -516,7 +522,7 @@ export default function SupportPage() {
           className="text-lg font-semibold italic"
           style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
         >
-          Avis Récents Critiques
+          {t("support.criticalReviews")}
         </h2>
         {loading ? (
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
@@ -536,7 +542,7 @@ export default function SupportPage() {
             style={{ backgroundColor: "#ffffff", boxShadow: "0 2px 24px rgba(160,60,0,0.05)" }}
           >
             <Star className="h-8 w-8 mb-2" style={{ color: "#e8e4de" }} />
-            <p className="text-sm" style={{ color: "#7c7570" }}>Aucun avis critique récent</p>
+            <p className="text-sm" style={{ color: "#7c7570" }}>{t("support.noReview")}</p>
           </div>
         )}
       </div>
@@ -546,7 +552,7 @@ export default function SupportPage() {
         className="text-center text-[10px] font-medium tracking-[0.12em] uppercase pt-2"
         style={{ color: "#b8b3ad" }}
       >
-        NYAMA TECH SYSTEMS &copy; 2026 &bull; PROPULSION DE L&apos;EXCELLENCE CULINAIRE CAMEROUNAISE
+        {t("footer")}
       </p>
     </div>
   );

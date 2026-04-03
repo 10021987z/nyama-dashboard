@@ -6,6 +6,7 @@ import type { Restaurant, RestaurantsResponse } from "@/lib/types";
 import { formatFcfaCompact } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
+import { useLanguage } from "@/hooks/use-language";
 import { Search, Star, Package, TrendingUp, ChefHat, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
 
 const LIMIT = 20;
@@ -97,6 +98,7 @@ function StatCard({
 // ── RestaurantCard ─────────────────────────────────────────────────────────────
 
 function RestaurantCard({ r }: { r: Restaurant }) {
+  const { t } = useLanguage();
   const specs = parseSpecialties(r.specialty);
   const color = avatarColor(r.id);
   const pct = Math.min(100, ((r.avgRating ?? 0) / 5) * 100);
@@ -187,7 +189,7 @@ function RestaurantCard({ r }: { r: Restaurant }) {
           <span className="text-xs font-semibold" style={{ color: "#1b1c1a" }}>
             {(r.totalOrders ?? 0).toLocaleString("fr-FR")}
           </span>
-          <span className="text-[10px]" style={{ color: "#7c7570" }}>cmd</span>
+          <span className="text-[10px]" style={{ color: "#7c7570" }}>{t("restaurants.orders")}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <TrendingUp className="h-3.5 w-3.5" style={{ color: "#2c694e" }} strokeWidth={2} />
@@ -226,6 +228,7 @@ function RestaurantCardSkeleton() {
 // ── Main page ──────────────────────────────────────────────────────────────────
 
 export default function RestaurantsPage() {
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [cityFilter, setCityFilter] = useState("");
@@ -236,8 +239,8 @@ export default function RestaurantsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search), 300);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
   }, [search]);
 
   const fetchRestaurants = useCallback(async () => {
@@ -278,10 +281,10 @@ export default function RestaurantsPage() {
           className="text-[1.8rem] font-semibold italic leading-tight"
           style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
         >
-          Restaurants & Cuisinières
+          {t("restaurants.title")}
         </h1>
         <p className="mt-1 text-sm" style={{ color: "#7c7570" }}>
-          Partenaires culinaires de la marketplace NYAMA
+          {t("restaurants.subtitle")}
         </p>
       </div>
 
@@ -289,26 +292,26 @@ export default function RestaurantsPage() {
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={<ChefHat className="h-5 w-5" style={{ color: "#a03c00" }} />}
-          label="Total"
+          label={t("restaurants.total")}
           value={data?.total ?? "—"}
           loading={loading}
         />
         <StatCard
           icon={<span className="h-2 w-2 rounded-full" style={{ backgroundColor: "#16a34a" }} />}
-          label="Actives"
+          label={t("restaurants.active")}
           value={totalActive}
-          sub="ce chargement"
+          sub={t("restaurants.thisLoad")}
           loading={loading}
         />
         <StatCard
           icon={<Star className="h-5 w-5" style={{ color: "#b45309" }} />}
-          label="Note moy."
+          label={t("restaurants.avgRating")}
           value={`${avgRating} / 5`}
           loading={loading}
         />
         <StatCard
           icon={<TrendingUp className="h-5 w-5" style={{ color: "#2c694e" }} />}
-          label="Revenus"
+          label={t("restaurants.revenue")}
           value={formatFcfaCompact(totalRevenue)}
           loading={loading}
         />
@@ -329,7 +332,7 @@ export default function RestaurantsPage() {
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            placeholder="Rechercher par nom..."
+            placeholder={t("restaurants.searchPlaceholder")}
             className="flex-1 bg-transparent text-sm outline-none"
             style={{ color: "#1b1c1a" }}
           />
@@ -342,7 +345,7 @@ export default function RestaurantsPage() {
           className="rounded-full px-4 py-2 text-sm outline-none cursor-pointer"
           style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
         >
-          <option value="">Toutes les villes</option>
+          <option value="">{t("restaurants.allQuarters")}</option>
           <option value="Douala">Douala</option>
           <option value="Yaoundé">Yaoundé</option>
         </select>
@@ -354,9 +357,9 @@ export default function RestaurantsPage() {
           className="rounded-full px-4 py-2 text-sm outline-none cursor-pointer"
           style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
         >
-          <option value="">Tous les statuts</option>
-          <option value="active">Actives</option>
-          <option value="inactive">Inactives</option>
+          <option value="">{t("restaurants.allStatus")}</option>
+          <option value="active">{t("restaurants.activeFilter")}</option>
+          <option value="inactive">{t("restaurants.inactiveFilter")}</option>
         </select>
 
         {/* Reset */}
@@ -366,7 +369,7 @@ export default function RestaurantsPage() {
           style={{ backgroundColor: "#f5f3ef", color: "#7c7570" }}
         >
           <RotateCcw className="h-3.5 w-3.5" />
-          Réinitialiser
+          {t("common.reset")}
         </button>
       </div>
 
@@ -383,7 +386,7 @@ export default function RestaurantsPage() {
         <div className="flex flex-col items-center justify-center py-20 gap-3">
           <ChefHat className="h-10 w-10" style={{ color: "#e8e4de" }} />
           <p className="text-sm" style={{ color: "#7c7570" }}>
-            Aucun restaurant trouvé
+            {t("restaurants.noRestaurant")}
           </p>
         </div>
       ) : (
@@ -398,7 +401,7 @@ export default function RestaurantsPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">
               <p className="text-sm" style={{ color: "#7c7570" }}>
-                Page {page} sur {totalPages} &bull;{" "}
+                {t("common.page")} {page} {t("common.of")} {totalPages} &bull;{" "}
                 <span className="font-medium" style={{ color: "#1b1c1a" }}>
                   {data?.total.toLocaleString("fr-FR")} restaurants
                 </span>
@@ -411,7 +414,7 @@ export default function RestaurantsPage() {
                   style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Précédent
+                  {t("common.previous")}
                 </button>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
@@ -424,7 +427,7 @@ export default function RestaurantsPage() {
                     color: page >= totalPages ? "#7c7570" : "#fff",
                   }}
                 >
-                  Suivant
+                  {t("common.next")}
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
@@ -438,7 +441,7 @@ export default function RestaurantsPage() {
         className="text-center text-[10px] font-medium tracking-[0.12em] uppercase pt-2"
         style={{ color: "#b8b3ad" }}
       >
-        NYAMA TECH SYSTEMS &copy; 2026 &bull; PROPULSION DE L&apos;EXCELLENCE CULINAIRE CAMEROUNAISE
+        {t("footer")}
       </p>
     </div>
   );

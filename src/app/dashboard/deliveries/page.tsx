@@ -6,6 +6,7 @@ import type { Delivery, DeliveriesResponse, DeliveryStatus } from "@/lib/types";
 import { formatFcfa, formatRelative } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
+import { useLanguage } from "@/hooks/use-language";
 import {
   Truck, Clock, CheckCircle2, XCircle, Package, ChevronLeft, ChevronRight,
   MapPin, User, Bike, Activity,
@@ -13,17 +14,22 @@ import {
 
 const LIMIT = 20;
 
-const STATUS_TABS: { value: string; label: string }[] = [
-  { value: "", label: "Toutes" },
-  { value: "pending", label: "En attente" },
-  { value: "assigned", label: "Assignées" },
-  { value: "picked_up", label: "Collectées" },
-  { value: "delivering", label: "En cours" },
-  { value: "delivered", label: "Livrées" },
-  { value: "failed", label: "Échouées" },
-];
+function getStatusTabs(t: (key: string) => string) {
+  return [
+    { value: "", label: t("deliveries.all") },
+    { value: "pending", label: t("deliveries.pendingTab") },
+    { value: "assigned", label: t("deliveries.assigned") },
+    { value: "picked_up", label: t("deliveries.collected") },
+    { value: "delivering", label: t("deliveries.inCourse") },
+    { value: "delivered", label: t("deliveries.deliveredTab") },
+    { value: "failed", label: t("deliveries.failed") },
+  ];
+}
 
-function deliveryStatusConfig(status: DeliveryStatus): {
+function deliveryStatusConfig(
+  status: DeliveryStatus,
+  t: (key: string) => string,
+): {
   label: string;
   bg: string;
   color: string;
@@ -31,17 +37,17 @@ function deliveryStatusConfig(status: DeliveryStatus): {
 } {
   switch (status) {
     case "pending":
-      return { label: "En attente", bg: "#fef9c3", color: "#854d0e", icon: Clock };
+      return { label: t("deliveries.statusPending"), bg: "#fef9c3", color: "#854d0e", icon: Clock };
     case "assigned":
-      return { label: "Assignée", bg: "#dbeafe", color: "#1e40af", icon: User };
+      return { label: t("deliveries.statusAssigned"), bg: "#dbeafe", color: "#1e40af", icon: User };
     case "picked_up":
-      return { label: "Collectée", bg: "#ffedd5", color: "#9a3412", icon: Package };
+      return { label: t("deliveries.statusPickedUp"), bg: "#ffedd5", color: "#9a3412", icon: Package };
     case "delivering":
-      return { label: "En cours", bg: "#fdf3ee", color: "#a03c00", icon: Bike };
+      return { label: t("deliveries.statusDelivering"), bg: "#fdf3ee", color: "#a03c00", icon: Bike };
     case "delivered":
-      return { label: "Livrée", bg: "#dcfce7", color: "#166534", icon: CheckCircle2 };
+      return { label: t("deliveries.statusDelivered"), bg: "#dcfce7", color: "#166534", icon: CheckCircle2 };
     case "failed":
-      return { label: "Échouée", bg: "#fee2e2", color: "#991b1b", icon: XCircle };
+      return { label: t("deliveries.statusFailed"), bg: "#fee2e2", color: "#991b1b", icon: XCircle };
     default:
       return { label: status, bg: "#f5f3ef", color: "#7c7570", icon: Clock };
   }
@@ -98,7 +104,8 @@ function StatCard({
 // ── Delivery row ───────────────────────────────────────────────────────────────
 
 function DeliveryRow({ d }: { d: Delivery }) {
-  const cfg = deliveryStatusConfig(d.status);
+  const { t } = useLanguage();
+  const cfg = deliveryStatusConfig(d.status, t);
   const StatusIcon = cfg.icon;
 
   return (
@@ -127,7 +134,7 @@ function DeliveryRow({ d }: { d: Delivery }) {
             </span>
           </div>
         ) : (
-          <span className="text-xs italic" style={{ color: "#b8b3ad" }}>Non assigné</span>
+          <span className="text-xs italic" style={{ color: "#b8b3ad" }}>{t("deliveries.notAssigned")}</span>
         )}
       </td>
       <td className="px-4 py-3">
@@ -154,7 +161,7 @@ function DeliveryRow({ d }: { d: Delivery }) {
           {formatFcfa(d.totalXaf)}
         </p>
         <p className="text-[10px]" style={{ color: "#7c7570" }}>
-          Livr. {formatFcfa(d.deliveryFeeXaf)}
+          {t("deliveries.deliveryFeeShort")} {formatFcfa(d.deliveryFeeXaf)}
         </p>
       </td>
       <td className="px-4 py-3 hidden sm:table-cell whitespace-nowrap">
@@ -169,11 +176,14 @@ function DeliveryRow({ d }: { d: Delivery }) {
 // ── Main page ──────────────────────────────────────────────────────────────────
 
 export default function DeliveriesPage() {
+  const { t } = useLanguage();
   const [statusTab, setStatusTab] = useState("");
   const [page, setPage] = useState(1);
   const [data, setData] = useState<DeliveriesResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const statusTabs = getStatusTabs(t);
 
   const fetchDeliveries = useCallback(async () => {
     setLoading(true);
@@ -213,10 +223,10 @@ export default function DeliveriesPage() {
             className="text-[1.8rem] font-semibold italic leading-tight"
             style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
           >
-            Suivi des Livraisons
+            {t("deliveries.title")}
           </h1>
           <p className="mt-1 text-sm" style={{ color: "#7c7570" }}>
-            Tracking en temps réel des commandes en transit
+            {t("deliveries.subtitle")}
           </p>
         </div>
         {/* Live indicator */}
@@ -226,17 +236,17 @@ export default function DeliveriesPage() {
             <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: "#16a34a" }} />
           </span>
           <span className="text-xs font-bold" style={{ color: "#166534" }}>
-            {inProgress} en transit
+            {inProgress} {t("deliveries.inProgress")}
           </span>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={<Activity className="h-5 w-5" />} label="En cours" value={loading ? "—" : inProgress} color="#a03c00" loading={loading} />
-        <StatCard icon={<Clock className="h-5 w-5" />} label="En attente" value={loading ? "—" : pending} color="#b45309" loading={loading} />
-        <StatCard icon={<CheckCircle2 className="h-5 w-5" />} label="Livrées" value={loading ? "—" : delivered} color="#16a34a" loading={loading} />
-        <StatCard icon={<XCircle className="h-5 w-5" />} label="Échouées" value={loading ? "—" : failed} color="#ef4444" loading={loading} />
+        <StatCard icon={<Activity className="h-5 w-5" />} label={t("deliveries.activeDeliveries")} value={loading ? "—" : inProgress} color="#a03c00" loading={loading} />
+        <StatCard icon={<Clock className="h-5 w-5" />} label={t("deliveries.avgTime")} value={loading ? "—" : pending} color="#b45309" loading={loading} />
+        <StatCard icon={<CheckCircle2 className="h-5 w-5" />} label={t("deliveries.successRate")} value={loading ? "—" : delivered} color="#16a34a" loading={loading} />
+        <StatCard icon={<XCircle className="h-5 w-5" />} label={t("deliveries.availableRiders")} value={loading ? "—" : failed} color="#ef4444" loading={loading} />
       </div>
 
       {/* Status tabs */}
@@ -244,7 +254,7 @@ export default function DeliveriesPage() {
         className="rounded-2xl p-1 flex gap-0.5 overflow-x-auto"
         style={{ backgroundColor: "#f5f3ef" }}
       >
-        {STATUS_TABS.map((tab) => (
+        {statusTabs.map((tab) => (
           <button
             key={tab.value}
             onClick={() => { setStatusTab(tab.value); setPage(1); }}
@@ -280,25 +290,25 @@ export default function DeliveriesPage() {
                 <thead>
                   <tr style={{ backgroundColor: "#fbf9f5" }}>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>
-                      ID Commande
+                      {t("deliveries.orderId")}
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>
-                      Client
+                      {t("deliveries.client")}
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden md:table-cell" style={{ color: "#7c7570" }}>
-                      Livreur
+                      {t("deliveries.rider")}
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>
-                      Statut
+                      {t("deliveries.status")}
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden lg:table-cell" style={{ color: "#7c7570" }}>
-                      Zone
+                      {t("deliveries.zone")}
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>
-                      Montant
+                      {t("deliveries.amount")}
                     </th>
                     <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden sm:table-cell" style={{ color: "#7c7570" }}>
-                      Date
+                      {t("deliveries.date")}
                     </th>
                   </tr>
                 </thead>
@@ -308,7 +318,7 @@ export default function DeliveriesPage() {
                       <td colSpan={7} className="px-4 py-16 text-center">
                         <Truck className="h-8 w-8 mx-auto mb-2" style={{ color: "#e8e4de" }} />
                         <p className="text-sm" style={{ color: "#7c7570" }}>
-                          Aucune livraison trouvée
+                          {t("deliveries.noDelivery")}
                         </p>
                       </td>
                     </tr>
@@ -326,7 +336,7 @@ export default function DeliveriesPage() {
                 style={{ borderTop: "1px solid #f5f3ef" }}
               >
                 <p className="text-sm" style={{ color: "#7c7570" }}>
-                  Page {page} / {totalPages} &bull;{" "}
+                  {t("common.page")} {page} / {totalPages} &bull;{" "}
                   <span className="font-medium" style={{ color: "#1b1c1a" }}>
                     {data?.total.toLocaleString("fr-FR")} livraisons
                   </span>
@@ -339,7 +349,7 @@ export default function DeliveriesPage() {
                     style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
                   >
                     <ChevronLeft className="h-3.5 w-3.5" />
-                    Précédent
+                    {t("common.previous")}
                   </button>
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
@@ -350,7 +360,7 @@ export default function DeliveriesPage() {
                       color: page >= totalPages ? "#7c7570" : "#fff",
                     }}
                   >
-                    Suivant
+                    {t("common.next")}
                     <ChevronRight className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -365,7 +375,7 @@ export default function DeliveriesPage() {
         className="text-center text-[10px] font-medium tracking-[0.12em] uppercase pt-2"
         style={{ color: "#b8b3ad" }}
       >
-        NYAMA TECH SYSTEMS &copy; 2026 &bull; PROPULSION DE L&apos;EXCELLENCE CULINAIRE CAMEROUNAISE
+        {t("footer")}
       </p>
     </div>
   );

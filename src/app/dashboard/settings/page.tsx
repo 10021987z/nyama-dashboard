@@ -8,6 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { useAuth } from "@/hooks/use-auth";
 import { logout } from "@/lib/auth";
+import { useLanguage } from "@/hooks/use-language";
+import type { Locale } from "@/lib/i18n";
 import {
   Globe, Clock, Coins, CreditCard, Truck, Shield,
   ChevronRight, Copy, Check, Palette, LogOut, History,
@@ -50,6 +52,7 @@ function SettingRow({
 
 export default function SettingsPage() {
   const { user } = useAuth();
+  const { locale, setLocale, t } = useLanguage();
   const [data, setData] = useState<SystemSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -95,10 +98,10 @@ export default function SettingsPage() {
           className="text-[2rem] font-semibold italic leading-tight"
           style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
         >
-          Configuration de l&apos;Écosystème
+          {t("settings.title")}
         </h1>
         <p className="mt-1 text-sm" style={{ color: "#7c7570" }}>
-          Gérez les fondations opérationnelles de Nyama.
+          {t("settings.subtitle")}
         </p>
       </div>
 
@@ -115,7 +118,7 @@ export default function SettingsPage() {
             className="text-base font-semibold"
             style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
           >
-            Configuration Générale
+            {t("settings.generalConfig")}
           </h2>
         </div>
         {loading ? (
@@ -124,23 +127,25 @@ export default function SettingsPage() {
           </div>
         ) : data ? (
           <>
-            <SettingRow label="Langue">
+            <SettingRow label={t("settings.language")}>
               <select
                 className="rounded-full px-4 py-1.5 text-sm outline-none cursor-pointer"
                 style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
-                defaultValue={data.general.language}
+                value={locale}
+                onChange={(e) => setLocale(e.target.value as Locale)}
               >
-                <option value="fr">Français</option>
-                <option value="en">English</option>
+                <option value="fr">{t("settings.french")}</option>
+                <option value="en">{t("settings.english")}</option>
+                <option value="pidgin">{t("settings.pidgin")}</option>
               </select>
             </SettingRow>
-            <SettingRow label="Fuseau horaire">
+            <SettingRow label={t("settings.timezone")}>
               <div className="flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5" style={{ color: "#7c7570" }} />
                 <span className="text-sm font-medium" style={{ color: "#1b1c1a" }}>{data.general.timezone}</span>
               </div>
             </SettingRow>
-            <SettingRow label="Devise locale">
+            <SettingRow label={t("settings.currency")}>
               <input
                 type="text"
                 value={data.general.currency}
@@ -164,7 +169,7 @@ export default function SettingsPage() {
             className="text-base font-semibold"
             style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
           >
-            Règles de Paiement
+            {t("settings.paymentRules")}
           </h2>
         </div>
         {loading ? (
@@ -173,10 +178,10 @@ export default function SettingsPage() {
           </div>
         ) : data ? (
           <>
-            <SettingRow label="Paiement à la livraison">
+            <SettingRow label={t("settings.cashOnDelivery")}>
               <Toggle checked={data.payment.cashOnDelivery} />
             </SettingRow>
-            <SettingRow label="Commission plateforme">
+            <SettingRow label={t("settings.platformCommission")}>
               <div className="flex items-center gap-1">
                 <input
                   type="text"
@@ -188,7 +193,7 @@ export default function SettingsPage() {
                 <span className="text-sm font-semibold" style={{ color: "#7c7570" }}>%</span>
               </div>
             </SettingRow>
-            <SettingRow label="Montant minimum">
+            <SettingRow label={t("settings.minimumOrder")}>
               <div className="flex items-center gap-1">
                 <input
                   type="text"
@@ -215,7 +220,7 @@ export default function SettingsPage() {
             className="text-base font-semibold"
             style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
           >
-            Logistique
+            {t("settings.logistics")}
           </h2>
         </div>
         {loading ? (
@@ -224,7 +229,7 @@ export default function SettingsPage() {
           </div>
         ) : data ? (
           <>
-            <SettingRow label="Rayon de livraison">
+            <SettingRow label={t("settings.deliveryRadius")}>
               <div className="flex items-center gap-3">
                 <div className="w-32 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "#f5f3ef" }}>
                   <div
@@ -240,12 +245,12 @@ export default function SettingsPage() {
                 </span>
               </div>
             </SettingRow>
-            <SettingRow label="Frais de livraison par défaut">
+            <SettingRow label={t("settings.defaultDeliveryFee")}>
               <span className="text-sm font-semibold" style={{ color: "#1b1c1a" }}>
                 {formatFcfa(data.logistics.defaultDeliveryFeeXaf)}
               </span>
             </SettingRow>
-            <SettingRow label="Heures d'ouverture globales">
+            <SettingRow label={t("settings.enforceHours")}>
               <Toggle checked={data.logistics.enforceOpeningHours} />
             </SettingRow>
           </>
@@ -263,7 +268,7 @@ export default function SettingsPage() {
             className="text-base font-semibold"
             style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
           >
-            Sécurité & Accès
+            {t("settings.security")}
           </h2>
           {data?.security.mfaEnabled && (
             <span
@@ -281,16 +286,16 @@ export default function SettingsPage() {
         ) : data ? (
           <>
             <div className="flex items-center justify-between py-3 cursor-pointer hover:bg-[#fbf9f5] -mx-2 px-2 rounded-xl transition-colors" style={{ borderBottom: "1px solid #f5f3ef" }}>
-              <span className="text-sm" style={{ color: "#1b1c1a" }}>Multi-Facteur (MFA)</span>
+              <span className="text-sm" style={{ color: "#1b1c1a" }}>{t("settings.mfa")}</span>
               <ChevronRight className="h-4 w-4" style={{ color: "#b8b3ad" }} />
             </div>
             <div className="flex items-center justify-between py-3 cursor-pointer hover:bg-[#fbf9f5] -mx-2 px-2 rounded-xl transition-colors" style={{ borderBottom: "1px solid #f5f3ef" }}>
-              <span className="text-sm" style={{ color: "#1b1c1a" }}>Logs d&apos;accès</span>
+              <span className="text-sm" style={{ color: "#1b1c1a" }}>{t("settings.accessLogs")}</span>
               <ChevronRight className="h-4 w-4" style={{ color: "#b8b3ad" }} />
             </div>
             <div className="py-3">
               <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#7c7570" }}>
-                Clé API de production
+                {t("settings.apiKey")}
               </p>
               <div className="flex items-center gap-2">
                 <input
@@ -329,13 +334,13 @@ export default function SettingsPage() {
             className="text-base font-semibold"
             style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
           >
-            Identité Visuelle
+            {t("settings.visualIdentity")}
           </h2>
         </div>
         <div className="flex items-start gap-6">
           {/* Logo */}
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#7c7570" }}>Logo actuel</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#7c7570" }}>{t("settings.currentLogo")}</p>
             <div
               className="flex h-[100px] w-[100px] items-center justify-center rounded-2xl"
               style={{ backgroundColor: "#f5f3ef" }}
@@ -350,7 +355,7 @@ export default function SettingsPage() {
           </div>
           {/* Colors */}
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#7c7570" }}>Couleur primaire</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#7c7570" }}>{t("settings.primaryColor")}</p>
             <div className="flex items-center gap-3">
               {BRAND_COLORS.map((c) => (
                 <div
@@ -379,7 +384,7 @@ export default function SettingsPage() {
             className="text-base font-semibold"
             style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
           >
-            Dernières modifications du système
+            {t("settings.recentChanges")}
           </h2>
         </div>
         <div className="space-y-3">
@@ -409,7 +414,7 @@ export default function SettingsPage() {
           </div>
         </div>
         <button className="mt-4 text-xs font-semibold" style={{ color: "#a03c00" }}>
-          Voir le journal complet
+          {t("settings.viewFullLog")}
         </button>
       </div>
 
@@ -420,7 +425,7 @@ export default function SettingsPage() {
         style={{ background: "linear-gradient(135deg, #ef4444, #dc2626)" }}
       >
         <LogOut className="h-4 w-4" />
-        Se déconnecter
+        {t("common.logout")}
       </button>
 
       {/* Footer */}
@@ -428,7 +433,7 @@ export default function SettingsPage() {
         className="text-center text-[10px] font-medium tracking-[0.12em] uppercase pt-2"
         style={{ color: "#b8b3ad" }}
       >
-        NYAMA TECH SYSTEMS &copy; 2026 &bull; PROPULSION DE L&apos;EXCELLENCE CULINAIRE CAMEROUNAISE
+        {t("footer")}
       </p>
     </div>
   );

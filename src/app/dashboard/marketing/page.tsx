@@ -8,12 +8,13 @@ import type {
 import { formatFcfa, formatDate } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
+import { useLanguage } from "@/hooks/use-language";
 import {
   TrendingUp, Ticket, Bell, DollarSign, Plus, Users, Calendar,
   Tag, Megaphone, Flame,
 } from "lucide-react";
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// -- Helpers ------------------------------------------------------------------
 
 function formatNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -33,7 +34,7 @@ function avatarColor(id?: string | null): string {
   return AVATAR_COLORS[n % AVATAR_COLORS.length];
 }
 
-// ── StatCard ─────────────────────────────────────────────────────────────────
+// -- StatCard -----------------------------------------------------------------
 
 function StatCard({
   icon,
@@ -109,9 +110,10 @@ function StatCard({
   );
 }
 
-// ── InfluencerCard ───────────────────────────────────────────────────────────
+// -- InfluencerCard -----------------------------------------------------------
 
 function InfluencerCard({ inf }: { inf: Influencer }) {
+  const { t } = useLanguage();
   const color = avatarColor(inf.id);
   return (
     <div
@@ -141,14 +143,14 @@ function InfluencerCard({ inf }: { inf: Influencer }) {
         </p>
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-xs" style={{ color: "#7c7570" }}>{inf.uses} utilisations</span>
+        <span className="text-xs" style={{ color: "#7c7570" }}>{inf.uses} {t("marketing.uses")}</span>
         <span className="text-xs font-bold" style={{ color: "#1b1c1a" }}>{formatFcfa(inf.revenue)}</span>
       </div>
     </div>
   );
 }
 
-// ── CalendarCard ─────────────────────────────────────────────────────────────
+// -- CalendarCard -------------------------------------------------------------
 
 function CalendarCard({ event }: { event: CalendarEvent }) {
   const d = new Date(event.date);
@@ -177,9 +179,10 @@ function CalendarCard({ event }: { event: CalendarEvent }) {
   );
 }
 
-// ── PromotionCard ────────────────────────────────────────────────────────────
+// -- PromotionCard ------------------------------------------------------------
 
 function PromotionCard({ promo }: { promo: Promotion }) {
+  const { t } = useLanguage();
   return (
     <div
       className="rounded-2xl p-4 flex items-center gap-4"
@@ -201,18 +204,18 @@ function PromotionCard({ promo }: { promo: Promotion }) {
             {promo.code}
           </span>
           <span className="text-[10px]" style={{ color: "#7c7570" }}>
-            Expire: {formatDate(promo.expiresAt)}
+            {t("marketing.expire")}: {formatDate(promo.expiresAt)}
           </span>
         </div>
       </div>
       <span className="text-xs font-semibold shrink-0" style={{ color: "#7c7570" }}>
-        {promo.uses} utilisations
+        {promo.uses} {t("marketing.uses")}
       </span>
     </div>
   );
 }
 
-// ── CampaignRow ──────────────────────────────────────────────────────────────
+// -- CampaignRow --------------------------------------------------------------
 
 function CampaignRow({ c }: { c: Campaign }) {
   return (
@@ -241,9 +244,10 @@ function CampaignRow({ c }: { c: Campaign }) {
   );
 }
 
-// ── Main page ────────────────────────────────────────────────────────────────
+// -- Main page ----------------------------------------------------------------
 
 export default function MarketingPage() {
+  const { t } = useLanguage();
   const [data, setData] = useState<MarketingOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -276,13 +280,13 @@ export default function MarketingPage() {
             className="text-[2rem] font-semibold italic leading-tight"
             style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
           >
-            Marketing & Promotions
+            {t("marketing.title")}
           </h1>
           <p
             className="mt-1 text-sm italic"
             style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#7c7570" }}
           >
-            Elevating the culinary heritage of Cameroon through targeted engagement.
+            {t("marketing.subtitle")}
           </p>
         </div>
         <button
@@ -290,7 +294,7 @@ export default function MarketingPage() {
           style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
         >
           <Plus className="h-4 w-4" />
-          Nouvelle Campagne
+          {t("marketing.newCampaign")}
         </button>
       </div>
 
@@ -300,30 +304,30 @@ export default function MarketingPage() {
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={<TrendingUp className="h-5 w-5" style={{ color: "#a03c00" }} />}
-          label="Conversion Promo"
-          value={stats ? `${stats.conversionRate}%` : "—"}
+          label={t("marketing.conversionRate")}
+          value={stats ? `${stats.conversionRate}%` : "\u2014"}
           sub="+3.2% vs last month"
           loading={loading}
         />
         <StatCard
           icon={<Ticket className="h-5 w-5" style={{ color: "#b45309" }} />}
-          label="Coupons Actifs"
-          value={stats?.activeCoupons ?? "—"}
-          sub="12 expirent bientôt"
+          label={t("marketing.activeCoupons")}
+          value={stats?.activeCoupons ?? "\u2014"}
+          sub={`12 ${t("marketing.expiresSoon")}`}
           loading={loading}
         />
         <StatCard
           icon={<Bell className="h-5 w-5" style={{ color: "#2c694e" }} />}
-          label="Portée Push"
-          value={stats ? formatNumber(stats.pushReach) : "—"}
+          label={t("marketing.pushReach")}
+          value={stats ? formatNumber(stats.pushReach) : "\u2014"}
           badge="68% Open Rate"
           badgeColor="#dcfce7"
           loading={loading}
         />
         <StatCard
           icon={<DollarSign className="h-5 w-5" style={{ color: "#ffffff" }} />}
-          label="Revenus Marketing"
-          value={stats ? formatFcfa(stats.marketingRevenue) : "—"}
+          label={t("marketing.marketingRevenue")}
+          value={stats ? formatFcfa(stats.marketingRevenue) : "\u2014"}
           sub="15% ROI"
           highlight
           loading={loading}
@@ -339,14 +343,14 @@ export default function MarketingPage() {
               className="text-lg font-semibold italic"
               style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
             >
-              Programmes Influenceurs
+              {t("marketing.influencers")}
             </h2>
             <button
               className="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition-colors"
               style={{ border: "1.5px solid #a03c00", color: "#a03c00" }}
             >
               <Plus className="h-3.5 w-3.5" />
-              Nouveau Code Influenceur
+              {t("marketing.newInfluencerCode")}
             </button>
           </div>
           {loading ? (
@@ -363,7 +367,7 @@ export default function MarketingPage() {
               {(!data?.influencers || data.influencers.length === 0) && (
                 <div className="col-span-2 flex flex-col items-center py-12">
                   <Users className="h-8 w-8 mb-2" style={{ color: "#e8e4de" }} />
-                  <p className="text-sm" style={{ color: "#7c7570" }}>Aucun influenceur configuré</p>
+                  <p className="text-sm" style={{ color: "#7c7570" }}>{t("marketing.noInfluencer")}</p>
                 </div>
               )}
             </div>
@@ -377,7 +381,7 @@ export default function MarketingPage() {
               className="text-lg font-semibold italic"
               style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
             >
-              Calendrier Gastronomique
+              {t("marketing.calendar")}
             </h2>
             <Calendar className="h-4 w-4" style={{ color: "#7c7570" }} />
           </div>
@@ -398,14 +402,14 @@ export default function MarketingPage() {
             ) : (
               <div className="flex flex-col items-center py-8">
                 <Calendar className="h-8 w-8 mb-2" style={{ color: "#e8e4de" }} />
-                <p className="text-sm" style={{ color: "#7c7570" }}>Aucun événement planifié</p>
+                <p className="text-sm" style={{ color: "#7c7570" }}>{t("marketing.noEvent")}</p>
               </div>
             )}
             <button
               className="w-full rounded-full py-2 text-xs font-semibold transition-colors"
               style={{ border: "1.5px solid #e8e4de", color: "#7c7570" }}
             >
-              Ajouter un événement
+              {t("marketing.addEvent")}
             </button>
           </div>
         </div>
@@ -417,7 +421,7 @@ export default function MarketingPage() {
           className="text-lg font-semibold italic"
           style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
         >
-          Promotions Actives
+          {t("marketing.activePromos")}
         </h2>
         {loading ? (
           <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
@@ -437,7 +441,7 @@ export default function MarketingPage() {
             style={{ backgroundColor: "#ffffff", boxShadow: "0 2px 24px rgba(160,60,0,0.05)" }}
           >
             <Tag className="h-8 w-8 mb-2" style={{ color: "#e8e4de" }} />
-            <p className="text-sm" style={{ color: "#7c7570" }}>Aucune promotion active</p>
+            <p className="text-sm" style={{ color: "#7c7570" }}>{t("marketing.noPromo")}</p>
           </div>
         )}
       </div>
@@ -450,7 +454,7 @@ export default function MarketingPage() {
             className="text-lg font-semibold italic"
             style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
           >
-            Campagnes de Notifications
+            {t("marketing.campaigns")}
           </h2>
           <div
             className="rounded-2xl overflow-hidden"
@@ -468,9 +472,9 @@ export default function MarketingPage() {
                   <thead>
                     <tr style={{ backgroundColor: "#fbf9f5" }}>
                       <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>Date</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>Message</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>Audience</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>Ouverture</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("marketing.message")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("marketing.audience")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("marketing.openRate")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -483,7 +487,7 @@ export default function MarketingPage() {
             ) : (
               <div className="p-8 flex flex-col items-center">
                 <Megaphone className="h-8 w-8 mb-2" style={{ color: "#e8e4de" }} />
-                <p className="text-sm" style={{ color: "#7c7570" }}>Aucune campagne envoyée</p>
+                <p className="text-sm" style={{ color: "#7c7570" }}>{t("marketing.noCampaign")}</p>
               </div>
             )}
           </div>
@@ -495,7 +499,7 @@ export default function MarketingPage() {
             className="text-lg font-semibold italic"
             style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
           >
-            Spice Analytics
+            {t("marketing.spiceAnalytics")}
           </h2>
           <div
             className="rounded-2xl p-6 space-y-4"
@@ -504,17 +508,17 @@ export default function MarketingPage() {
             <div className="flex items-center gap-2">
               <Flame className="h-5 w-5 text-white" />
               <span className="text-xs font-bold uppercase tracking-wider text-white/70">
-                HOT INSIGHT
+                {t("marketing.hotInsight")}
               </span>
             </div>
             <p className="text-sm leading-relaxed text-white/90">
-              Les promotions avec codes influenceurs génèrent en moyenne{" "}
-              <span className="font-bold text-white">3.2x plus de conversions</span>{" "}
-              que les coupons standards dans la région du Littoral.
+              {t("marketing.insightText")}{" "}
+              <span className="font-bold text-white">{t("marketing.insightHighlight")}</span>{" "}
+              {t("marketing.insightSuffix")}
             </p>
             <div className="flex gap-2">
               <span className="rounded-full px-2.5 py-1 text-[10px] font-bold bg-white/20 text-white">
-                HOT INSIGHT
+                {t("marketing.hotInsight")}
               </span>
               <span className="rounded-full px-2.5 py-1 text-[10px] font-bold bg-white/20 text-white">
                 LITTORAL REGION
@@ -529,7 +533,7 @@ export default function MarketingPage() {
         className="text-center text-[10px] font-medium tracking-[0.12em] uppercase pt-2"
         style={{ color: "#b8b3ad" }}
       >
-        NYAMA TECH SYSTEMS &copy; 2026 &bull; PROPULSION DE L&apos;EXCELLENCE CULINAIRE CAMEROUNAISE
+        {t("footer")}
       </p>
     </div>
   );
