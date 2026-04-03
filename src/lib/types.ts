@@ -364,7 +364,90 @@ export interface SupportOverview {
   criticalReviews: CriticalReview[];
 }
 
-// ── Analytics ─────────────────────────────────────────────────────────────────
+// ── Analytics Revenue ─────────────────────────────────────────────────────────
+
+export interface RevenueStats {
+  totalRevenueXaf: number;
+  netPlatformXaf: number;
+  totalTransactions: number;
+  conversionRate: number;
+  avgBasketXaf: number;
+  revenueTrend: number;
+}
+
+export interface WeeklyRevenue {
+  week: string;
+  grossXaf: number;
+  commissionXaf: number;
+}
+
+export interface PaymentBreakdown {
+  method: string;
+  percentage: number;
+  color?: string;
+}
+
+export interface TopRestaurant {
+  id: string;
+  displayName: string;
+  quarterName: string;
+  orders: number;
+  revenueXaf: number;
+  commissionXaf: number;
+}
+
+export interface RevenueAnalytics {
+  stats: RevenueStats;
+  weeklyRevenue: WeeklyRevenue[];
+  paymentBreakdown: PaymentBreakdown[];
+  topRestaurants: TopRestaurant[];
+}
+
+// ── Settings ─────────────────────────────────────────────────────────────────
+
+export interface SystemSettings {
+  general: {
+    language: string;
+    timezone: string;
+    currency: string;
+  };
+  payment: {
+    cashOnDelivery: boolean;
+    platformCommission: number;
+    minimumOrderXaf: number;
+  };
+  logistics: {
+    maxDeliveryRadiusKm: number;
+    defaultDeliveryFeeXaf: number;
+    enforceOpeningHours: boolean;
+  };
+  security: {
+    mfaEnabled: boolean;
+    apiKeyMasked: string;
+  };
+}
+
+// ── Dashboard (enriched) ─────────────────────────────────────────────────────
+
+export interface DashboardData {
+  ordersToday: number;
+  ordersThisWeek: number;
+  revenueToday: number;
+  revenueThisMonth: number;
+  avgBasketXaf: number;
+  paymentSuccessRate: number;
+  activeCooks: number;
+  newCooksThisMonth: number;
+  appDownloads: number;
+  completionRate: number;
+  ordersTrend: number;
+  revenueTrend: number;
+  hourlyOrders: { hour: string; count: number }[];
+  revenueByQuarter: { quarter: string; revenueM: number }[];
+  ordersByStatus: { status: string; count: number }[];
+}
+
+// ── Analytics (legacy) ───────────────────────────────────────────────────────
 
 export interface AnalyticsOverview {
   revenueByCity: { city: string; revenue: number }[];

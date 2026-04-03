@@ -458,6 +458,14 @@ export default function FleetPage() {
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <p
+        className="text-center text-[10px] font-medium tracking-[0.12em] uppercase pt-2"
+        style={{ color: "#b8b3ad" }}
+      >
+        NYAMA TECH SYSTEMS &copy; 2026 &bull; PROPULSION DE L&apos;EXCELLENCE CULINAIRE CAMEROUNAISE
+      </p>
     </div>
   );
 }

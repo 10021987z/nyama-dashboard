@@ -449,10 +449,10 @@ export default function CustomersPage() {
 
       {/* Footer */}
       <p
-        className="text-center text-xs italic pt-4"
-        style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "rgba(160,60,0,0.5)" }}
+        className="text-center text-[10px] font-medium tracking-[0.12em] uppercase pt-2"
+        style={{ color: "#b8b3ad" }}
       >
-        Le goût de l&apos;héritage &bull; Douala &bull; Yaoundé &bull; Bafoussam
+        NYAMA TECH SYSTEMS &copy; 2026 &bull; PROPULSION DE L&apos;EXCELLENCE CULINAIRE CAMEROUNAISE
       </p>
     </div>
   );
