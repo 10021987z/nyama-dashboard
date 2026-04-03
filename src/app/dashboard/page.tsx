@@ -20,7 +20,7 @@ import {
   Package,
   TrendingUp,
   CreditCard,
-  Smartphone,
+  Users,
   ChefHat,
   CheckCircle,
   ArrowUpRight,
@@ -97,17 +97,18 @@ interface KpiDef {
   iconColor: string;
   iconBg: string;
   featured?: boolean;
-  extra?: "progress" | "avatars";
-  progressValue?: number;
 }
 
 function buildKpis(d: DashboardData): KpiDef[] {
+  const ordersTrend = d.ordersTrend ?? 0;
+  const revenueTrend = d.revenueTrend ?? 0;
+
   return [
     {
       title: "COMMANDES AUJOURD'HUI",
-      value: d.ordersToday.toLocaleString("fr-FR"),
-      trend: d.ordersTrend !== 0
-        ? { label: `${d.ordersTrend >= 0 ? "+" : ""}${d.ordersTrend}%`, positive: d.ordersTrend >= 0 }
+      value: (d.ordersToday ?? 0).toLocaleString("fr-FR"),
+      trend: ordersTrend !== 0
+        ? { label: `${ordersTrend >= 0 ? "+" : ""}${ordersTrend}%`, positive: ordersTrend >= 0 }
         : "stable",
       subtext: "VS WEEK-1",
       icon: ShoppingBag,
@@ -116,28 +117,26 @@ function buildKpis(d: DashboardData): KpiDef[] {
     },
     {
       title: "COMMANDES SEMAINE",
-      value: d.ordersThisWeek.toLocaleString("fr-FR"),
-      subtext: "Taux de complétion",
+      value: (d.ordersThisWeek ?? 0).toLocaleString("fr-FR"),
+      subtext: "CETTE SEMAINE",
       icon: Package,
       iconColor: "#2c694e",
       iconBg: "#f0fdf4",
-      extra: "progress",
-      progressValue: d.completionRate,
     },
     {
       title: "CA DU JOUR",
-      value: formatFcfa(d.revenueToday),
-      trend: d.revenueTrend !== 0
-        ? { label: `${d.revenueTrend >= 0 ? "+" : ""}${d.revenueTrend}%`, positive: d.revenueTrend >= 0 }
+      value: formatFcfa(d.revenueToday ?? 0),
+      trend: revenueTrend !== 0
+        ? { label: `${revenueTrend >= 0 ? "+" : ""}${revenueTrend}%`, positive: revenueTrend >= 0 }
         : "stable",
       subtext: "VS VEILLE",
       icon: TrendingUp,
-      iconColor: d.revenueTrend >= 0 ? "#16a34a" : "#ef4444",
-      iconBg: d.revenueTrend >= 0 ? "#f0fdf4" : "#fff1f2",
+      iconColor: revenueTrend >= 0 ? "#16a34a" : "#ef4444",
+      iconBg: revenueTrend >= 0 ? "#f0fdf4" : "#fff1f2",
     },
     {
       title: "CA CUMULÉ DU MOIS",
-      value: formatFcfaCompact(d.revenueThisMonth),
+      value: formatFcfaCompact(d.revenueThisMonth ?? 0),
       subtext: "PROJECTION MENSUELLE",
       icon: CreditCard,
       iconColor: "#ffffff",
@@ -145,28 +144,24 @@ function buildKpis(d: DashboardData): KpiDef[] {
       featured: true,
     },
     {
-      title: "TÉLÉCHARGEMENTS APP",
-      value: d.appDownloads.toLocaleString("fr-FR"),
-      subtext: "CE MOIS",
-      icon: Smartphone,
+      title: "UTILISATEURS",
+      value: (d.totalUsers ?? 0).toLocaleString("fr-FR"),
+      subtext: "TOTAL INSCRITS",
+      icon: Users,
       iconColor: "#2563eb",
       iconBg: "#eff6ff",
     },
     {
       title: "CUISINIÈRES ACTIVES",
-      value: String(d.activeCooks),
-      trend: d.newCooksThisMonth > 0
-        ? { label: `+${d.newCooksThisMonth}`, positive: true }
-        : undefined,
-      subtext: "NOUVEAUX PARTENAIRES",
+      value: String(d.totalCooks ?? 0),
+      subtext: "PARTENAIRES",
       icon: ChefHat,
       iconColor: "#2c694e",
       iconBg: "#f0fdf4",
-      extra: "avatars",
     },
     {
       title: "PANIER MOYEN",
-      value: formatFcfa(d.avgBasketXaf),
+      value: formatFcfa(d.avgBasketXaf ?? 0),
       trend: "stable",
       subtext: "VS SEMAINE DERNIÈRE",
       icon: ShoppingBag,
@@ -174,8 +169,8 @@ function buildKpis(d: DashboardData): KpiDef[] {
       iconBg: "#fef3c7",
     },
     {
-      title: "SUCCÈS PAIEMENT MOMO",
-      value: `${d.paymentSuccessRate}%`,
+      title: "SUCCÈS PAIEMENT",
+      value: `${d.paymentSuccessRate ?? 0}%`,
       subtext: "MOBILE MONEY CAMEROON",
       icon: CheckCircle,
       iconColor: "#16a34a",
@@ -185,7 +180,7 @@ function buildKpis(d: DashboardData): KpiDef[] {
 }
 
 function KpiCard({ kpi }: { kpi: KpiDef }) {
-  const { title, value, trend, subtext, icon: Icon, iconColor, iconBg, featured, extra, progressValue } = kpi;
+  const { title, value, trend, subtext, icon: Icon, iconColor, iconBg, featured } = kpi;
 
   const cardBg = featured ? "#a03c00" : "#ffffff";
   const textColor = featured ? "#ffffff" : "#1b1c1a";
@@ -246,39 +241,7 @@ function KpiCard({ kpi }: { kpi: KpiDef }) {
         </p>
       </div>
 
-      {extra === "progress" && (
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px]" style={{ color: mutedColor }}>{subtext}</span>
-            <span className="text-[10px] font-bold" style={{ color: textColor }}>
-              {progressValue ?? 0}%
-            </span>
-          </div>
-          <div className="h-1.5 rounded-full" style={{ backgroundColor: "#f0fdf4" }}>
-            <div
-              className="h-full rounded-full"
-              style={{ width: `${progressValue ?? 0}%`, backgroundColor: "#2c694e" }}
-            />
-          </div>
-        </div>
-      )}
-      {extra === "avatars" && (
-        <div className="flex items-center gap-1.5">
-          {["#a03c00", "#2c694e", "#8b4c11", "#c94d00"].map((c, i) => (
-            <div
-              key={i}
-              className="flex h-6 w-6 items-center justify-center rounded-full text-[8px] font-bold text-white -ml-1.5 first:ml-0 ring-2 ring-white"
-              style={{ backgroundColor: c, zIndex: 4 - i }}
-            />
-          ))}
-          <span className="ml-1 text-[10px]" style={{ color: mutedColor }}>
-            +{kpi.trend && kpi.trend !== "stable" ? kpi.trend.label : "0"} ce mois
-          </span>
-        </div>
-      )}
-      {!extra && (
-        <p className="text-[10px]" style={{ color: mutedColor }}>{subtext}</p>
-      )}
+      <p className="text-[10px]" style={{ color: mutedColor }}>{subtext}</p>
     </div>
   );
 }
@@ -545,8 +508,8 @@ export default function DashboardPage() {
       {/* Charts */}
       {!loading && data && (
         <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-          <VolumeChart data={data.hourlyOrders} />
-          <QuartierChart data={data.revenueByQuarter} />
+          <VolumeChart data={data.hourlyOrders ?? []} />
+          <QuartierChart data={data.revenueByQuarter ?? []} />
         </div>
       )}
       {loading && (

@@ -430,21 +430,29 @@ export interface SystemSettings {
 // ── Dashboard (enriched) ─────────────────────────────────────────────────────
 
 export interface DashboardData {
+  totalOrders: number;
+  totalRevenue: number;
+  totalUsers: number;
+  totalCooks: number;
+  totalRiders: number;
   ordersToday: number;
-  ordersThisWeek: number;
   revenueToday: number;
+  avgRating: number;
+  ordersThisWeek: number;
+  revenueThisWeek: number;
   revenueThisMonth: number;
   avgBasketXaf: number;
+  deliverySuccessRate: number;
   paymentSuccessRate: number;
-  activeCooks: number;
-  newCooksThisMonth: number;
-  appDownloads: number;
-  completionRate: number;
+  newUsersThisMonth: number;
+  activeClientsLast30d: number;
+  retentionRate: number;
   ordersTrend: number;
   revenueTrend: number;
   hourlyOrders: { hour: string; count: number }[];
   revenueByQuarter: { quarter: string; revenueM: number }[];
   ordersByStatus: { status: string; count: number }[];
+  paymentMethodBreakdown: { method: string; count: number }[];
 }
 
 // ── Analytics (legacy) ───────────────────────────────────────────────────────
