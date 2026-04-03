@@ -362,7 +362,7 @@ export default function MarketingPage() {
           ) : (
             <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
               {(data?.influencers ?? []).map((inf) => (
-                <InfluencerCard key={inf.id} inf={inf} />
+                <InfluencerCard key={inf.code} inf={inf} />
               ))}
               {(!data?.influencers || data.influencers.length === 0) && (
                 <div className="col-span-2 flex flex-col items-center py-12">
@@ -396,8 +396,8 @@ export default function MarketingPage() {
                 ))}
               </div>
             ) : data?.calendarEvents && data.calendarEvents.length > 0 ? (
-              (data.calendarEvents ?? []).map((ev) => (
-                <CalendarCard key={ev.id} event={ev} />
+              (data.calendarEvents ?? []).map((ev, i) => (
+                <CalendarCard key={i} event={ev} />
               ))
             ) : (
               <div className="flex flex-col items-center py-8">
@@ -432,7 +432,7 @@ export default function MarketingPage() {
         ) : data?.promotions && data.promotions.length > 0 ? (
           <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {(data.promotions ?? []).map((p) => (
-              <PromotionCard key={p.id} promo={p} />
+              <PromotionCard key={p.code} promo={p} />
             ))}
           </div>
         ) : (
@@ -478,8 +478,8 @@ export default function MarketingPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(data.campaigns ?? []).map((c) => (
-                      <CampaignRow key={c.id} c={c} />
+                    {(data.campaigns ?? []).map((c, i) => (
+                      <CampaignRow key={i} c={c} />
                     ))}
                   </tbody>
                 </table>
