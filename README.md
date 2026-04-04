@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nyama Dashboard
+
+Administration dashboard for the **Nyama** food delivery platform — built for the Cameroonian market. Monitor restaurants, orders, deliveries, fleet, customers, and marketing campaigns from a single interface.
+
+## Tech Stack
+
+- **Framework** — [Next.js 16](https://nextjs.org/) (App Router, React 19)
+- **Language** — TypeScript
+- **Styling** — Tailwind CSS 4, shadcn/ui components
+- **Charts** — Recharts
+- **i18n** — French, English, Pidgin
+- **Theming** — Light / Dark mode via `next-themes`
+
+## Design System
+
+The UI follows a warm, Africa-inspired palette:
+
+| Token | Hex | Usage |
+|---|---|---|
+| Terracotta | `#a03c00` | Primary accent, CTAs |
+| Leaf | `#2c694e` | Success states, secondary accent |
+| Earthy | `#8b4c11` | Tertiary, badges |
+| Surface | `#fbf9f5` | Background |
+| On Surface | `#1b1c1a` | Text |
+
+## Pages
+
+| Route | Description |
+|---|---|
+| `/dashboard` | Executive overview — KPIs, revenue chart, recent activity |
+| `/dashboard/restaurants` | Restaurant list, status, performance |
+| `/dashboard/orders` | Order management, filters, statuses |
+| `/dashboard/deliveries` | Live delivery tracking |
+| `/dashboard/fleet` | Fleet overview — riders, vehicles, zones |
+| `/dashboard/customers` | Customer directory, segments |
+| `/dashboard/marketing` | Campaigns, promotions, push notifications |
+| `/dashboard/support` | Support tickets, chat, resolution metrics |
+| `/dashboard/settings` | Platform settings, roles, configuration |
+
+Additional pages: `/dashboard/users`, `/dashboard/riders`, `/dashboard/cooks`, `/dashboard/analytics`.
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- npm or pnpm
+
+### Installation
+
+```bash
+git clone https://github.com/your-org/nyama-dashboard.git
+cd nyama-dashboard
+npm install
+```
+
+### Environment Variables
+
+```bash
+cp .env.production.example .env.local
+```
+
+Edit `.env.local` and set `NEXT_PUBLIC_API_URL` to your API endpoint (defaults to `http://localhost:3000/api/v1`).
+
+### Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The dashboard runs on [http://localhost:3001](http://localhost:3001).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Production Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## Deploy to Vercel
 
-To learn more about Next.js, take a look at the following resources:
+1. Push the repo to GitHub
+2. Import the project in [Vercel](https://vercel.com/new)
+3. Add the environment variable:
+   - `NEXT_PUBLIC_API_URL` = `https://nyama-api-production.up.railway.app/api/v1`
+4. Deploy — Vercel auto-detects Next.js via `vercel.json`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Proprietary — all rights reserved.
