@@ -1,5 +1,9 @@
+// In production, use relative path so requests are proxied via Next.js rewrites (avoids CORS).
+// In development, use the env variable or default to localhost.
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api/v1";
+  typeof window !== "undefined" && window.location.hostname !== "localhost"
+    ? "/api/v1"
+    : (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api/v1");
 
 // ── Brand colors ──────────────────────────────────────────────────────────────
 export const NYAMA_TERRACOTTA = "#a03c00";
