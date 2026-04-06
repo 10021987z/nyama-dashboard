@@ -1,20 +1,34 @@
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
 
-// ── Brand colors ──────────────────────────────────────────────────────────────
-export const NYAMA_TERRACOTTA = "#a03c00";
-export const NYAMA_TERRACOTTA_CONTAINER = "#c94d00";
-export const NYAMA_LEAF = "#2c694e";
-export const NYAMA_EARTHY = "#8b4c11";
-export const NYAMA_SURFACE = "#fbf9f5";
-export const NYAMA_SURFACE_LOW = "#f5f3ef";
-export const NYAMA_ON_SURFACE = "#1b1c1a";
+// ── Brand colors — Palette officielle NYAMA ──────────────────────────────────
+export const NYAMA_ORANGE = "#F57C20";
+export const NYAMA_CHARCOAL = "#3D3D3D";
+export const NYAMA_CTA_GREEN = "#1B4332";
+export const NYAMA_GOLD = "#D4A017";
+export const NYAMA_ACCENT_RED = "#E8413C";
+export const NYAMA_CREME = "#F5F5F0";
+export const NYAMA_SURFACE = "#F5F5F0";
+export const NYAMA_SURFACE_LOW = "#EFEFEF";
+export const NYAMA_ON_SURFACE = "#3D3D3D";
+
+// Compat aliases
+export const NYAMA_TERRACOTTA = NYAMA_ORANGE;
+export const NYAMA_TERRACOTTA_CONTAINER = "#E06A10";
+export const NYAMA_LEAF = NYAMA_CTA_GREEN;
+export const NYAMA_EARTHY = NYAMA_GOLD;
 
 export const CHART_COLORS = {
-  terracotta: NYAMA_TERRACOTTA,
-  terracottaLight: "#e8c4b0",
-  leaf: NYAMA_LEAF,
-  earthy: NYAMA_EARTHY,
+  orange: NYAMA_ORANGE,
+  green: NYAMA_CTA_GREEN,
+  gold: NYAMA_GOLD,
+  red: NYAMA_ACCENT_RED,
+  charcoal: NYAMA_CHARCOAL,
+  // Compat
+  terracotta: NYAMA_ORANGE,
+  terracottaLight: "#F5C49B",
+  leaf: NYAMA_CTA_GREEN,
+  earthy: NYAMA_GOLD,
   blue: "#2563eb",
   amber: "#b45309",
 };

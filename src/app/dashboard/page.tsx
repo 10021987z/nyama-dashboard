@@ -62,10 +62,10 @@ function PeriodFilter({
           style={
             selected === key
               ? {
-                  background: "linear-gradient(135deg, #a03c00, #c94d00)",
+                  background: "linear-gradient(135deg, #F57C20, #E06A10)",
                   color: "#fff",
                 }
-              : { color: "#7c7570" }
+              : { color: "#6B7280" }
           }
         >
           {periodLabels[key]}
@@ -192,9 +192,9 @@ function buildKpis(d: DashboardData, t: (key: string) => string): KpiDef[] {
 function KpiCard({ kpi }: { kpi: KpiDef }) {
   const { title, value, trend, subtext, icon: Icon, iconColor, iconBg, featured } = kpi;
 
-  const cardBg = featured ? "#a03c00" : "#ffffff";
-  const textColor = featured ? "#ffffff" : "#1b1c1a";
-  const mutedColor = featured ? "rgba(255,255,255,0.7)" : "#7c7570";
+  const cardBg = featured ? "#F57C20" : "#ffffff";
+  const textColor = featured ? "#ffffff" : "#3D3D3D";
+  const mutedColor = featured ? "rgba(255,255,255,0.7)" : "#6B7280";
 
   return (
     <div
@@ -216,7 +216,7 @@ function KpiCard({ kpi }: { kpi: KpiDef }) {
         {trend === "stable" ? (
           <span
             className="rounded-full px-2.5 py-1 text-[10px] font-bold"
-            style={{ backgroundColor: "#f5f3ef", color: "#7c7570" }}
+            style={{ backgroundColor: "#f5f3ef", color: "#6B7280" }}
           >
             STABLE
           </span>
@@ -239,7 +239,7 @@ function KpiCard({ kpi }: { kpi: KpiDef }) {
       <div>
         <p
           className="text-[1.6rem] font-bold leading-none"
-          style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: textColor }}
+          style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: textColor }}
         >
           {value}
         </p>
@@ -288,7 +288,7 @@ function VolumeChart({ data }: { data: DashboardData["hourlyOrders"] }) {
       <div className="flex items-center justify-between mb-4">
         <h2
           className="text-lg font-semibold"
-          style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+          style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
         >
           {t("dashboard.volumeTitle")}
         </h2>
@@ -306,12 +306,12 @@ function VolumeChart({ data }: { data: DashboardData["hourlyOrders"] }) {
         <BarChart data={data} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
           <XAxis
             dataKey="hour"
-            tick={{ fontSize: 10, fill: "#7c7570" }}
+            tick={{ fontSize: 10, fill: "#6B7280" }}
             tickLine={false}
             axisLine={false}
           />
           <YAxis
-            tick={{ fontSize: 10, fill: "#7c7570" }}
+            tick={{ fontSize: 10, fill: "#6B7280" }}
             tickLine={false}
             axisLine={false}
           />
@@ -326,9 +326,9 @@ function VolumeChart({ data }: { data: DashboardData["hourlyOrders"] }) {
                 key={i}
                 fill={
                   entry.hour === "NOW"
-                    ? "#c94d00"
+                    ? "#E06A10"
                     : entry.count >= 170
-                    ? "#a03c00"
+                    ? "#F57C20"
                     : "#e8c4b0"
                 }
               />
@@ -350,7 +350,7 @@ function QuartierChart({ data }: { data: DashboardData["revenueByQuarter"] }) {
     >
       <h2
         className="text-lg font-semibold mb-4"
-        style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+        style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
       >
         {t("dashboard.revenueByQuarter")}
       </h2>
@@ -362,7 +362,7 @@ function QuartierChart({ data }: { data: DashboardData["revenueByQuarter"] }) {
         >
           <XAxis
             type="number"
-            tick={{ fontSize: 10, fill: "#7c7570" }}
+            tick={{ fontSize: 10, fill: "#6B7280" }}
             tickLine={false}
             axisLine={false}
             tickFormatter={(v) => `${v}M`}
@@ -370,7 +370,7 @@ function QuartierChart({ data }: { data: DashboardData["revenueByQuarter"] }) {
           <YAxis
             type="category"
             dataKey="quarter"
-            tick={{ fontSize: 11, fill: "#1b1c1a" }}
+            tick={{ fontSize: 11, fill: "#3D3D3D" }}
             tickLine={false}
             axisLine={false}
             width={60}
@@ -380,14 +380,14 @@ function QuartierChart({ data }: { data: DashboardData["revenueByQuarter"] }) {
             contentStyle={tooltipStyle}
             formatter={(v) => [`${v}M FCFA`, t("dashboard.revenueLabel")]}
           />
-          <Bar dataKey="revenueM" fill="#a03c00" radius={[0, 6, 6, 0]} />
+          <Bar dataKey="revenueM" fill="#F57C20" radius={[0, 6, 6, 0]} />
         </BarChart>
       </ResponsiveContainer>
 
       {/* Insight card */}
       <div
         className="mt-4 rounded-xl p-3.5"
-        style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+        style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
       >
         <div className="flex items-start gap-2">
           <Zap className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "rgba(255,255,255,0.8)" }} />
@@ -419,30 +419,30 @@ function DeliveryDensity({
     <>
       <div
         className="relative rounded-2xl overflow-hidden p-8 min-h-[200px]"
-        style={{ backgroundColor: "#1b1c1a" }}
+        style={{ backgroundColor: "#3D3D3D" }}
       >
         <div
           className="absolute inset-0 opacity-[0.07]"
           style={{
-            backgroundImage: "radial-gradient(circle, #a03c00 1.5px, transparent 1.5px)",
+            backgroundImage: "radial-gradient(circle, #F57C20 1.5px, transparent 1.5px)",
             backgroundSize: "28px 28px",
           }}
         />
-        <div className="absolute right-24 top-8 h-28 w-28 rounded-full blur-2xl opacity-30" style={{ backgroundColor: "#a03c00" }} />
-        <div className="absolute right-40 bottom-8 h-20 w-20 rounded-full blur-xl opacity-20" style={{ backgroundColor: "#c94d00" }} />
-        <div className="absolute right-12 bottom-12 h-16 w-16 rounded-full blur-xl opacity-25" style={{ backgroundColor: "#a03c00" }} />
+        <div className="absolute right-24 top-8 h-28 w-28 rounded-full blur-2xl opacity-30" style={{ backgroundColor: "#F57C20" }} />
+        <div className="absolute right-40 bottom-8 h-20 w-20 rounded-full blur-xl opacity-20" style={{ backgroundColor: "#E06A10" }} />
+        <div className="absolute right-12 bottom-12 h-16 w-16 rounded-full blur-xl opacity-25" style={{ backgroundColor: "#F57C20" }} />
         <div className="absolute right-64 top-12 h-12 w-12 rounded-full blur-lg opacity-15" style={{ backgroundColor: "#8b4c11" }} />
 
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-2">
-            <Activity className="h-4 w-4" style={{ color: "#a03c00" }} />
+            <Activity className="h-4 w-4" style={{ color: "#F57C20" }} />
             <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.5)" }}>
               {t("dashboard.realtime")}
             </span>
           </div>
           <h2
             className="text-2xl font-semibold text-white mb-2"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif" }}
           >
             {t("dashboard.deliveryDensity")}
           </h2>
@@ -463,13 +463,13 @@ function DeliveryDensity({
       {showMap && (
         <div
           className="fixed inset-0 z-50 flex flex-col"
-          style={{ backgroundColor: "#1b1c1a" }}
+          style={{ backgroundColor: "#3D3D3D" }}
         >
           {/* Header */}
           <div className="flex items-center justify-between px-8 py-5">
             <h2
               className="text-2xl font-semibold text-white"
-              style={{ fontFamily: "var(--font-newsreader), Georgia, serif" }}
+              style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif" }}
             >
               Carte de Densit&eacute; des Livraisons
             </h2>
@@ -487,7 +487,7 @@ function DeliveryDensity({
             <div
               className="absolute inset-0 opacity-[0.05]"
               style={{
-                backgroundImage: "radial-gradient(circle, #a03c00 1px, transparent 1px)",
+                backgroundImage: "radial-gradient(circle, #F57C20 1px, transparent 1px)",
                 backgroundSize: "20px 20px",
               }}
             />
@@ -516,7 +516,7 @@ function DeliveryDensity({
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
                     <div
                       className="h-3 w-3 rounded-full mb-1"
-                      style={{ background: "linear-gradient(135deg, #c94d00, #a03c00)" }}
+                      style={{ background: "linear-gradient(135deg, #E06A10, #F57C20)" }}
                     />
                     <span className="text-white text-xs font-semibold whitespace-nowrap">{q.quarter}</span>
                     <span className="text-white/60 text-[10px]">{q.revenueM}M FCFA</span>
@@ -566,11 +566,11 @@ export default function DashboardPage() {
         <div>
           <h1
             className="text-[2rem] font-semibold italic leading-tight"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {t("dashboard.title")}
           </h1>
-          <p className="mt-1 text-sm" style={{ color: "#7c7570" }}>
+          <p className="mt-1 text-sm" style={{ color: "#6B7280" }}>
             {t("dashboard.subtitle")}
           </p>
         </div>

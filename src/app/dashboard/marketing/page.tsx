@@ -27,7 +27,7 @@ function initials(name?: string | null): string {
   return name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
 }
 
-const AVATAR_COLORS = ["#a03c00", "#2c694e", "#8b4c11", "#c94d00", "#b45309", "#2563eb", "#7c3aed", "#db2777"];
+const AVATAR_COLORS = ["#F57C20", "#2c694e", "#8b4c11", "#E06A10", "#b45309", "#2563eb", "#7c3aed", "#db2777"];
 function avatarColor(id?: string | null): string {
   if (!id) return AVATAR_COLORS[0];
   const n = id.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
@@ -60,7 +60,7 @@ function StatCard({
       className="rounded-2xl p-5 flex items-start gap-4"
       style={
         highlight
-          ? { background: "linear-gradient(135deg, #a03c00, #c94d00)" }
+          ? { background: "linear-gradient(135deg, #F57C20, #E06A10)" }
           : { backgroundColor: "#ffffff", boxShadow: "0 2px 24px rgba(160,60,0,0.05), 0 1px 3px rgba(27,28,26,0.04)" }
       }
     >
@@ -78,8 +78,8 @@ function StatCard({
             <p
               className="text-[1.6rem] font-bold leading-tight"
               style={{
-                fontFamily: "var(--font-newsreader), Georgia, serif",
-                color: highlight ? "#ffffff" : "#1b1c1a",
+                fontFamily: "var(--font-montserrat), system-ui, sans-serif",
+                color: highlight ? "#ffffff" : "#3D3D3D",
               }}
             >
               {value}
@@ -96,7 +96,7 @@ function StatCard({
         </div>
         <p
           className="text-[10px] font-semibold uppercase tracking-wider"
-          style={{ color: highlight ? "rgba(255,255,255,0.7)" : "#7c7570" }}
+          style={{ color: highlight ? "rgba(255,255,255,0.7)" : "#6B7280" }}
         >
           {label}
         </p>
@@ -128,8 +128,8 @@ function InfluencerCard({ inf }: { inf: Influencer }) {
           {initials(inf.name)}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold truncate" style={{ color: "#1b1c1a" }}>{inf.name}</p>
-          <p className="text-[10px]" style={{ color: "#7c7570" }}>{inf.type}</p>
+          <p className="text-sm font-semibold truncate" style={{ color: "#3D3D3D" }}>{inf.name}</p>
+          <p className="text-[10px]" style={{ color: "#6B7280" }}>{inf.type}</p>
         </div>
         {inf.trend > 0 && (
           <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ backgroundColor: "#dcfce7", color: "#166534" }}>
@@ -138,13 +138,13 @@ function InfluencerCard({ inf }: { inf: Influencer }) {
         )}
       </div>
       <div className="rounded-xl px-3 py-2" style={{ backgroundColor: "#f5f3ef" }}>
-        <p className="text-[10px] font-mono font-bold tracking-wider" style={{ color: "#a03c00" }}>
+        <p className="text-[10px] font-mono font-bold tracking-wider" style={{ color: "#F57C20" }}>
           CODE: {inf.code}
         </p>
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-xs" style={{ color: "#7c7570" }}>{inf.uses} {t("marketing.uses")}</span>
-        <span className="text-xs font-bold" style={{ color: "#1b1c1a" }}>{formatFcfa(inf.revenue)}</span>
+        <span className="text-xs" style={{ color: "#6B7280" }}>{inf.uses} {t("marketing.uses")}</span>
+        <span className="text-xs font-bold" style={{ color: "#3D3D3D" }}>{formatFcfa(inf.revenue)}</span>
       </div>
     </div>
   );
@@ -164,18 +164,18 @@ function CalendarCard({ event, onClick }: { event: CalendarEvent; onClick?: () =
     >
       <div
         className="flex flex-col items-center justify-center rounded-xl px-3 py-2 shrink-0"
-        style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+        style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
       >
         <span className="text-[10px] font-bold uppercase" style={{ color: "rgba(255,255,255,0.7)" }}>{month}</span>
         <span className="text-lg font-bold leading-none text-white">{day}</span>
       </div>
       <div className="min-w-0">
-        <p className="text-sm font-semibold" style={{ color: "#1b1c1a" }}>{event.title}</p>
+        <p className="text-sm font-semibold" style={{ color: "#3D3D3D" }}>{event.title}</p>
         {event.code && (
-          <p className="text-[10px] font-mono mt-0.5" style={{ color: "#a03c00" }}>CODE: {event.code}</p>
+          <p className="text-[10px] font-mono mt-0.5" style={{ color: "#F57C20" }}>CODE: {event.code}</p>
         )}
         {event.action && (
-          <p className="text-[10px] mt-0.5" style={{ color: "#7c7570" }}>{event.action}</p>
+          <p className="text-[10px] mt-0.5" style={{ color: "#6B7280" }}>{event.action}</p>
         )}
       </div>
     </div>
@@ -195,23 +195,23 @@ function PromotionCard({ promo }: { promo: Promotion }) {
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
         style={{ backgroundColor: "#fdf3ee" }}
       >
-        <Tag className="h-5 w-5" style={{ color: "#a03c00" }} />
+        <Tag className="h-5 w-5" style={{ color: "#F57C20" }} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold" style={{ color: "#1b1c1a" }}>{promo.name}</p>
+        <p className="text-sm font-semibold" style={{ color: "#3D3D3D" }}>{promo.name}</p>
         <div className="flex items-center gap-2 mt-1">
           <span
             className="rounded-full px-2 py-0.5 text-[10px] font-mono font-bold"
-            style={{ backgroundColor: "#fdf3ee", color: "#a03c00" }}
+            style={{ backgroundColor: "#fdf3ee", color: "#F57C20" }}
           >
             {promo.code}
           </span>
-          <span className="text-[10px]" style={{ color: "#7c7570" }}>
+          <span className="text-[10px]" style={{ color: "#6B7280" }}>
             {t("marketing.expire")}: {formatDate(promo.expiresAt)}
           </span>
         </div>
       </div>
-      <span className="text-xs font-semibold shrink-0" style={{ color: "#7c7570" }}>
+      <span className="text-xs font-semibold shrink-0" style={{ color: "#6B7280" }}>
         {promo.uses} {t("marketing.uses")}
       </span>
     </div>
@@ -224,13 +224,13 @@ function CampaignRow({ c }: { c: Campaign }) {
   return (
     <tr className="hover:bg-[#fbf9f5] transition-colors">
       <td className="px-4 py-3">
-        <span className="text-xs" style={{ color: "#7c7570" }}>{formatDate(c.date)}</span>
+        <span className="text-xs" style={{ color: "#6B7280" }}>{formatDate(c.date)}</span>
       </td>
       <td className="px-4 py-3">
-        <p className="text-sm truncate max-w-[250px]" style={{ color: "#1b1c1a" }}>{c.message}</p>
+        <p className="text-sm truncate max-w-[250px]" style={{ color: "#3D3D3D" }}>{c.message}</p>
       </td>
       <td className="px-4 py-3">
-        <span className="text-sm font-semibold" style={{ color: "#1b1c1a" }}>{formatNumber(c.audience)}</span>
+        <span className="text-sm font-semibold" style={{ color: "#3D3D3D" }}>{formatNumber(c.audience)}</span>
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
@@ -240,7 +240,7 @@ function CampaignRow({ c }: { c: Campaign }) {
               style={{ width: `${Math.min(100, c.openRate)}%`, backgroundColor: c.openRate > 50 ? "#16a34a" : "#b45309" }}
             />
           </div>
-          <span className="text-xs font-bold shrink-0" style={{ color: "#1b1c1a" }}>{c.openRate}%</span>
+          <span className="text-xs font-bold shrink-0" style={{ color: "#3D3D3D" }}>{c.openRate}%</span>
         </div>
       </td>
     </tr>
@@ -258,7 +258,7 @@ function Toast({ message, onDone }: { message: string; onDone: () => void }) {
   return (
     <div
       className="fixed bottom-6 right-6 z-[100] rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-lg animate-in fade-in slide-in-from-bottom-4"
-      style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+      style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
     >
       {message}
     </div>
@@ -285,7 +285,7 @@ function DialogTitle({ children }: { children: React.ReactNode }) {
   return (
     <h3
       className="text-xl font-semibold italic"
-      style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+      style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
     >
       {children}
     </h3>
@@ -299,14 +299,14 @@ function DialogInput({
 }) {
   return (
     <div className="space-y-1">
-      <label className="text-xs font-semibold" style={{ color: "#7c7570" }}>{label}</label>
+      <label className="text-xs font-semibold" style={{ color: "#6B7280" }}>{label}</label>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className="w-full rounded-xl px-3 py-2.5 text-sm outline-none border-0"
-        style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+        style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
       />
     </div>
   );
@@ -319,14 +319,14 @@ function DialogTextarea({
 }) {
   return (
     <div className="space-y-1">
-      <label className="text-xs font-semibold" style={{ color: "#7c7570" }}>{label}</label>
+      <label className="text-xs font-semibold" style={{ color: "#6B7280" }}>{label}</label>
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         rows={3}
         className="w-full rounded-xl px-3 py-2.5 text-sm outline-none border-0 resize-none"
-        style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+        style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
       />
     </div>
   );
@@ -339,12 +339,12 @@ function DialogSelect({
 }) {
   return (
     <div className="space-y-1">
-      <label className="text-xs font-semibold" style={{ color: "#7c7570" }}>{label}</label>
+      <label className="text-xs font-semibold" style={{ color: "#6B7280" }}>{label}</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-xl px-3 py-2.5 text-sm outline-none border-0 appearance-none"
-        style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+        style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>{o.label}</option>
@@ -360,7 +360,7 @@ function DialogButton({ children, onClick, disabled }: { children: React.ReactNo
       onClick={onClick}
       disabled={disabled}
       className="w-full rounded-full py-2.5 text-sm font-semibold text-white transition-all disabled:opacity-50"
-      style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+      style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
     >
       {children}
     </button>
@@ -489,13 +489,13 @@ export default function MarketingPage() {
         <div>
           <h1
             className="text-[2rem] font-semibold italic leading-tight"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {t("marketing.title")}
           </h1>
           <p
             className="mt-1 text-sm italic"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#7c7570" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#6B7280" }}
           >
             {t("marketing.subtitle")}
           </p>
@@ -503,7 +503,7 @@ export default function MarketingPage() {
         <button
           onClick={() => setShowNewCampaign(true)}
           className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90"
-          style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+          style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
         >
           <Plus className="h-4 w-4" />
           {t("marketing.newCampaign")}
@@ -515,7 +515,7 @@ export default function MarketingPage() {
       {/* KPI Cards */}
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <StatCard
-          icon={<TrendingUp className="h-5 w-5" style={{ color: "#a03c00" }} />}
+          icon={<TrendingUp className="h-5 w-5" style={{ color: "#F57C20" }} />}
           label={t("marketing.conversionRate")}
           value={stats ? `${stats.conversionRate}%` : "\u2014"}
           sub="+3.2% vs last month"
@@ -553,14 +553,14 @@ export default function MarketingPage() {
           <div className="flex items-center justify-between">
             <h2
               className="text-lg font-semibold italic"
-              style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+              style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
             >
               {t("marketing.influencers")}
             </h2>
             <button
               onClick={() => setShowNewInfluencer(true)}
               className="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition-colors hover:opacity-80"
-              style={{ border: "1.5px solid #a03c00", color: "#a03c00" }}
+              style={{ border: "1.5px solid #F57C20", color: "#F57C20" }}
             >
               <Plus className="h-3.5 w-3.5" />
               {t("marketing.newInfluencerCode")}
@@ -580,7 +580,7 @@ export default function MarketingPage() {
               {allInfluencers.length === 0 && (
                 <div className="col-span-2 flex flex-col items-center py-12">
                   <Users className="h-8 w-8 mb-2" style={{ color: "#e8e4de" }} />
-                  <p className="text-sm" style={{ color: "#7c7570" }}>{t("marketing.noInfluencer")}</p>
+                  <p className="text-sm" style={{ color: "#6B7280" }}>{t("marketing.noInfluencer")}</p>
                 </div>
               )}
             </div>
@@ -592,11 +592,11 @@ export default function MarketingPage() {
           <div className="flex items-center justify-between">
             <h2
               className="text-lg font-semibold italic"
-              style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+              style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
             >
               {t("marketing.calendar")}
             </h2>
-            <Calendar className="h-4 w-4" style={{ color: "#7c7570" }} />
+            <Calendar className="h-4 w-4" style={{ color: "#6B7280" }} />
           </div>
           <div
             className="rounded-2xl p-5 space-y-4"
@@ -615,13 +615,13 @@ export default function MarketingPage() {
             ) : (
               <div className="flex flex-col items-center py-8">
                 <Calendar className="h-8 w-8 mb-2" style={{ color: "#e8e4de" }} />
-                <p className="text-sm" style={{ color: "#7c7570" }}>{t("marketing.noEvent")}</p>
+                <p className="text-sm" style={{ color: "#6B7280" }}>{t("marketing.noEvent")}</p>
               </div>
             )}
             <button
               onClick={() => setShowNewEvent(true)}
               className="w-full rounded-full py-2 text-xs font-semibold transition-colors hover:opacity-80"
-              style={{ border: "1.5px solid #e8e4de", color: "#7c7570" }}
+              style={{ border: "1.5px solid #e8e4de", color: "#6B7280" }}
             >
               {t("marketing.addEvent")}
             </button>
@@ -633,7 +633,7 @@ export default function MarketingPage() {
       <div className="space-y-4">
         <h2
           className="text-lg font-semibold italic"
-          style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+          style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
         >
           {t("marketing.activePromos")}
         </h2>
@@ -655,7 +655,7 @@ export default function MarketingPage() {
             style={{ backgroundColor: "#ffffff", boxShadow: "0 2px 24px rgba(160,60,0,0.05)" }}
           >
             <Tag className="h-8 w-8 mb-2" style={{ color: "#e8e4de" }} />
-            <p className="text-sm" style={{ color: "#7c7570" }}>{t("marketing.noPromo")}</p>
+            <p className="text-sm" style={{ color: "#6B7280" }}>{t("marketing.noPromo")}</p>
           </div>
         )}
       </div>
@@ -666,7 +666,7 @@ export default function MarketingPage() {
         <div className="lg:col-span-3 space-y-4">
           <h2
             className="text-lg font-semibold italic"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {t("marketing.campaigns")}
           </h2>
@@ -685,10 +685,10 @@ export default function MarketingPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr style={{ backgroundColor: "#fbf9f5" }}>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>Date</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("marketing.message")}</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("marketing.audience")}</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("marketing.openRate")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#6B7280" }}>Date</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#6B7280" }}>{t("marketing.message")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#6B7280" }}>{t("marketing.audience")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#6B7280" }}>{t("marketing.openRate")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -701,7 +701,7 @@ export default function MarketingPage() {
             ) : (
               <div className="p-8 flex flex-col items-center">
                 <Megaphone className="h-8 w-8 mb-2" style={{ color: "#e8e4de" }} />
-                <p className="text-sm" style={{ color: "#7c7570" }}>{t("marketing.noCampaign")}</p>
+                <p className="text-sm" style={{ color: "#6B7280" }}>{t("marketing.noCampaign")}</p>
               </div>
             )}
           </div>
@@ -711,13 +711,13 @@ export default function MarketingPage() {
         <div className="lg:col-span-2 space-y-4">
           <h2
             className="text-lg font-semibold italic"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {t("marketing.spiceAnalytics")}
           </h2>
           <div
             className="rounded-2xl p-6 space-y-4"
-            style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+            style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
           >
             <div className="flex items-center gap-2">
               <Flame className="h-5 w-5 text-white" />
@@ -817,28 +817,28 @@ export default function MarketingPage() {
           <DialogTitle>{selectedEvent.title}</DialogTitle>
           <div className="space-y-3">
             <div className="rounded-xl px-3 py-2" style={{ backgroundColor: "#f5f3ef" }}>
-              <p className="text-[10px] font-semibold uppercase" style={{ color: "#7c7570" }}>Date</p>
-              <p className="text-sm font-semibold" style={{ color: "#1b1c1a" }}>
+              <p className="text-[10px] font-semibold uppercase" style={{ color: "#6B7280" }}>Date</p>
+              <p className="text-sm font-semibold" style={{ color: "#3D3D3D" }}>
                 {new Date(selectedEvent.date).toLocaleDateString("fr-FR", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
               </p>
             </div>
             {selectedEvent.code && (
               <div className="rounded-xl px-3 py-2" style={{ backgroundColor: "#f5f3ef" }}>
-                <p className="text-[10px] font-semibold uppercase" style={{ color: "#7c7570" }}>Code promo</p>
-                <p className="text-sm font-mono font-bold" style={{ color: "#a03c00" }}>{selectedEvent.code}</p>
+                <p className="text-[10px] font-semibold uppercase" style={{ color: "#6B7280" }}>Code promo</p>
+                <p className="text-sm font-mono font-bold" style={{ color: "#F57C20" }}>{selectedEvent.code}</p>
               </div>
             )}
             {selectedEvent.action && (
               <div className="rounded-xl px-3 py-2" style={{ backgroundColor: "#f5f3ef" }}>
-                <p className="text-[10px] font-semibold uppercase" style={{ color: "#7c7570" }}>Description</p>
-                <p className="text-sm" style={{ color: "#1b1c1a" }}>{selectedEvent.action}</p>
+                <p className="text-[10px] font-semibold uppercase" style={{ color: "#6B7280" }}>Description</p>
+                <p className="text-sm" style={{ color: "#3D3D3D" }}>{selectedEvent.action}</p>
               </div>
             )}
           </div>
           <button
             onClick={() => setSelectedEvent(null)}
             className="w-full rounded-full py-2.5 text-sm font-semibold transition-colors"
-            style={{ border: "1.5px solid #e8e4de", color: "#7c7570" }}
+            style={{ border: "1.5px solid #e8e4de", color: "#6B7280" }}
           >
             Fermer
           </button>

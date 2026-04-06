@@ -43,13 +43,13 @@ function deliveryStatusConfig(
     case "picked_up":
       return { label: t("deliveries.statusPickedUp"), bg: "#ffedd5", color: "#9a3412", icon: Package };
     case "delivering":
-      return { label: t("deliveries.statusDelivering"), bg: "#fdf3ee", color: "#a03c00", icon: Bike };
+      return { label: t("deliveries.statusDelivering"), bg: "#fdf3ee", color: "#F57C20", icon: Bike };
     case "delivered":
       return { label: t("deliveries.statusDelivered"), bg: "#dcfce7", color: "#166534", icon: CheckCircle2 };
     case "failed":
       return { label: t("deliveries.statusFailed"), bg: "#fee2e2", color: "#991b1b", icon: XCircle };
     default:
-      return { label: status, bg: "#f5f3ef", color: "#7c7570", icon: Clock };
+      return { label: status, bg: "#f5f3ef", color: "#6B7280", icon: Clock };
   }
 }
 
@@ -88,12 +88,12 @@ function StatCard({
         ) : (
           <p
             className="text-xl font-bold leading-none"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {value}
           </p>
         )}
-        <p className="text-[10px] font-semibold uppercase tracking-wider mt-0.5" style={{ color: "#7c7570" }}>
+        <p className="text-[10px] font-semibold uppercase tracking-wider mt-0.5" style={{ color: "#6B7280" }}>
           {label}
         </p>
       </div>
@@ -111,16 +111,16 @@ function DeliveryRow({ d }: { d: Delivery }) {
   return (
     <tr className="hover:bg-[#fbf9f5] transition-colors">
       <td className="px-4 py-3">
-        <span className="font-mono text-xs" style={{ color: "#7c7570" }}>
+        <span className="font-mono text-xs" style={{ color: "#6B7280" }}>
           #{(d.orderId ?? "").slice(-6).toUpperCase()}
         </span>
       </td>
       <td className="px-4 py-3">
         <div>
-          <p className="text-sm font-medium" style={{ color: "#1b1c1a" }}>
+          <p className="text-sm font-medium" style={{ color: "#3D3D3D" }}>
             {d.clientName}
           </p>
-          <p className="text-xs" style={{ color: "#7c7570" }}>
+          <p className="text-xs" style={{ color: "#6B7280" }}>
             {d.clientPhone}
           </p>
         </div>
@@ -128,8 +128,8 @@ function DeliveryRow({ d }: { d: Delivery }) {
       <td className="px-4 py-3 hidden md:table-cell">
         {d.riderName ? (
           <div className="flex items-center gap-1.5">
-            <Bike className="h-3.5 w-3.5 shrink-0" style={{ color: "#a03c00" }} />
-            <span className="text-sm" style={{ color: "#1b1c1a" }}>
+            <Bike className="h-3.5 w-3.5 shrink-0" style={{ color: "#F57C20" }} />
+            <span className="text-sm" style={{ color: "#3D3D3D" }}>
               {d.riderName}
             </span>
           </div>
@@ -149,23 +149,23 @@ function DeliveryRow({ d }: { d: Delivery }) {
       <td className="px-4 py-3 hidden lg:table-cell">
         {(d.neighborhood || d.city) && (
           <div className="flex items-center gap-1">
-            <MapPin className="h-3 w-3 shrink-0" style={{ color: "#a03c00" }} />
-            <span className="text-xs" style={{ color: "#7c7570" }}>
+            <MapPin className="h-3 w-3 shrink-0" style={{ color: "#F57C20" }} />
+            <span className="text-xs" style={{ color: "#6B7280" }}>
               {d.neighborhood ? `${d.neighborhood}, ${d.city}` : d.city}
             </span>
           </div>
         )}
       </td>
       <td className="px-4 py-3 whitespace-nowrap">
-        <p className="text-sm font-semibold" style={{ color: "#1b1c1a" }}>
+        <p className="text-sm font-semibold" style={{ color: "#3D3D3D" }}>
           {formatFcfa(d.totalXaf)}
         </p>
-        <p className="text-[10px]" style={{ color: "#7c7570" }}>
+        <p className="text-[10px]" style={{ color: "#6B7280" }}>
           {t("deliveries.deliveryFeeShort")} {formatFcfa(d.deliveryFeeXaf)}
         </p>
       </td>
       <td className="px-4 py-3 hidden sm:table-cell whitespace-nowrap">
-        <span className="text-xs" style={{ color: "#7c7570" }}>
+        <span className="text-xs" style={{ color: "#6B7280" }}>
           {formatRelative(d.assignedAt ?? d.createdAt)}
         </span>
       </td>
@@ -221,11 +221,11 @@ export default function DeliveriesPage() {
         <div>
           <h1
             className="text-[1.8rem] font-semibold italic leading-tight"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {t("deliveries.title")}
           </h1>
-          <p className="mt-1 text-sm" style={{ color: "#7c7570" }}>
+          <p className="mt-1 text-sm" style={{ color: "#6B7280" }}>
             {t("deliveries.subtitle")}
           </p>
         </div>
@@ -243,7 +243,7 @@ export default function DeliveriesPage() {
 
       {/* Stats */}
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={<Activity className="h-5 w-5" />} label={t("deliveries.activeDeliveries")} value={loading ? "—" : inProgress} color="#a03c00" loading={loading} />
+        <StatCard icon={<Activity className="h-5 w-5" />} label={t("deliveries.activeDeliveries")} value={loading ? "—" : inProgress} color="#F57C20" loading={loading} />
         <StatCard icon={<Clock className="h-5 w-5" />} label={t("deliveries.avgTime")} value={loading ? "—" : pending} color="#b45309" loading={loading} />
         <StatCard icon={<CheckCircle2 className="h-5 w-5" />} label={t("deliveries.successRate")} value={loading ? "—" : delivered} color="#16a34a" loading={loading} />
         <StatCard icon={<XCircle className="h-5 w-5" />} label={t("deliveries.availableRiders")} value={loading ? "—" : failed} color="#ef4444" loading={loading} />
@@ -261,8 +261,8 @@ export default function DeliveriesPage() {
             className="shrink-0 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all whitespace-nowrap"
             style={
               statusTab === tab.value
-                ? { background: "linear-gradient(135deg, #a03c00, #c94d00)", color: "#ffffff" }
-                : { color: "#7c7570" }
+                ? { background: "linear-gradient(135deg, #F57C20, #E06A10)", color: "#ffffff" }
+                : { color: "#6B7280" }
             }
           >
             {tab.label}
@@ -289,25 +289,25 @@ export default function DeliveriesPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ backgroundColor: "#fbf9f5" }}>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#6B7280" }}>
                       {t("deliveries.orderId")}
                     </th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#6B7280" }}>
                       {t("deliveries.client")}
                     </th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden md:table-cell" style={{ color: "#7c7570" }}>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden md:table-cell" style={{ color: "#6B7280" }}>
                       {t("deliveries.rider")}
                     </th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#6B7280" }}>
                       {t("deliveries.status")}
                     </th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden lg:table-cell" style={{ color: "#7c7570" }}>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden lg:table-cell" style={{ color: "#6B7280" }}>
                       {t("deliveries.zone")}
                     </th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#6B7280" }}>
                       {t("deliveries.amount")}
                     </th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden sm:table-cell" style={{ color: "#7c7570" }}>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden sm:table-cell" style={{ color: "#6B7280" }}>
                       {t("deliveries.date")}
                     </th>
                   </tr>
@@ -317,7 +317,7 @@ export default function DeliveriesPage() {
                     <tr>
                       <td colSpan={7} className="px-4 py-16 text-center">
                         <Truck className="h-8 w-8 mx-auto mb-2" style={{ color: "#e8e4de" }} />
-                        <p className="text-sm" style={{ color: "#7c7570" }}>
+                        <p className="text-sm" style={{ color: "#6B7280" }}>
                           {t("deliveries.noDelivery")}
                         </p>
                       </td>
@@ -335,9 +335,9 @@ export default function DeliveriesPage() {
                 className="flex items-center justify-between px-4 py-3"
                 style={{ borderTop: "1px solid #f5f3ef" }}
               >
-                <p className="text-sm" style={{ color: "#7c7570" }}>
+                <p className="text-sm" style={{ color: "#6B7280" }}>
                   {t("common.page")} {page} / {totalPages} &bull;{" "}
-                  <span className="font-medium" style={{ color: "#1b1c1a" }}>
+                  <span className="font-medium" style={{ color: "#3D3D3D" }}>
                     {data?.total.toLocaleString("fr-FR")} livraisons
                   </span>
                 </p>
@@ -346,7 +346,7 @@ export default function DeliveriesPage() {
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page <= 1}
                     className="flex items-center gap-1 rounded-full px-3.5 py-1.5 text-xs font-medium disabled:opacity-40"
-                    style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+                    style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
                   >
                     <ChevronLeft className="h-3.5 w-3.5" />
                     {t("common.previous")}
@@ -356,8 +356,8 @@ export default function DeliveriesPage() {
                     disabled={page >= totalPages}
                     className="flex items-center gap-1 rounded-full px-3.5 py-1.5 text-xs font-medium text-white disabled:opacity-40"
                     style={{
-                      background: page >= totalPages ? "#e8e4de" : "linear-gradient(135deg, #a03c00, #c94d00)",
-                      color: page >= totalPages ? "#7c7570" : "#fff",
+                      background: page >= totalPages ? "#e8e4de" : "linear-gradient(135deg, #F57C20, #E06A10)",
+                      color: page >= totalPages ? "#6B7280" : "#fff",
                     }}
                   >
                     {t("common.next")}

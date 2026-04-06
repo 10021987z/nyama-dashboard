@@ -32,7 +32,7 @@ function initials(name?: string | null): string {
 }
 
 const AVATAR_COLORS = [
-  "#a03c00", "#2c694e", "#8b4c11", "#c94d00",
+  "#F57C20", "#2c694e", "#8b4c11", "#E06A10",
   "#b45309", "#2563eb", "#7c3aed", "#db2777",
 ];
 
@@ -77,12 +77,12 @@ function StatCard({
         ) : (
           <p
             className="text-[1.6rem] font-bold leading-tight"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {value}
           </p>
         )}
-        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#7c7570" }}>
+        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#6B7280" }}>
           {label}
         </p>
         {sub && (
@@ -135,11 +135,11 @@ function RestaurantCard({
         <div className="flex-1 min-w-0">
           <p
             className="text-base font-semibold leading-tight truncate"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {name}
           </p>
-          <p className="text-xs truncate" style={{ color: "#7c7570" }}>
+          <p className="text-xs truncate" style={{ color: "#6B7280" }}>
             {r.neighborhood ? `${r.neighborhood}, ` : ""}
             {r.city ?? "\u2014"}
           </p>
@@ -170,7 +170,7 @@ function RestaurantCard({
           {specs.length > 3 && (
             <span
               className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
-              style={{ backgroundColor: "#f5f3ef", color: "#7c7570" }}
+              style={{ backgroundColor: "#f5f3ef", color: "#6B7280" }}
             >
               +{specs.length - 3}
             </span>
@@ -181,7 +181,7 @@ function RestaurantCard({
       {/* Rating bar */}
       <div className="flex items-center gap-2">
         <Star className="h-3.5 w-3.5 shrink-0" style={{ color: "#b45309" }} strokeWidth={2} />
-        <span className="text-sm font-bold" style={{ color: "#1b1c1a" }}>
+        <span className="text-sm font-bold" style={{ color: "#3D3D3D" }}>
           {(r.avgRating ?? 0).toFixed(1)}
         </span>
         <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "#f5f3ef" }}>
@@ -198,15 +198,15 @@ function RestaurantCard({
         style={{ backgroundColor: "#fbf9f5" }}
       >
         <div className="flex items-center gap-1.5">
-          <Package className="h-3.5 w-3.5" style={{ color: "#a03c00" }} strokeWidth={2} />
-          <span className="text-xs font-semibold" style={{ color: "#1b1c1a" }}>
+          <Package className="h-3.5 w-3.5" style={{ color: "#F57C20" }} strokeWidth={2} />
+          <span className="text-xs font-semibold" style={{ color: "#3D3D3D" }}>
             {(r.totalOrders ?? 0).toLocaleString("fr-FR")}
           </span>
-          <span className="text-[10px]" style={{ color: "#7c7570" }}>{t("restaurants.orders")}</span>
+          <span className="text-[10px]" style={{ color: "#6B7280" }}>{t("restaurants.orders")}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <TrendingUp className="h-3.5 w-3.5" style={{ color: "#2c694e" }} strokeWidth={2} />
-          <span className="text-xs font-semibold" style={{ color: "#1b1c1a" }}>
+          <span className="text-xs font-semibold" style={{ color: "#3D3D3D" }}>
             {formatFcfaCompact(r.totalRevenue)}
           </span>
         </div>
@@ -217,7 +217,7 @@ function RestaurantCard({
         <button
           onClick={() => onView(r)}
           className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-1.5 text-xs font-semibold transition-colors"
-          style={{ backgroundColor: "#f5f3ef", color: "#7c7570" }}
+          style={{ backgroundColor: "#f5f3ef", color: "#6B7280" }}
           title="Voir"
         >
           <Eye className="h-3.5 w-3.5" />
@@ -226,7 +226,7 @@ function RestaurantCard({
         <button
           onClick={() => onEdit(r)}
           className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-1.5 text-xs font-semibold transition-colors"
-          style={{ backgroundColor: "#fdf3ee", color: "#a03c00" }}
+          style={{ backgroundColor: "#fdf3ee", color: "#F57C20" }}
           title="Modifier"
         >
           <Pencil className="h-3.5 w-3.5" />
@@ -271,7 +271,7 @@ function Toast({ message, onDone }: { message: string; onDone: () => void }) {
   return (
     <div
       className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] rounded-2xl px-5 py-3 text-sm font-semibold text-white shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-300"
-      style={{ backgroundColor: "#a03c00" }}
+      style={{ backgroundColor: "#F57C20" }}
     >
       {message}
     </div>
@@ -298,7 +298,7 @@ function ViewDialog({ r, onClose }: { r: Restaurant; onClose: () => void }) {
         <button
           onClick={onClose}
           className="absolute top-4 right-4 rounded-full p-1 transition-colors"
-          style={{ color: "#7c7570" }}
+          style={{ color: "#6B7280" }}
         >
           <X className="h-5 w-5" />
         </button>
@@ -313,11 +313,11 @@ function ViewDialog({ r, onClose }: { r: Restaurant; onClose: () => void }) {
           <div>
             <p
               className="text-lg font-semibold"
-              style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+              style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
             >
               {name}
             </p>
-            <p className="text-xs" style={{ color: "#7c7570" }}>
+            <p className="text-xs" style={{ color: "#6B7280" }}>
               {r.neighborhood ? `${r.neighborhood}, ` : ""}{r.city ?? "\u2014"}
             </p>
           </div>
@@ -326,7 +326,7 @@ function ViewDialog({ r, onClose }: { r: Restaurant; onClose: () => void }) {
         <div className="space-y-2.5">
           {specs.length > 0 && (
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "#7c7570" }}>
+              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "#6B7280" }}>
                 Sp\u00e9cialit\u00e9s
               </p>
               <div className="flex flex-wrap gap-1">
@@ -355,7 +355,7 @@ function ViewDialog({ r, onClose }: { r: Restaurant; onClose: () => void }) {
               className="h-2.5 w-2.5 rounded-full"
               style={{ backgroundColor: r.isActive ? "#16a34a" : "#e5e7eb" }}
             />
-            <span className="text-sm font-semibold" style={{ color: r.isActive ? "#16a34a" : "#7c7570" }}>
+            <span className="text-sm font-semibold" style={{ color: r.isActive ? "#16a34a" : "#6B7280" }}>
               {r.isActive ? "Actif" : "Inactif"}
             </span>
           </div>
@@ -368,10 +368,10 @@ function ViewDialog({ r, onClose }: { r: Restaurant; onClose: () => void }) {
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#7c7570" }}>
+      <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#6B7280" }}>
         {label}
       </p>
-      <p className="text-sm font-semibold" style={{ color: "#1b1c1a" }}>{value}</p>
+      <p className="text-sm font-semibold" style={{ color: "#3D3D3D" }}>{value}</p>
     </div>
   );
 }
@@ -418,21 +418,21 @@ function EditDialog({
         <button
           onClick={onClose}
           className="absolute top-4 right-4 rounded-full p-1 transition-colors"
-          style={{ color: "#7c7570" }}
+          style={{ color: "#6B7280" }}
         >
           <X className="h-5 w-5" />
         </button>
 
         <p
           className="text-lg font-semibold"
-          style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+          style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
         >
           Modifier le restaurant
         </p>
 
         <div className="space-y-3">
           <div>
-            <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: "#7c7570" }}>
+            <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: "#6B7280" }}>
               Nom
             </label>
             <input
@@ -440,12 +440,12 @@ function EditDialog({
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
               className="w-full rounded-xl px-3.5 py-2 text-sm outline-none"
-              style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+              style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
             />
           </div>
 
           <div>
-            <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: "#7c7570" }}>
+            <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: "#6B7280" }}>
               Sp\u00e9cialit\u00e9s (s\u00e9par\u00e9es par des virgules)
             </label>
             <input
@@ -453,12 +453,12 @@ function EditDialog({
               value={editSpecialty}
               onChange={(e) => setEditSpecialty(e.target.value)}
               className="w-full rounded-xl px-3.5 py-2 text-sm outline-none"
-              style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+              style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
             />
           </div>
 
           <div>
-            <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: "#7c7570" }}>
+            <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: "#6B7280" }}>
               Statut
             </label>
             <div className="flex items-center gap-2">
@@ -466,7 +466,7 @@ function EditDialog({
                 className="h-2.5 w-2.5 rounded-full"
                 style={{ backgroundColor: r.isActive ? "#16a34a" : "#e5e7eb" }}
               />
-              <span className="text-sm font-semibold" style={{ color: r.isActive ? "#16a34a" : "#7c7570" }}>
+              <span className="text-sm font-semibold" style={{ color: r.isActive ? "#16a34a" : "#6B7280" }}>
                 {r.isActive ? "Actif" : "Inactif"}
               </span>
             </div>
@@ -477,7 +477,7 @@ function EditDialog({
           <button
             onClick={handleSave}
             className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white transition-colors"
-            style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+            style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
           >
             Sauvegarder
           </button>
@@ -600,11 +600,11 @@ export default function RestaurantsPage() {
       <div>
         <h1
           className="text-[1.8rem] font-semibold italic leading-tight"
-          style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+          style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
         >
           {t("restaurants.title")}
         </h1>
-        <p className="mt-1 text-sm" style={{ color: "#7c7570" }}>
+        <p className="mt-1 text-sm" style={{ color: "#6B7280" }}>
           {t("restaurants.subtitle")}
         </p>
       </div>
@@ -612,7 +612,7 @@ export default function RestaurantsPage() {
       {/* Stats */}
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <StatCard
-          icon={<ChefHat className="h-5 w-5" style={{ color: "#a03c00" }} />}
+          icon={<ChefHat className="h-5 w-5" style={{ color: "#F57C20" }} />}
           label={t("restaurants.total")}
           value={data?.total ?? "—"}
           loading={loading}
@@ -648,14 +648,14 @@ export default function RestaurantsPage() {
           className="flex flex-1 min-w-[200px] items-center gap-2 rounded-full px-3.5 py-2"
           style={{ backgroundColor: "#f5f3ef" }}
         >
-          <Search className="h-4 w-4 shrink-0" style={{ color: "#7c7570" }} />
+          <Search className="h-4 w-4 shrink-0" style={{ color: "#6B7280" }} />
           <input
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder={t("restaurants.searchPlaceholder")}
             className="flex-1 bg-transparent text-sm outline-none"
-            style={{ color: "#1b1c1a" }}
+            style={{ color: "#3D3D3D" }}
           />
         </div>
 
@@ -664,7 +664,7 @@ export default function RestaurantsPage() {
           value={cityFilter}
           onChange={(e) => { setCityFilter(e.target.value); setPage(1); }}
           className="rounded-full px-4 py-2 text-sm outline-none cursor-pointer"
-          style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+          style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
         >
           <option value="">{t("restaurants.allQuarters")}</option>
           <option value="Douala">Douala</option>
@@ -676,7 +676,7 @@ export default function RestaurantsPage() {
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
           className="rounded-full px-4 py-2 text-sm outline-none cursor-pointer"
-          style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+          style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
         >
           <option value="">{t("restaurants.allStatus")}</option>
           <option value="active">{t("restaurants.activeFilter")}</option>
@@ -687,7 +687,7 @@ export default function RestaurantsPage() {
         <button
           onClick={() => { setSearch(""); setCityFilter(""); setStatusFilter(""); setPage(1); }}
           className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors"
-          style={{ backgroundColor: "#f5f3ef", color: "#7c7570" }}
+          style={{ backgroundColor: "#f5f3ef", color: "#6B7280" }}
         >
           <RotateCcw className="h-3.5 w-3.5" />
           {t("common.reset")}
@@ -706,7 +706,7 @@ export default function RestaurantsPage() {
       ) : data?.data.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
           <ChefHat className="h-10 w-10" style={{ color: "#e8e4de" }} />
-          <p className="text-sm" style={{ color: "#7c7570" }}>
+          <p className="text-sm" style={{ color: "#6B7280" }}>
             {t("restaurants.noRestaurant")}
           </p>
         </div>
@@ -729,9 +729,9 @@ export default function RestaurantsPage() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">
-              <p className="text-sm" style={{ color: "#7c7570" }}>
+              <p className="text-sm" style={{ color: "#6B7280" }}>
                 {t("common.page")} {page} {t("common.of")} {totalPages} &bull;{" "}
-                <span className="font-medium" style={{ color: "#1b1c1a" }}>
+                <span className="font-medium" style={{ color: "#3D3D3D" }}>
                   {data?.total.toLocaleString("fr-FR")} restaurants
                 </span>
               </p>
@@ -740,7 +740,7 @@ export default function RestaurantsPage() {
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page <= 1}
                   className="flex items-center gap-1 rounded-full px-4 py-1.5 text-sm font-medium transition-all disabled:opacity-40"
-                  style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+                  style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
                 >
                   <ChevronLeft className="h-4 w-4" />
                   {t("common.previous")}
@@ -752,8 +752,8 @@ export default function RestaurantsPage() {
                   style={{
                     background: page >= totalPages
                       ? "#e8e4de"
-                      : "linear-gradient(135deg, #a03c00, #c94d00)",
-                    color: page >= totalPages ? "#7c7570" : "#fff",
+                      : "linear-gradient(135deg, #F57C20, #E06A10)",
+                    color: page >= totalPages ? "#6B7280" : "#fff",
                   }}
                 >
                   {t("common.next")}

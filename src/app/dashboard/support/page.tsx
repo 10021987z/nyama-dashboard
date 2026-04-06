@@ -19,7 +19,7 @@ function initials(name?: string | null): string {
   return name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
 }
 
-const AVATAR_COLORS = ["#a03c00", "#2c694e", "#8b4c11", "#c94d00", "#b45309", "#2563eb", "#7c3aed", "#db2777"];
+const AVATAR_COLORS = ["#F57C20", "#2c694e", "#8b4c11", "#E06A10", "#b45309", "#2563eb", "#7c3aed", "#db2777"];
 function avatarColor(name?: string | null): string {
   if (!name) return AVATAR_COLORS[0];
   const n = name.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
@@ -76,7 +76,7 @@ function StatCard({
           ) : (
             <p
               className="text-[1.6rem] font-bold leading-tight"
-              style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+              style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
             >
               {value}
             </p>
@@ -93,7 +93,7 @@ function StatCard({
             </span>
           )}
         </div>
-        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#7c7570" }}>
+        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#6B7280" }}>
           {label}
         </p>
       </div>
@@ -123,21 +123,21 @@ function TicketRow({
       onMouseLeave={(e) => { if (!selected) e.currentTarget.style.backgroundColor = ""; }}
     >
       <td className="px-4 py-3">
-        <span className="font-mono text-xs font-bold" style={{ color: "#a03c00" }}>
+        <span className="font-mono text-xs font-bold" style={{ color: "#F57C20" }}>
           #{(ticket.id ?? "").slice(-6).toUpperCase()}
         </span>
       </td>
       <td className="px-4 py-3">
         <div>
-          <p className="text-sm font-medium" style={{ color: "#1b1c1a" }}>{ticket.clientName}</p>
-          <p className="text-[10px]" style={{ color: "#7c7570" }}>{ticket.clientCity}</p>
+          <p className="text-sm font-medium" style={{ color: "#3D3D3D" }}>{ticket.clientName}</p>
+          <p className="text-[10px]" style={{ color: "#6B7280" }}>{ticket.clientCity}</p>
         </div>
       </td>
       <td className="px-4 py-3 hidden md:table-cell">
-        <span className="text-xs" style={{ color: "#7c7570" }}>{ticket.restaurant}</span>
+        <span className="text-xs" style={{ color: "#6B7280" }}>{ticket.restaurant}</span>
       </td>
       <td className="px-4 py-3 hidden lg:table-cell">
-        <span className="text-xs" style={{ color: "#1b1c1a" }}>{ticket.motif}</span>
+        <span className="text-xs" style={{ color: "#3D3D3D" }}>{ticket.motif}</span>
       </td>
       <td className="px-4 py-3">
         <span
@@ -176,7 +176,7 @@ function TicketDetail({
         style={{ backgroundColor: "#ffffff", boxShadow: "0 2px 24px rgba(160,60,0,0.05)" }}
       >
         <MessageCircle className="h-10 w-10 mb-3" style={{ color: "#e8e4de" }} />
-        <p className="text-sm" style={{ color: "#7c7570" }}>
+        <p className="text-sm" style={{ color: "#6B7280" }}>
           {t("support.selectTicket")}
         </p>
       </div>
@@ -199,7 +199,7 @@ function TicketDetail({
           >
             {sev.label}
           </span>
-          <span className="text-xs font-mono" style={{ color: "#7c7570" }}>
+          <span className="text-xs font-mono" style={{ color: "#6B7280" }}>
             ID: {(ticket.id ?? "").slice(-8).toUpperCase()}
           </span>
         </div>
@@ -208,7 +208,7 @@ function TicketDetail({
       {/* Order info */}
       {ticket.orderId && (
         <div className="px-4 pt-3">
-          <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#7c7570" }}>
+          <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#6B7280" }}>
             COMMANDE #{(ticket.orderId ?? "").slice(-6).toUpperCase()}
           </p>
           <div
@@ -216,15 +216,15 @@ function TicketDetail({
             style={{ backgroundColor: "#fbf9f5" }}
           >
             <div>
-              <p className="text-xs" style={{ color: "#7c7570" }}>{t("support.orderTotal")}</p>
-              <p className="text-sm font-bold" style={{ color: "#1b1c1a" }}>
+              <p className="text-xs" style={{ color: "#6B7280" }}>{t("support.orderTotal")}</p>
+              <p className="text-sm font-bold" style={{ color: "#3D3D3D" }}>
                 {ticket.totalXaf ? formatFcfa(ticket.totalXaf) : "—"}
               </p>
             </div>
             {ticket.paymentMethod && (
               <div className="text-right">
-                <p className="text-xs" style={{ color: "#7c7570" }}>{t("support.paymentMethod")}</p>
-                <p className="text-sm font-semibold" style={{ color: "#1b1c1a" }}>{ticket.paymentMethod}</p>
+                <p className="text-xs" style={{ color: "#6B7280" }}>{t("support.paymentMethod")}</p>
+                <p className="text-sm font-semibold" style={{ color: "#3D3D3D" }}>{ticket.paymentMethod}</p>
               </div>
             )}
           </div>
@@ -243,8 +243,8 @@ function TicketDetail({
                     className="rounded-2xl px-4 py-2.5 text-sm"
                     style={
                       isClient
-                        ? { backgroundColor: "#f5f3ef", color: "#1b1c1a" }
-                        : { background: "linear-gradient(135deg, #a03c00, #c94d00)", color: "#ffffff" }
+                        ? { backgroundColor: "#f5f3ef", color: "#3D3D3D" }
+                        : { background: "linear-gradient(135deg, #F57C20, #E06A10)", color: "#ffffff" }
                     }
                   >
                     {msg.text}
@@ -262,7 +262,7 @@ function TicketDetail({
         ) : (
           <div className="flex flex-col items-center py-8">
             <Send className="h-6 w-6 mb-2" style={{ color: "#e8e4de" }} />
-            <p className="text-xs" style={{ color: "#7c7570" }}>{t("support.noMessage")}</p>
+            <p className="text-xs" style={{ color: "#6B7280" }}>{t("support.noMessage")}</p>
           </div>
         )}
       </div>
@@ -271,21 +271,21 @@ function TicketDetail({
       <div className="p-4 flex flex-wrap gap-2" style={{ borderTop: "1px solid #f5f3ef" }}>
         <button
           className="flex-1 rounded-full py-2.5 text-xs font-bold text-white transition-all"
-          style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+          style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
           onClick={() => onRefund(ticket)}
         >
           {t("support.refundClient")}
         </button>
         <button
           className="rounded-full px-4 py-2.5 text-xs font-bold transition-colors"
-          style={{ border: "1.5px solid #e8e4de", color: "#7c7570" }}
+          style={{ border: "1.5px solid #e8e4de", color: "#6B7280" }}
           onClick={() => onContactRestaurant(ticket)}
         >
           {t("support.restaurateur")}
         </button>
         <button
           className="rounded-full px-4 py-2.5 text-xs font-bold transition-colors"
-          style={{ border: "1.5px solid #e8e4de", color: "#7c7570" }}
+          style={{ border: "1.5px solid #e8e4de", color: "#6B7280" }}
           onClick={() => onClose(ticket)}
         >
           {t("support.closeTicket")}
@@ -313,7 +313,7 @@ function ReviewCard({ review }: { review: CriticalReview }) {
           {initials(review.clientName)}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold" style={{ color: "#1b1c1a" }}>{review.clientName}</p>
+          <p className="text-sm font-semibold" style={{ color: "#3D3D3D" }}>{review.clientName}</p>
           <div className="flex items-center gap-0.5 mt-0.5">
             {Array.from({ length: 5 }).map((_, i) => (
               <Star
@@ -328,7 +328,7 @@ function ReviewCard({ review }: { review: CriticalReview }) {
       </div>
       <p
         className="text-sm italic leading-relaxed"
-        style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#7c7570" }}
+        style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#6B7280" }}
       >
         &ldquo;{review.comment}&rdquo;
       </p>
@@ -337,13 +337,13 @@ function ReviewCard({ review }: { review: CriticalReview }) {
         <div className="flex gap-2">
           <button
             className="rounded-full px-3 py-1.5 text-[10px] font-bold transition-colors"
-            style={{ border: "1.5px solid #a03c00", color: "#a03c00" }}
+            style={{ border: "1.5px solid #F57C20", color: "#F57C20" }}
           >
             {t("support.openTicketBtn")}
           </button>
           <button
             className="rounded-full px-3 py-1.5 text-[10px] font-bold text-white"
-            style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+            style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
           >
             {t("support.reply")}
           </button>
@@ -462,24 +462,24 @@ export default function SupportPage() {
         <div>
           <h1
             className="text-[2rem] font-semibold italic leading-tight"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {t("support.title")}
           </h1>
-          <p className="mt-1 text-sm" style={{ color: "#7c7570" }}>
+          <p className="mt-1 text-sm" style={{ color: "#6B7280" }}>
             {t("support.subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
             className="flex items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-semibold transition-colors"
-            style={{ border: "1.5px solid #e8e4de", color: "#7c7570" }}
+            style={{ border: "1.5px solid #e8e4de", color: "#6B7280" }}
           >
             {t("common.filter")}
           </button>
           <button
             className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-all"
-            style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+            style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
             onClick={() => setShowNewTicket(true)}
           >
             <Plus className="h-4 w-4" />
@@ -513,15 +513,15 @@ export default function SupportPage() {
           label={t("support.satisfaction")}
           value={stats ? `${stats.satisfactionRate}%` : "—"}
           badge="Stable"
-          badgeColor={{ bg: "#f5f3ef", text: "#7c7570" }}
+          badgeColor={{ bg: "#f5f3ef", text: "#6B7280" }}
           loading={loading}
         />
         <StatCard
-          icon={<Banknote className="h-5 w-5" style={{ color: "#a03c00" }} />}
+          icon={<Banknote className="h-5 w-5" style={{ color: "#F57C20" }} />}
           label={t("support.refunds")}
           value={stats ? formatFcfa(stats.refundsXaf) : "—"}
           badge={t("support.monthInProgress")}
-          badgeColor={{ bg: "#fdf3ee", text: "#a03c00" }}
+          badgeColor={{ bg: "#fdf3ee", text: "#F57C20" }}
           loading={loading}
         />
       </div>
@@ -533,7 +533,7 @@ export default function SupportPage() {
           <div className="flex items-center justify-between">
             <h2
               className="text-lg font-semibold italic"
-              style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+              style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
             >
               {t("support.currentTickets")}
             </h2>
@@ -563,11 +563,11 @@ export default function SupportPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr style={{ backgroundColor: "#fbf9f5" }}>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("support.ticketId")}</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("support.client")}</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden md:table-cell" style={{ color: "#7c7570" }}>{t("support.restaurant")}</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden lg:table-cell" style={{ color: "#7c7570" }}>{t("support.motif")}</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("support.severity")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#6B7280" }}>{t("support.ticketId")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#6B7280" }}>{t("support.client")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden md:table-cell" style={{ color: "#6B7280" }}>{t("support.restaurant")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden lg:table-cell" style={{ color: "#6B7280" }}>{t("support.motif")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#6B7280" }}>{t("support.severity")}</th>
                       <th className="px-4 py-3 w-8"></th>
                     </tr>
                   </thead>
@@ -586,7 +586,7 @@ export default function SupportPage() {
             ) : (
               <div className="p-8 flex flex-col items-center">
                 <AlertTriangle className="h-8 w-8 mb-2" style={{ color: "#e8e4de" }} />
-                <p className="text-sm" style={{ color: "#7c7570" }}>{t("support.noTicket")}</p>
+                <p className="text-sm" style={{ color: "#6B7280" }}>{t("support.noTicket")}</p>
               </div>
             )}
           </div>
@@ -596,7 +596,7 @@ export default function SupportPage() {
         <div className="lg:col-span-2">
           <h2
             className="text-lg font-semibold italic mb-3"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {t("support.ticketDetail")}
           </h2>
@@ -613,7 +613,7 @@ export default function SupportPage() {
       <div className="space-y-4">
         <h2
           className="text-lg font-semibold italic"
-          style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+          style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
         >
           {t("support.criticalReviews")}
         </h2>
@@ -635,7 +635,7 @@ export default function SupportPage() {
             style={{ backgroundColor: "#ffffff", boxShadow: "0 2px 24px rgba(160,60,0,0.05)" }}
           >
             <Star className="h-8 w-8 mb-2" style={{ color: "#e8e4de" }} />
-            <p className="text-sm" style={{ color: "#7c7570" }}>{t("support.noReview")}</p>
+            <p className="text-sm" style={{ color: "#6B7280" }}>{t("support.noReview")}</p>
           </div>
         )}
       </div>
@@ -661,14 +661,14 @@ export default function SupportPage() {
           >
             <h3
               className="text-xl font-semibold italic"
-              style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+              style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
             >
               Nouveau Ticket
             </h3>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "#7c7570" }}>
+                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "#6B7280" }}>
                   Nom du client
                 </label>
                 <input
@@ -676,13 +676,13 @@ export default function SupportPage() {
                   value={newTicketForm.clientName}
                   onChange={(e) => setNewTicketForm((f) => ({ ...f, clientName: e.target.value }))}
                   className="w-full rounded-xl px-3 py-2 text-sm outline-none"
-                  style={{ border: "1.5px solid #e8e4de", color: "#1b1c1a" }}
+                  style={{ border: "1.5px solid #e8e4de", color: "#3D3D3D" }}
                   placeholder="Ex: Jean Dupont"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "#7c7570" }}>
+                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "#6B7280" }}>
                   Restaurant
                 </label>
                 <input
@@ -690,20 +690,20 @@ export default function SupportPage() {
                   value={newTicketForm.restaurant}
                   onChange={(e) => setNewTicketForm((f) => ({ ...f, restaurant: e.target.value }))}
                   className="w-full rounded-xl px-3 py-2 text-sm outline-none"
-                  style={{ border: "1.5px solid #e8e4de", color: "#1b1c1a" }}
+                  style={{ border: "1.5px solid #e8e4de", color: "#3D3D3D" }}
                   placeholder="Ex: Chez Mama"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "#7c7570" }}>
+                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "#6B7280" }}>
                   Motif
                 </label>
                 <select
                   value={newTicketForm.motif}
                   onChange={(e) => setNewTicketForm((f) => ({ ...f, motif: e.target.value }))}
                   className="w-full rounded-xl px-3 py-2 text-sm outline-none appearance-none"
-                  style={{ border: "1.5px solid #e8e4de", color: "#1b1c1a", backgroundColor: "#ffffff" }}
+                  style={{ border: "1.5px solid #e8e4de", color: "#3D3D3D", backgroundColor: "#ffffff" }}
                 >
                   <option value="Commande non reçue">Commande non reçue</option>
                   <option value="Erreur de commande">Erreur de commande</option>
@@ -714,7 +714,7 @@ export default function SupportPage() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "#7c7570" }}>
+                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "#6B7280" }}>
                   Gravité
                 </label>
                 <div className="flex gap-3">
@@ -725,16 +725,16 @@ export default function SupportPage() {
                         name="severity"
                         checked={newTicketForm.severity === sev}
                         onChange={() => setNewTicketForm((f) => ({ ...f, severity: sev }))}
-                        style={{ accentColor: "#a03c00" }}
+                        style={{ accentColor: "#F57C20" }}
                       />
-                      <span className="text-xs font-bold" style={{ color: "#1b1c1a" }}>{sev}</span>
+                      <span className="text-xs font-bold" style={{ color: "#3D3D3D" }}>{sev}</span>
                     </label>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "#7c7570" }}>
+                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "#6B7280" }}>
                   Description
                 </label>
                 <textarea
@@ -742,7 +742,7 @@ export default function SupportPage() {
                   onChange={(e) => setNewTicketForm((f) => ({ ...f, description: e.target.value }))}
                   rows={3}
                   className="w-full rounded-xl px-3 py-2 text-sm outline-none resize-none"
-                  style={{ border: "1.5px solid #e8e4de", color: "#1b1c1a" }}
+                  style={{ border: "1.5px solid #e8e4de", color: "#3D3D3D" }}
                   placeholder="Décrivez le problème..."
                 />
               </div>
@@ -752,14 +752,14 @@ export default function SupportPage() {
               <button
                 onClick={() => setShowNewTicket(false)}
                 className="flex-1 rounded-full py-2.5 text-sm font-semibold transition-colors"
-                style={{ border: "1.5px solid #e8e4de", color: "#7c7570" }}
+                style={{ border: "1.5px solid #e8e4de", color: "#6B7280" }}
               >
                 Annuler
               </button>
               <button
                 onClick={handleCreateTicket}
                 className="flex-1 rounded-full py-2.5 text-sm font-semibold text-white transition-all"
-                style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+                style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
               >
                 Créer le ticket
               </button>
@@ -772,7 +772,7 @@ export default function SupportPage() {
       {toastMessage && (
         <div
           className="fixed bottom-6 right-6 z-50 rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-lg transition-all"
-          style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)", boxShadow: "0 4px 20px rgba(160,60,0,0.3)" }}
+          style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)", boxShadow: "0 4px 20px rgba(160,60,0,0.3)" }}
         >
           {toastMessage}
         </div>

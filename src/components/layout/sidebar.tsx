@@ -47,7 +47,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   return (
     <div
       className="flex h-full flex-col"
-      style={{ backgroundColor: "#f5f3ef" }}
+      style={{ backgroundColor: "#3D3D3D" }}
     >
       {/* Logo */}
       <div className="flex h-16 items-center px-5">
@@ -55,23 +55,23 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           <p
             className="text-xl font-bold leading-tight"
             style={{
-              fontFamily: "var(--font-newsreader), Georgia, serif",
-              color: "#a03c00",
+              fontFamily: "var(--font-montserrat), system-ui, sans-serif",
+              color: "#F57C20",
             }}
           >
             Nyama Admin
           </p>
           <p
             className="text-[9px] tracking-[0.15em] uppercase leading-none mt-0.5"
-            style={{ color: "#7c7570" }}
+            style={{ color: "rgba(255,255,255,0.5)" }}
           >
-            The Modern Griot&apos;s Table
+            Cuisine camerounaise
           </p>
         </div>
       </div>
 
       {/* Divider */}
-      <div className="mx-4 h-px" style={{ backgroundColor: "#e8e4de" }} />
+      <div className="mx-4 h-px" style={{ backgroundColor: "rgba(255,255,255,0.1)" }} />
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
@@ -85,12 +85,12 @@ export function Sidebar({ onNavigate }: SidebarProps) {
               className={cn(
                 "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
                 active
-                  ? "text-[#a03c00] font-semibold"
-                  : "text-[#7c7570] hover:text-[#1b1c1a]"
+                  ? "text-[#F57C20] font-semibold"
+                  : "text-white/60 hover:text-white/90"
               )}
               style={
                 active
-                  ? { backgroundColor: "rgba(160, 60, 0, 0.08)" }
+                  ? { backgroundColor: "rgba(245, 124, 32, 0.15)" }
                   : undefined
               }
             >
@@ -98,13 +98,13 @@ export function Sidebar({ onNavigate }: SidebarProps) {
               {active && (
                 <span
                   className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full"
-                  style={{ backgroundColor: "#a03c00" }}
+                  style={{ backgroundColor: "#F57C20" }}
                 />
               )}
               <Icon
                 className="h-4 w-4 shrink-0"
                 strokeWidth={active ? 2.5 : 2}
-                style={{ color: active ? "#a03c00" : "#7c7570" }}
+                style={{ color: active ? "#F57C20" : "rgba(255,255,255,0.5)" }}
               />
               {t(labelKey)}
             </Link>
@@ -113,7 +113,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       </nav>
 
       {/* Divider */}
-      <div className="mx-4 h-px" style={{ backgroundColor: "#e8e4de" }} />
+      <div className="mx-4 h-px" style={{ backgroundColor: "rgba(255,255,255,0.1)" }} />
 
       {/* Bottom: Export + Avatar */}
       <div className="px-3 py-4 space-y-3">
@@ -150,7 +150,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           }}
           className="flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
           style={{
-            background: "linear-gradient(135deg, #a03c00, #c94d00)",
+            background: "linear-gradient(135deg, #F57C20, #E06A10)",
           }}
         >
           <Download className="h-3.5 w-3.5" />
@@ -160,15 +160,15 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         <div className="flex items-center gap-2.5 px-1">
           <div
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-            style={{ backgroundColor: "#a03c00" }}
+            style={{ backgroundColor: "#F57C20" }}
           >
             A
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-[#1b1c1a] truncate">
+            <p className="text-xs font-semibold text-[#3D3D3D] truncate">
               Administrateur
             </p>
-            <p className="text-[10px] text-[#7c7570] truncate">Super Admin</p>
+            <p className="text-[10px] text-[#6B7280] truncate">Super Admin</p>
           </div>
         </div>
       </div>

@@ -22,7 +22,7 @@ function initials(name?: string | null): string {
 }
 
 const AVATAR_COLORS = [
-  "#a03c00", "#2c694e", "#8b4c11", "#c94d00",
+  "#F57C20", "#2c694e", "#8b4c11", "#E06A10",
   "#b45309", "#2563eb", "#7c3aed", "#db2777",
 ];
 
@@ -99,7 +99,7 @@ function StatCard({
           ) : (
             <p
               className="text-[1.6rem] font-bold leading-tight"
-              style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+              style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
             >
               {value}
             </p>
@@ -113,7 +113,7 @@ function StatCard({
             </span>
           )}
         </div>
-        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#7c7570" }}>
+        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#6B7280" }}>
           {label}
         </p>
         {sub && <div className="mt-1">{sub}</div>}
@@ -133,7 +133,7 @@ function Toast({ message, onDismiss }: { message: string; onDismiss: () => void 
   return (
     <div
       className="fixed bottom-6 right-6 z-[9999] rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-lg"
-      style={{ backgroundColor: "#1b1c1a" }}
+      style={{ backgroundColor: "#3D3D3D" }}
     >
       {message}
     </div>
@@ -171,7 +171,7 @@ function ViewClientDialog({ client, onClose }: { client: Customer; onClose: () =
           onClick={onClose}
           className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[#f5f3ef] transition-colors"
         >
-          <X className="h-4 w-4" style={{ color: "#7c7570" }} />
+          <X className="h-4 w-4" style={{ color: "#6B7280" }} />
         </button>
 
         <div className="flex items-center gap-4 mb-6">
@@ -184,19 +184,19 @@ function ViewClientDialog({ client, onClose }: { client: Customer; onClose: () =
           <div>
             <h2
               className="text-xl font-semibold italic"
-              style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+              style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
             >
               {client.name}
             </h2>
-            <p className="text-xs" style={{ color: "#7c7570" }}>Fiche client</p>
+            <p className="text-xs" style={{ color: "#6B7280" }}>Fiche client</p>
           </div>
         </div>
 
         <div className="space-y-3">
           {rows.map((r) => (
             <div key={r.label} className="flex items-center justify-between py-2" style={{ borderBottom: "1px solid #f5f3ef" }}>
-              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#7c7570" }}>{r.label}</span>
-              <span className="text-sm font-medium" style={{ color: "#1b1c1a" }}>{r.value}</span>
+              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#6B7280" }}>{r.label}</span>
+              <span className="text-sm font-medium" style={{ color: "#3D3D3D" }}>{r.value}</span>
             </div>
           ))}
         </div>
@@ -204,7 +204,7 @@ function ViewClientDialog({ client, onClose }: { client: Customer; onClose: () =
         <button
           onClick={onClose}
           className="mt-6 w-full rounded-full py-2.5 text-sm font-semibold transition-colors"
-          style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+          style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
         >
           Fermer
         </button>
@@ -251,7 +251,7 @@ function EditClientDialog({
           onClick={onClose}
           className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[#f5f3ef] transition-colors"
         >
-          <X className="h-4 w-4" style={{ color: "#7c7570" }} />
+          <X className="h-4 w-4" style={{ color: "#6B7280" }} />
         </button>
 
         <div className="flex items-center gap-4 mb-6">
@@ -264,17 +264,17 @@ function EditClientDialog({
           <div>
             <h2
               className="text-xl font-semibold italic"
-              style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+              style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
             >
               Modifier le client
             </h2>
-            <p className="text-xs" style={{ color: "#7c7570" }}>{client.phone}</p>
+            <p className="text-xs" style={{ color: "#6B7280" }}>{client.phone}</p>
           </div>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "#7c7570" }}>
+            <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "#6B7280" }}>
               Nom
             </label>
             <input
@@ -282,13 +282,13 @@ function EditClientDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
-              style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a", border: "1.5px solid transparent" }}
-              onFocus={(e) => (e.target.style.borderColor = "#a03c00")}
+              style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D", border: "1.5px solid transparent" }}
+              onFocus={(e) => (e.target.style.borderColor = "#F57C20")}
               onBlur={(e) => (e.target.style.borderColor = "transparent")}
             />
           </div>
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "#7c7570" }}>
+            <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "#6B7280" }}>
               Quartier
             </label>
             <input
@@ -296,8 +296,8 @@ function EditClientDialog({
               value={quarter}
               onChange={(e) => setQuarter(e.target.value)}
               className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
-              style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a", border: "1.5px solid transparent" }}
-              onFocus={(e) => (e.target.style.borderColor = "#a03c00")}
+              style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D", border: "1.5px solid transparent" }}
+              onFocus={(e) => (e.target.style.borderColor = "#F57C20")}
               onBlur={(e) => (e.target.style.borderColor = "transparent")}
             />
           </div>
@@ -310,7 +310,7 @@ function EditClientDialog({
               onClose();
             }}
             className="flex-1 rounded-full py-2.5 text-sm font-semibold text-white transition-colors"
-            style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+            style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
           >
             Sauvegarder
           </button>
@@ -417,11 +417,11 @@ export default function CustomersPage() {
         <div>
           <h1
             className="text-[2rem] font-semibold italic leading-tight"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {t("customers.title")}
           </h1>
-          <p className="mt-1 text-sm" style={{ color: "#7c7570" }}>
+          <p className="mt-1 text-sm" style={{ color: "#6B7280" }}>
             {stats ? `${stats.totalClients.toLocaleString("fr-FR")} ${t("customers.subtitle")}` : "Chargement..."}
           </p>
         </div>
@@ -430,7 +430,7 @@ export default function CustomersPage() {
             if (data?.data) downloadCsv(data.data.map(getCustomer));
           }}
           className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors"
-          style={{ border: "1.5px solid #a03c00", color: "#a03c00", backgroundColor: "transparent" }}
+          style={{ border: "1.5px solid #F57C20", color: "#F57C20", backgroundColor: "transparent" }}
         >
           <Download className="h-4 w-4" />
           {t("customers.exportList")}
@@ -440,7 +440,7 @@ export default function CustomersPage() {
       {/* KPI Cards */}
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <StatCard
-          icon={<Users className="h-5 w-5" style={{ color: "#a03c00" }} />}
+          icon={<Users className="h-5 w-5" style={{ color: "#F57C20" }} />}
           label={t("customers.totalClients")}
           value={stats?.totalClients.toLocaleString("fr-FR") ?? "\u2014"}
           badge="+8%"
@@ -496,14 +496,14 @@ export default function CustomersPage() {
           className="flex flex-1 min-w-[220px] items-center gap-2 rounded-full px-3.5 py-2"
           style={{ backgroundColor: "#f5f3ef" }}
         >
-          <Search className="h-4 w-4 shrink-0" style={{ color: "#7c7570" }} />
+          <Search className="h-4 w-4 shrink-0" style={{ color: "#6B7280" }} />
           <input
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder={t("customers.searchPlaceholder")}
             className="flex-1 bg-transparent text-sm outline-none"
-            style={{ color: "#1b1c1a" }}
+            style={{ color: "#3D3D3D" }}
           />
         </div>
 
@@ -511,7 +511,7 @@ export default function CustomersPage() {
           value={quarterFilter}
           onChange={(e) => { setQuarterFilter(e.target.value); setPage(1); }}
           className="rounded-full px-4 py-2 text-sm outline-none cursor-pointer"
-          style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+          style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
         >
           <option value="">{t("customers.allQuarters")}</option>
           {quarters.map((q) => (
@@ -523,7 +523,7 @@ export default function CustomersPage() {
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
           className="rounded-full px-4 py-2 text-sm outline-none cursor-pointer"
-          style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+          style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
         >
           <option value="">{t("customers.allStatus")}</option>
           <option value="ACTIF">{t("customers.activeFilter")}</option>
@@ -533,7 +533,7 @@ export default function CustomersPage() {
         <button
           onClick={() => { setSearch(""); setQuarterFilter(""); setStatusFilter(""); setPage(1); }}
           className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors"
-          style={{ backgroundColor: "#f5f3ef", color: "#7c7570" }}
+          style={{ backgroundColor: "#f5f3ef", color: "#6B7280" }}
         >
           <RotateCcw className="h-3.5 w-3.5" />
           {t("common.reset")}
@@ -559,14 +559,14 @@ export default function CustomersPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ backgroundColor: "#fbf9f5" }}>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("customers.name")}</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden md:table-cell" style={{ color: "#7c7570" }}>{t("customers.quarter")}</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden lg:table-cell" style={{ color: "#7c7570" }}>{t("customers.registeredAt")}</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("customers.totalOrders")}</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("customers.totalSpent")}</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden sm:table-cell" style={{ color: "#7c7570" }}>{t("customers.lastOrder")}</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>Statut</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("customers.actions")}</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#6B7280" }}>{t("customers.name")}</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden md:table-cell" style={{ color: "#6B7280" }}>{t("customers.quarter")}</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden lg:table-cell" style={{ color: "#6B7280" }}>{t("customers.registeredAt")}</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#6B7280" }}>{t("customers.totalOrders")}</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#6B7280" }}>{t("customers.totalSpent")}</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden sm:table-cell" style={{ color: "#6B7280" }}>{t("customers.lastOrder")}</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#6B7280" }}>Statut</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#6B7280" }}>{t("customers.actions")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -574,7 +574,7 @@ export default function CustomersPage() {
                     <tr>
                       <td colSpan={8} className="px-4 py-16 text-center">
                         <Users className="h-8 w-8 mx-auto mb-2" style={{ color: "#e8e4de" }} />
-                        <p className="text-sm" style={{ color: "#7c7570" }}>{t("customers.noClient")}</p>
+                        <p className="text-sm" style={{ color: "#6B7280" }}>{t("customers.noClient")}</p>
                       </td>
                     </tr>
                   ) : (
@@ -592,25 +592,25 @@ export default function CustomersPage() {
                                 {initials(c.name)}
                               </div>
                               <div>
-                                <p className="text-sm font-medium" style={{ color: "#1b1c1a" }}>{c.name}</p>
-                                <p className="text-xs" style={{ color: "#7c7570" }}>{c.phone}</p>
+                                <p className="text-sm font-medium" style={{ color: "#3D3D3D" }}>{c.name}</p>
+                                <p className="text-xs" style={{ color: "#6B7280" }}>{c.phone}</p>
                               </div>
                             </div>
                           </td>
                           <td className="px-4 py-3 hidden md:table-cell">
-                            <span className="text-xs" style={{ color: "#7c7570" }}>{quarterDisplay(c.quarter)}</span>
+                            <span className="text-xs" style={{ color: "#6B7280" }}>{quarterDisplay(c.quarter)}</span>
                           </td>
                           <td className="px-4 py-3 hidden lg:table-cell">
-                            <span className="text-xs" style={{ color: "#7c7570" }}>{formatDate(c.createdAt)}</span>
+                            <span className="text-xs" style={{ color: "#6B7280" }}>{formatDate(c.createdAt)}</span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className="text-sm font-semibold" style={{ color: "#1b1c1a" }}>{c.totalOrders}</span>
+                            <span className="text-sm font-semibold" style={{ color: "#3D3D3D" }}>{c.totalOrders}</span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className="text-sm font-bold" style={{ color: "#a03c00" }}>{formatFcfa(c.totalSpentXaf)}</span>
+                            <span className="text-sm font-bold" style={{ color: "#F57C20" }}>{formatFcfa(c.totalSpentXaf)}</span>
                           </td>
                           <td className="px-4 py-3 hidden sm:table-cell">
-                            <span className="text-xs" style={{ color: "#7c7570" }}>
+                            <span className="text-xs" style={{ color: "#6B7280" }}>
                               {c.lastOrderAt ? formatRelative(c.lastOrderAt) : "\u2014"}
                             </span>
                           </td>
@@ -633,14 +633,14 @@ export default function CustomersPage() {
                                 className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#f5f3ef]"
                                 title="Voir"
                               >
-                                <Eye className="h-3.5 w-3.5" style={{ color: "#7c7570" }} />
+                                <Eye className="h-3.5 w-3.5" style={{ color: "#6B7280" }} />
                               </button>
                               <button
                                 onClick={() => setEditClient(c)}
                                 className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#f5f3ef]"
                                 title="\u00c9diter"
                               >
-                                <Pencil className="h-3.5 w-3.5" style={{ color: "#7c7570" }} />
+                                <Pencil className="h-3.5 w-3.5" style={{ color: "#6B7280" }} />
                               </button>
                             </div>
                           </td>
@@ -658,9 +658,9 @@ export default function CustomersPage() {
                 className="flex items-center justify-between px-4 py-3"
                 style={{ borderTop: "1px solid #f5f3ef" }}
               >
-                <p className="text-sm" style={{ color: "#7c7570" }}>
+                <p className="text-sm" style={{ color: "#6B7280" }}>
                   {t("common.page")} {page} / {totalPages} &bull;{" "}
-                  <span className="font-medium" style={{ color: "#1b1c1a" }}>
+                  <span className="font-medium" style={{ color: "#3D3D3D" }}>
                     {data?.total.toLocaleString("fr-FR")} clients
                   </span>
                 </p>
@@ -669,7 +669,7 @@ export default function CustomersPage() {
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page <= 1}
                     className="flex items-center justify-center h-8 w-8 rounded-lg text-sm font-medium disabled:opacity-40"
-                    style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+                    style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
@@ -691,8 +691,8 @@ export default function CustomersPage() {
                         className="flex items-center justify-center h-8 w-8 rounded-lg text-xs font-semibold transition-all"
                         style={
                           page === pageNum
-                            ? { background: "linear-gradient(135deg, #a03c00, #c94d00)", color: "#fff" }
-                            : { color: "#7c7570" }
+                            ? { background: "linear-gradient(135deg, #F57C20, #E06A10)", color: "#fff" }
+                            : { color: "#6B7280" }
                         }
                       >
                         {pageNum}
@@ -703,7 +703,7 @@ export default function CustomersPage() {
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page >= totalPages}
                     className="flex items-center justify-center h-8 w-8 rounded-lg text-sm font-medium disabled:opacity-40"
-                    style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+                    style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>

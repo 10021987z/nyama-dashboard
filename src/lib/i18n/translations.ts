@@ -39,7 +39,7 @@ export const translations = {
     },
     dashboard: {
       title: "Tableau de Bord Exécutif",
-      subtitle: "Vue d'ensemble des opérations Nyama \u2022 Savor Cameroon",
+      subtitle: "Vue d'ensemble des opérations Nyama \u2022 NYAMA",
       ordersToday: "Commandes aujourd'hui",
       ordersWeek: "Commandes semaine",
       revenueToday: "CA du jour",
@@ -209,7 +209,7 @@ export const translations = {
     },
     customers: {
       title: "Gestion des Clients",
-      subtitle: "clients enregistrés dans l'écosystème Savor Cameroon",
+      subtitle: "clients enregistrés dans l'écosystème NYAMA",
       exportList: "Exporter la liste",
       totalClients: "Total Clients",
       activeClients: "Clients Actifs (30j)",
@@ -402,7 +402,7 @@ export const translations = {
     },
     dashboard: {
       title: "Executive Dashboard",
-      subtitle: "Overview of Nyama operations \u2022 Savor Cameroon",
+      subtitle: "Overview of Nyama operations \u2022 NYAMA",
       ordersToday: "Orders today",
       ordersWeek: "Orders this week",
       revenueToday: "Revenue today",
@@ -572,7 +572,7 @@ export const translations = {
     },
     customers: {
       title: "Customer Management",
-      subtitle: "customers registered in the Savor Cameroon ecosystem",
+      subtitle: "customers registered in the NYAMA ecosystem",
       exportList: "Export list",
       totalClients: "Total Customers",
       activeClients: "Active Customers (30d)",
@@ -765,7 +765,7 @@ export const translations = {
     },
     dashboard: {
       title: "Big Man Dashboard",
-      subtitle: "How Nyama operations di go \u2022 Savor Cameroon",
+      subtitle: "How Nyama operations di go \u2022 NYAMA",
       ordersToday: "Orders for today",
       ordersWeek: "Orders dis week",
       revenueToday: "Money for today",
@@ -935,7 +935,7 @@ export const translations = {
     },
     customers: {
       title: "Customer dem Management",
-      subtitle: "customers wey don register for Savor Cameroon",
+      subtitle: "customers wey don register for NYAMA",
       exportList: "Carry list comot",
       totalClients: "All Customers",
       activeClients: "Active Customers (30 days)",

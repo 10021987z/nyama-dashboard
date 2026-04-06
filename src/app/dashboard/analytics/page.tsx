@@ -27,7 +27,7 @@ const PAYMENT_COLORS: Record<string, string> = {
 };
 
 function getPaymentColor(method: string, fallbackColor?: string): string {
-  return PAYMENT_COLORS[method] ?? fallbackColor ?? "#a03c00";
+  return PAYMENT_COLORS[method] ?? fallbackColor ?? "#F57C20";
 }
 
 const tooltipStyle = {
@@ -78,7 +78,7 @@ function StatCard({
           ) : (
             <p
               className="text-[1.5rem] font-bold leading-tight"
-              style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+              style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
             >
               {value}
             </p>
@@ -96,7 +96,7 @@ function StatCard({
             </span>
           )}
         </div>
-        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#7c7570" }}>
+        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#6B7280" }}>
           {label}
         </p>
         {sub && (
@@ -106,7 +106,7 @@ function StatCard({
           <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "#f5f3ef" }}>
             <div
               className="h-full rounded-full"
-              style={{ width: `${Math.min(100, progress)}%`, backgroundColor: "#a03c00" }}
+              style={{ width: `${Math.min(100, progress)}%`, backgroundColor: "#F57C20" }}
             />
           </div>
         )}
@@ -162,11 +162,11 @@ export default function AnalyticsPage() {
         <div>
           <h1
             className="text-[2rem] font-semibold italic leading-tight"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {t("analytics.title")}
           </h1>
-          <p className="mt-1 text-sm" style={{ color: "#7c7570" }}>
+          <p className="mt-1 text-sm" style={{ color: "#6B7280" }}>
             {t("analytics.subtitle")}
           </p>
         </div>
@@ -180,8 +180,8 @@ export default function AnalyticsPage() {
                 className="rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all"
                 style={
                   period === p.value
-                    ? { background: "linear-gradient(135deg, #a03c00, #c94d00)", color: "#fff" }
-                    : { color: "#7c7570" }
+                    ? { background: "linear-gradient(135deg, #F57C20, #E06A10)", color: "#fff" }
+                    : { color: "#6B7280" }
                 }
               >
                 {p.label}
@@ -190,14 +190,14 @@ export default function AnalyticsPage() {
           </div>
           <button
             className="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition-colors"
-            style={{ border: "1.5px solid #e8e4de", color: "#7c7570" }}
+            style={{ border: "1.5px solid #e8e4de", color: "#6B7280" }}
           >
             <Download className="h-3.5 w-3.5" />
             {t("analytics.exportCsv")}
           </button>
           <button
             className="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-white"
-            style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+            style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
           >
             <Download className="h-3.5 w-3.5" />
             {t("analytics.exportPdf")}
@@ -210,7 +210,7 @@ export default function AnalyticsPage() {
       {/* KPI Cards */}
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <StatCard
-          icon={<TrendingUp className="h-5 w-5" style={{ color: "#a03c00" }} />}
+          icon={<TrendingUp className="h-5 w-5" style={{ color: "#F57C20" }} />}
           label={t("analytics.totalRevenue")}
           value={stats ? formatFcfa(stats.totalRevenueXaf) : "—"}
           trend={stats?.revenueTrend}
@@ -249,18 +249,18 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between mb-4">
             <h2
               className="text-lg font-semibold italic"
-              style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+              style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
             >
               {t("analytics.revenueEvolution")}
             </h2>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#a03c00" }} />
-                <span className="text-[10px] font-semibold" style={{ color: "#7c7570" }}>{t("analytics.grossRevenue")}</span>
+                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#F57C20" }} />
+                <span className="text-[10px] font-semibold" style={{ color: "#6B7280" }}>{t("analytics.grossRevenue")}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#e8c4b0" }} />
-                <span className="text-[10px] font-semibold" style={{ color: "#7c7570" }}>{t("analytics.commission")}</span>
+                <span className="text-[10px] font-semibold" style={{ color: "#6B7280" }}>{t("analytics.commission")}</span>
               </div>
             </div>
           </div>
@@ -271,12 +271,12 @@ export default function AnalyticsPage() {
               <BarChart data={data.weeklyRevenue} margin={{ top: 4, right: 0, left: -10, bottom: 0 }}>
                 <XAxis
                   dataKey="week"
-                  tick={{ fontSize: 10, fill: "#7c7570" }}
+                  tick={{ fontSize: 10, fill: "#6B7280" }}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 10, fill: "#7c7570" }}
+                  tick={{ fontSize: 10, fill: "#6B7280" }}
                   tickLine={false}
                   axisLine={false}
                   tickFormatter={(v) => formatFcfaCompact(Number(v)).replace(" FCFA", "")}
@@ -289,13 +289,13 @@ export default function AnalyticsPage() {
                     name === "grossXaf" ? t("analytics.grossRevenue") : t("analytics.commission"),
                   ]}
                 />
-                <Bar dataKey="grossXaf" stackId="a" fill="#a03c00" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="grossXaf" stackId="a" fill="#F57C20" radius={[0, 0, 0, 0]} />
                 <Bar dataKey="commissionXaf" stackId="a" fill="#e8c4b0" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
             <div className="h-[260px] flex items-center justify-center">
-              <p className="text-sm" style={{ color: "#7c7570" }}>{t("analytics.noRevenueData")}</p>
+              <p className="text-sm" style={{ color: "#6B7280" }}>{t("analytics.noRevenueData")}</p>
             </div>
           )}
         </div>
@@ -307,7 +307,7 @@ export default function AnalyticsPage() {
         >
           <h2
             className="text-lg font-semibold italic mb-4"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {t("analytics.paymentMethod")}
           </h2>
@@ -332,7 +332,7 @@ export default function AnalyticsPage() {
                   ))}
                 </Pie>
                 {/* Center label */}
-                <text x="50%" y="43%" textAnchor="middle" dominantBaseline="middle" className="text-[10px] font-bold" fill="#7c7570">
+                <text x="50%" y="43%" textAnchor="middle" dominantBaseline="middle" className="text-[10px] font-bold" fill="#6B7280">
                   100%
                 </text>
                 <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-[10px]" fill="#b8b3ad">
@@ -356,7 +356,7 @@ export default function AnalyticsPage() {
             </ResponsiveContainer>
           ) : (
             <div className="h-[260px] flex items-center justify-center">
-              <p className="text-sm" style={{ color: "#7c7570" }}>{t("analytics.noPaymentData")}</p>
+              <p className="text-sm" style={{ color: "#6B7280" }}>{t("analytics.noPaymentData")}</p>
             </div>
           )}
         </div>
@@ -369,11 +369,11 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between">
             <h2
               className="text-lg font-semibold italic"
-              style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+              style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
             >
               {t("analytics.topRestaurants")}
             </h2>
-            <button className="text-xs font-semibold flex items-center gap-1" style={{ color: "#a03c00" }}>
+            <button className="text-xs font-semibold flex items-center gap-1" style={{ color: "#F57C20" }}>
               {t("common.seeAll")} <ChevronRight className="h-3.5 w-3.5" />
             </button>
           </div>
@@ -392,30 +392,30 @@ export default function AnalyticsPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr style={{ backgroundColor: "#fbf9f5" }}>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>Restaurant</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden md:table-cell" style={{ color: "#7c7570" }}>{t("analytics.quarterCol")}</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("analytics.ordersCol")}</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#7c7570" }}>{t("analytics.revenueCol")}</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden lg:table-cell" style={{ color: "#7c7570" }}>{t("analytics.commissionCol")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#6B7280" }}>Restaurant</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden md:table-cell" style={{ color: "#6B7280" }}>{t("analytics.quarterCol")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#6B7280" }}>{t("analytics.ordersCol")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider" style={{ color: "#6B7280" }}>{t("analytics.revenueCol")}</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider hidden lg:table-cell" style={{ color: "#6B7280" }}>{t("analytics.commissionCol")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {(data.topRestaurants ?? []).map((r) => (
                       <tr key={r.id} className="hover:bg-[#fbf9f5] transition-colors">
                         <td className="px-4 py-3">
-                          <span className="text-sm font-semibold" style={{ color: "#1b1c1a" }}>{r.displayName}</span>
+                          <span className="text-sm font-semibold" style={{ color: "#3D3D3D" }}>{r.displayName}</span>
                         </td>
                         <td className="px-4 py-3 hidden md:table-cell">
-                          <span className="text-xs" style={{ color: "#7c7570" }}>{r.quarterName}</span>
+                          <span className="text-xs" style={{ color: "#6B7280" }}>{r.quarterName}</span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-sm" style={{ color: "#1b1c1a" }}>{r.orders.toLocaleString("fr-FR")}</span>
+                          <span className="text-sm" style={{ color: "#3D3D3D" }}>{r.orders.toLocaleString("fr-FR")}</span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-sm font-bold" style={{ color: "#a03c00" }}>{formatFcfa(r.revenueXaf)}</span>
+                          <span className="text-sm font-bold" style={{ color: "#F57C20" }}>{formatFcfa(r.revenueXaf)}</span>
                         </td>
                         <td className="px-4 py-3 hidden lg:table-cell">
-                          <span className="text-xs" style={{ color: "#7c7570" }}>{formatFcfa(r.commissionXaf)}</span>
+                          <span className="text-xs" style={{ color: "#6B7280" }}>{formatFcfa(r.commissionXaf)}</span>
                         </td>
                       </tr>
                     ))}
@@ -425,7 +425,7 @@ export default function AnalyticsPage() {
             ) : (
               <div className="p-8 flex flex-col items-center">
                 <ShoppingBag className="h-8 w-8 mb-2" style={{ color: "#e8e4de" }} />
-                <p className="text-sm" style={{ color: "#7c7570" }}>{t("analytics.noRestaurant")}</p>
+                <p className="text-sm" style={{ color: "#6B7280" }}>{t("analytics.noRestaurant")}</p>
               </div>
             )}
           </div>
@@ -435,7 +435,7 @@ export default function AnalyticsPage() {
         <div className="lg:col-span-2 space-y-4">
           <h2
             className="text-lg font-semibold italic"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {t("analytics.weeklyAnalysis")}
           </h2>
@@ -443,7 +443,7 @@ export default function AnalyticsPage() {
           {/* Insight card */}
           <div
             className="rounded-2xl p-6 space-y-4"
-            style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+            style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
           >
             <p className="text-sm leading-relaxed text-white/90">
               {t("analytics.insightText")}{" "}
@@ -469,7 +469,7 @@ export default function AnalyticsPage() {
           {/* Avg basket card */}
           <div
             className="rounded-2xl p-6 flex items-center gap-4"
-            style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+            style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
           >
             <div
               className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl"
@@ -486,7 +486,7 @@ export default function AnalyticsPage() {
               ) : (
                 <p
                   className="text-2xl font-bold text-white"
-                  style={{ fontFamily: "var(--font-newsreader), Georgia, serif" }}
+                  style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif" }}
                 >
                   {stats ? formatFcfa(stats.avgBasketXaf) : "—"}
                 </p>

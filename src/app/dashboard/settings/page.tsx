@@ -30,7 +30,7 @@ function Toast({ message, onDone }: { message: string; onDone: () => void }) {
         bottom: 32,
         left: "50%",
         transform: "translateX(-50%)",
-        background: "linear-gradient(135deg, #a03c00, #c95a1e)",
+        background: "linear-gradient(135deg, #F57C20, #c95a1e)",
         color: "#fff",
         padding: "12px 24px",
         borderRadius: 9999,
@@ -53,7 +53,7 @@ function Toggle({ checked, onClick }: { checked: boolean; onClick?: () => void }
     <div
       onClick={onClick}
       className="relative h-6 w-11 rounded-full shrink-0 transition-colors cursor-pointer"
-      style={{ backgroundColor: checked ? "#a03c00" : "#e8e4de" }}
+      style={{ backgroundColor: checked ? "#F57C20" : "#e8e4de" }}
     >
       <div
         className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform"
@@ -74,7 +74,7 @@ function SettingRow({
 }) {
   return (
     <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid #f5f3ef" }}>
-      <span className="text-sm" style={{ color: "#7c7570" }}>{label}</span>
+      <span className="text-sm" style={{ color: "#6B7280" }}>{label}</span>
       <div className="flex items-center gap-2">{children}</div>
     </div>
   );
@@ -117,10 +117,10 @@ function AccessLogsModal({ onClose }: { onClose: () => void }) {
       >
         <h3
           style={{
-            fontFamily: "var(--font-newsreader), Georgia, serif",
+            fontFamily: "var(--font-montserrat), system-ui, sans-serif",
             fontSize: 18,
             fontWeight: 600,
-            color: "#1b1c1a",
+            color: "#3D3D3D",
             marginBottom: 16,
           }}
         >
@@ -135,7 +135,7 @@ function AccessLogsModal({ onClose }: { onClose: () => void }) {
                 borderRadius: 12,
                 padding: "10px 14px",
                 fontSize: 13,
-                color: "#1b1c1a",
+                color: "#3D3D3D",
                 fontFamily: "monospace",
               }}
             >
@@ -150,7 +150,7 @@ function AccessLogsModal({ onClose }: { onClose: () => void }) {
             width: "100%",
             height: 40,
             borderRadius: 9999,
-            background: "linear-gradient(135deg, #a03c00, #c95a1e)",
+            background: "linear-gradient(135deg, #F57C20, #c95a1e)",
             color: "#fff",
             fontSize: 14,
             fontWeight: 600,
@@ -295,10 +295,10 @@ export default function SettingsPage() {
   }
 
   const BRAND_COLORS = [
-    { name: "Terracotta", value: "#a03c00", active: true },
-    { name: "Leaf", value: "#2c694e", active: false },
-    { name: "Gold", value: "#b45309", active: false },
-    { name: "Dark", value: "#1b1c1a", active: false },
+    { name: "NYAMA Orange", value: "#F57C20", active: true },
+    { name: "Forest Green", value: "#1B4332", active: false },
+    { name: "Gold", value: "#D4A017", active: false },
+    { name: "Charcoal", value: "#3D3D3D", active: false },
   ];
 
   return (
@@ -322,11 +322,11 @@ export default function SettingsPage() {
       <div>
         <h1
           className="text-[2rem] font-semibold italic leading-tight"
-          style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+          style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
         >
           {t("settings.title")}
         </h1>
-        <p className="mt-1 text-sm" style={{ color: "#7c7570" }}>
+        <p className="mt-1 text-sm" style={{ color: "#6B7280" }}>
           {t("settings.subtitle")}
         </p>
       </div>
@@ -339,10 +339,10 @@ export default function SettingsPage() {
         style={{ backgroundColor: "#ffffff", boxShadow: "0 2px 24px rgba(160,60,0,0.05), 0 1px 3px rgba(27,28,26,0.04)" }}
       >
         <div className="flex items-center gap-2 mb-4">
-          <Globe className="h-5 w-5" style={{ color: "#a03c00" }} />
+          <Globe className="h-5 w-5" style={{ color: "#F57C20" }} />
           <h2
             className="text-base font-semibold"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {t("settings.generalConfig")}
           </h2>
@@ -356,7 +356,7 @@ export default function SettingsPage() {
             <SettingRow label={t("settings.language")}>
               <select
                 className="rounded-full px-4 py-1.5 text-sm outline-none cursor-pointer"
-                style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+                style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
                 value={locale}
                 onChange={(e) => setLocale(e.target.value as Locale)}
               >
@@ -367,8 +367,8 @@ export default function SettingsPage() {
             </SettingRow>
             <SettingRow label={t("settings.timezone")}>
               <div className="flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5" style={{ color: "#7c7570" }} />
-                <span className="text-sm font-medium" style={{ color: "#1b1c1a" }}>{data.general.timezone}</span>
+                <Clock className="h-3.5 w-3.5" style={{ color: "#6B7280" }} />
+                <span className="text-sm font-medium" style={{ color: "#3D3D3D" }}>{data.general.timezone}</span>
               </div>
             </SettingRow>
             <SettingRow label={t("settings.currency")}>
@@ -377,7 +377,7 @@ export default function SettingsPage() {
                 value={data.general.currency}
                 disabled
                 className="rounded-full px-4 py-1.5 text-sm text-right w-24"
-                style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+                style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
               />
             </SettingRow>
           </>
@@ -390,10 +390,10 @@ export default function SettingsPage() {
         style={{ backgroundColor: "#ffffff", boxShadow: "0 2px 24px rgba(160,60,0,0.05), 0 1px 3px rgba(27,28,26,0.04)" }}
       >
         <div className="flex items-center gap-2 mb-4">
-          <CreditCard className="h-5 w-5" style={{ color: "#a03c00" }} />
+          <CreditCard className="h-5 w-5" style={{ color: "#F57C20" }} />
           <h2
             className="text-base font-semibold"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {t("settings.paymentRules")}
           </h2>
@@ -421,9 +421,9 @@ export default function SettingsPage() {
                   value={data.payment.platformCommission}
                   disabled
                   className="rounded-full px-4 py-1.5 text-sm text-right w-20"
-                  style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+                  style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
                 />
-                <span className="text-sm font-semibold" style={{ color: "#7c7570" }}>%</span>
+                <span className="text-sm font-semibold" style={{ color: "#6B7280" }}>%</span>
               </div>
             </SettingRow>
             <SettingRow label={t("settings.minimumOrder")}>
@@ -434,9 +434,9 @@ export default function SettingsPage() {
                   onChange={(e) => updateSetting("minimumOrderXaf", Number(e.target.value))}
                   onBlur={() => showToast(`Montant minimum mis à jour : ${settings.minimumOrderXaf} FCFA`)}
                   className="rounded-full px-4 py-1.5 text-sm text-right w-24"
-                  style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+                  style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
                 />
-                <span className="text-sm font-semibold" style={{ color: "#7c7570" }}>FCFA</span>
+                <span className="text-sm font-semibold" style={{ color: "#6B7280" }}>FCFA</span>
               </div>
             </SettingRow>
           </>
@@ -449,10 +449,10 @@ export default function SettingsPage() {
         style={{ backgroundColor: "#ffffff", boxShadow: "0 2px 24px rgba(160,60,0,0.05), 0 1px 3px rgba(27,28,26,0.04)" }}
       >
         <div className="flex items-center gap-2 mb-4">
-          <Truck className="h-5 w-5" style={{ color: "#a03c00" }} />
+          <Truck className="h-5 w-5" style={{ color: "#F57C20" }} />
           <h2
             className="text-base font-semibold"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {t("settings.logistics")}
           </h2>
@@ -472,9 +472,9 @@ export default function SettingsPage() {
                   value={settings.maxDeliveryRadiusKm}
                   onChange={(e) => updateSetting("maxDeliveryRadiusKm", Number(e.target.value))}
                   className="w-32"
-                  style={{ accentColor: "#a03c00" }}
+                  style={{ accentColor: "#F57C20" }}
                 />
-                <span className="text-sm font-bold" style={{ color: "#1b1c1a" }}>
+                <span className="text-sm font-bold" style={{ color: "#3D3D3D" }}>
                   {settings.maxDeliveryRadiusKm} km
                 </span>
               </div>
@@ -487,9 +487,9 @@ export default function SettingsPage() {
                   onChange={(e) => updateSetting("defaultDeliveryFeeXaf", Number(e.target.value))}
                   onBlur={() => showToast("Frais de livraison mis à jour")}
                   className="rounded-full px-4 py-1.5 text-sm text-right w-24"
-                  style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+                  style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
                 />
-                <span className="text-sm font-semibold" style={{ color: "#7c7570" }}>FCFA</span>
+                <span className="text-sm font-semibold" style={{ color: "#6B7280" }}>FCFA</span>
               </div>
             </SettingRow>
             <SettingRow label={t("settings.enforceHours")}>
@@ -512,10 +512,10 @@ export default function SettingsPage() {
         style={{ backgroundColor: "#ffffff", boxShadow: "0 2px 24px rgba(160,60,0,0.05), 0 1px 3px rgba(27,28,26,0.04)" }}
       >
         <div className="flex items-center gap-2 mb-4">
-          <Shield className="h-5 w-5" style={{ color: "#a03c00" }} />
+          <Shield className="h-5 w-5" style={{ color: "#F57C20" }} />
           <h2
             className="text-base font-semibold"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {t("settings.security")}
           </h2>
@@ -546,7 +546,7 @@ export default function SettingsPage() {
               className="flex items-center justify-between py-3 cursor-pointer hover:bg-[#fbf9f5] -mx-2 px-2 rounded-xl transition-colors"
               style={{ borderBottom: "1px solid #f5f3ef" }}
             >
-              <span className="text-sm" style={{ color: "#1b1c1a" }}>{t("settings.mfa")}</span>
+              <span className="text-sm" style={{ color: "#3D3D3D" }}>{t("settings.mfa")}</span>
               <ChevronRight className="h-4 w-4" style={{ color: "#b8b3ad" }} />
             </div>
             <div
@@ -554,11 +554,11 @@ export default function SettingsPage() {
               className="flex items-center justify-between py-3 cursor-pointer hover:bg-[#fbf9f5] -mx-2 px-2 rounded-xl transition-colors"
               style={{ borderBottom: "1px solid #f5f3ef" }}
             >
-              <span className="text-sm" style={{ color: "#1b1c1a" }}>{t("settings.accessLogs")}</span>
+              <span className="text-sm" style={{ color: "#3D3D3D" }}>{t("settings.accessLogs")}</span>
               <ChevronRight className="h-4 w-4" style={{ color: "#b8b3ad" }} />
             </div>
             <div className="py-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#7c7570" }}>
+              <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#6B7280" }}>
                 {t("settings.apiKey")}
               </p>
               <div className="flex items-center gap-2">
@@ -567,7 +567,7 @@ export default function SettingsPage() {
                   value={data.security.apiKeyMasked}
                   readOnly
                   className="flex-1 rounded-full px-4 py-2 text-sm font-mono"
-                  style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+                  style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
                 />
                 <button
                   onClick={handleCopyKey}
@@ -578,7 +578,7 @@ export default function SettingsPage() {
                   {copied ? (
                     <Check className="h-4 w-4" style={{ color: "#16a34a" }} />
                   ) : (
-                    <Copy className="h-4 w-4" style={{ color: "#7c7570" }} />
+                    <Copy className="h-4 w-4" style={{ color: "#6B7280" }} />
                   )}
                 </button>
               </div>
@@ -593,10 +593,10 @@ export default function SettingsPage() {
         style={{ backgroundColor: "#ffffff", boxShadow: "0 2px 24px rgba(160,60,0,0.05), 0 1px 3px rgba(27,28,26,0.04)" }}
       >
         <div className="flex items-center gap-2 mb-4">
-          <Palette className="h-5 w-5" style={{ color: "#a03c00" }} />
+          <Palette className="h-5 w-5" style={{ color: "#F57C20" }} />
           <h2
             className="text-base font-semibold"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {t("settings.visualIdentity")}
           </h2>
@@ -604,7 +604,7 @@ export default function SettingsPage() {
         <div className="flex items-start gap-6">
           {/* Logo */}
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#7c7570" }}>{t("settings.currentLogo")}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#6B7280" }}>{t("settings.currentLogo")}</p>
             <div
               onClick={handleLogoClick}
               className="flex h-[100px] w-[100px] items-center justify-center rounded-2xl cursor-pointer overflow-hidden"
@@ -619,7 +619,7 @@ export default function SettingsPage() {
               ) : (
                 <span
                   className="text-lg font-bold italic"
-                  style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#a03c00" }}
+                  style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#F57C20" }}
                 >
                   NYAMA
                 </span>
@@ -647,7 +647,7 @@ export default function SettingsPage() {
           </div>
           {/* Colors */}
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#7c7570" }}>{t("settings.primaryColor")}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#6B7280" }}>{t("settings.primaryColor")}</p>
             <div className="flex items-center gap-3">
               {BRAND_COLORS.map((c) => (
                 <div
@@ -671,10 +671,10 @@ export default function SettingsPage() {
         style={{ backgroundColor: "#ffffff", boxShadow: "0 2px 24px rgba(160,60,0,0.05), 0 1px 3px rgba(27,28,26,0.04)" }}
       >
         <div className="flex items-center gap-2 mb-4">
-          <History className="h-5 w-5" style={{ color: "#a03c00" }} />
+          <History className="h-5 w-5" style={{ color: "#F57C20" }} />
           <h2
             className="text-base font-semibold"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {t("settings.recentChanges")}
           </h2>
@@ -685,10 +685,10 @@ export default function SettingsPage() {
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full mt-0.5"
               style={{ backgroundColor: "#fdf3ee" }}
             >
-              <CreditCard className="h-4 w-4" style={{ color: "#a03c00" }} />
+              <CreditCard className="h-4 w-4" style={{ color: "#F57C20" }} />
             </div>
             <div>
-              <p className="text-sm" style={{ color: "#1b1c1a" }}>Commission plateforme mise à jour de 12% à 15%</p>
+              <p className="text-sm" style={{ color: "#3D3D3D" }}>Commission plateforme mise à jour de 12% à 15%</p>
               <p className="text-[10px] mt-0.5" style={{ color: "#b8b3ad" }}>Il y a 3 jours &bull; Admin principal</p>
             </div>
           </div>
@@ -697,15 +697,15 @@ export default function SettingsPage() {
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full mt-0.5"
               style={{ backgroundColor: "#fdf3ee" }}
             >
-              <Truck className="h-4 w-4" style={{ color: "#a03c00" }} />
+              <Truck className="h-4 w-4" style={{ color: "#F57C20" }} />
             </div>
             <div>
-              <p className="text-sm" style={{ color: "#1b1c1a" }}>Rayon de livraison étendu à 15 km pour Yaoundé</p>
+              <p className="text-sm" style={{ color: "#3D3D3D" }}>Rayon de livraison étendu à 15 km pour Yaoundé</p>
               <p className="text-[10px] mt-0.5" style={{ color: "#b8b3ad" }}>Il y a 1 semaine &bull; Admin principal</p>
             </div>
           </div>
         </div>
-        <button className="mt-4 text-xs font-semibold" style={{ color: "#a03c00" }}>
+        <button className="mt-4 text-xs font-semibold" style={{ color: "#F57C20" }}>
           {t("settings.viewFullLog")}
         </button>
       </div>

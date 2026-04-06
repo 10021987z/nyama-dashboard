@@ -113,14 +113,14 @@ export default function LoginPage() {
   return (
     <div
       className="min-h-screen flex items-center justify-center p-4"
-      style={{ background: "linear-gradient(135deg, #a03c00 0%, #c94d00 50%, #8b4c11 100%)" }}
+      style={{ background: "linear-gradient(135deg, #F57C20 0%, #E06A10 50%, #8b4c11 100%)" }}
     >
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="text-center pb-2">
           <div className="text-4xl mb-2">🍽️</div>
           <CardTitle
             className="text-2xl font-black"
-            style={{ color: "#a03c00" }}
+            style={{ color: "#F57C20" }}
           >
             NYAMA Dashboard
           </CardTitle>
@@ -157,7 +157,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 className="w-full h-11 font-bold text-white"
-                style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+                style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
                 disabled={loading}
               >
                 {loading ? "Envoi en cours..." : "Recevoir le code"}
@@ -202,7 +202,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 className="w-full h-11 font-bold text-white"
-                style={{ background: "linear-gradient(135deg, #a03c00, #c94d00)" }}
+                style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
                 disabled={loading || otp.join("").length < 6}
               >
                 {loading ? "Vérification..." : "Se connecter"}

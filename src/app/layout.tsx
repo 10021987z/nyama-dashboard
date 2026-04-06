@@ -1,25 +1,30 @@
 import type { Metadata } from "next";
-import { Inter, Newsreader } from "next/font/google";
+import { Montserrat, Nunito_Sans, Space_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
   subsets: ["latin"],
   display: "swap",
 });
 
-const newsreader = Newsreader({
-  variable: "--font-newsreader",
+const nunitoSans = Nunito_Sans({
+  variable: "--font-nunito-sans",
   subsets: ["latin"],
-  style: ["normal", "italic"],
-  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+});
+
+const spaceMono = Space_Mono({
+  variable: "--font-space-mono",
+  subsets: ["latin"],
+  weight: ["400", "700"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "NYAMA Dashboard — The Modern Griot's Table",
-  description: "Tableau de bord de la marketplace NYAMA · Savor Cameroon",
+  title: "NYAMA Dashboard — Administration",
+  description: "Tableau de bord de la marketplace NYAMA · Cuisine camerounaise",
 };
 
 export default function RootLayout({
@@ -30,7 +35,7 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${inter.variable} ${newsreader.variable} h-full antialiased`}
+      className={`${montserrat.variable} ${nunitoSans.variable} ${spaceMono.variable} h-full antialiased`}
     >
       <body className="h-full">
         {children}

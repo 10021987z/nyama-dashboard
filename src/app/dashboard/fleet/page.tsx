@@ -29,7 +29,7 @@ function riderStatusConfig(
     case "online":
       return { label: t("fleet.statusOnline"), dotColor: "#16a34a", bg: "#dcfce7", textColor: "#166534" };
     case "delivering":
-      return { label: t("fleet.statusDelivering"), dotColor: "#a03c00", bg: "#fdf3ee", textColor: "#a03c00" };
+      return { label: t("fleet.statusDelivering"), dotColor: "#F57C20", bg: "#fdf3ee", textColor: "#F57C20" };
     case "offline":
     default:
       return { label: t("fleet.statusOffline"), dotColor: "#9ca3af", bg: "#f3f4f6", textColor: "#6b7280" };
@@ -41,7 +41,7 @@ function initials(name?: string | null): string {
   return name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
 }
 
-const AVATAR_PALETTE = ["#a03c00", "#2c694e", "#8b4c11", "#c94d00", "#b45309", "#2563eb"];
+const AVATAR_PALETTE = ["#F57C20", "#2c694e", "#8b4c11", "#E06A10", "#b45309", "#2563eb"];
 function avatarBg(id?: string | null): string {
   if (!id) return AVATAR_PALETTE[0];
   const n = id.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
@@ -83,11 +83,11 @@ function RiderCard({ rider }: { rider: FleetRider }) {
         <div className="flex-1 min-w-0">
           <p
             className="text-base font-semibold leading-tight truncate"
-            style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
           >
             {rider.name}
           </p>
-          <p className="text-xs truncate" style={{ color: "#7c7570" }}>
+          <p className="text-xs truncate" style={{ color: "#6B7280" }}>
             {rider.phone}
           </p>
         </div>
@@ -103,8 +103,8 @@ function RiderCard({ rider }: { rider: FleetRider }) {
       {/* Vehicle info */}
       {(rider.vehicleType || rider.plateNumber) && (
         <div className="flex items-center gap-2">
-          <Bike className="h-3.5 w-3.5 shrink-0" style={{ color: "#a03c00" }} />
-          <span className="text-xs" style={{ color: "#7c7570" }}>
+          <Bike className="h-3.5 w-3.5 shrink-0" style={{ color: "#F57C20" }} />
+          <span className="text-xs" style={{ color: "#6B7280" }}>
             {[rider.vehicleType, rider.plateNumber].filter(Boolean).join(" · ")}
           </span>
         </div>
@@ -113,8 +113,8 @@ function RiderCard({ rider }: { rider: FleetRider }) {
       {/* City/neighborhood */}
       {(rider.city || rider.neighborhood) && (
         <div className="flex items-center gap-2">
-          <MapPin className="h-3.5 w-3.5 shrink-0" style={{ color: "#7c7570" }} />
-          <span className="text-xs" style={{ color: "#7c7570" }}>
+          <MapPin className="h-3.5 w-3.5 shrink-0" style={{ color: "#6B7280" }} />
+          <span className="text-xs" style={{ color: "#6B7280" }}>
             {rider.neighborhood ? `${rider.neighborhood}, ${rider.city}` : rider.city}
           </span>
         </div>
@@ -123,7 +123,7 @@ function RiderCard({ rider }: { rider: FleetRider }) {
       {/* Rating bar */}
       <div className="flex items-center gap-2">
         <Star className="h-3.5 w-3.5 shrink-0" style={{ color: "#b45309" }} strokeWidth={2} />
-        <span className="text-sm font-bold" style={{ color: "#1b1c1a" }}>
+        <span className="text-sm font-bold" style={{ color: "#3D3D3D" }}>
           {(rider.avgRating ?? 0).toFixed(1)}
         </span>
         <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "#f5f3ef" }}>
@@ -140,16 +140,16 @@ function RiderCard({ rider }: { rider: FleetRider }) {
         style={{ backgroundColor: "#fbf9f5" }}
       >
         <div>
-          <p className="text-xs font-bold" style={{ color: "#1b1c1a" }}>
+          <p className="text-xs font-bold" style={{ color: "#3D3D3D" }}>
             {(rider.totalTrips ?? 0).toLocaleString("fr-FR")}
           </p>
-          <p className="text-[10px]" style={{ color: "#7c7570" }}>{t("fleet.deliveries")}</p>
+          <p className="text-[10px]" style={{ color: "#6B7280" }}>{t("fleet.deliveries")}</p>
         </div>
         <div>
-          <p className="text-xs font-bold" style={{ color: "#1b1c1a" }}>
+          <p className="text-xs font-bold" style={{ color: "#3D3D3D" }}>
             {formatFcfaCompact(rider.totalEarnings)}
           </p>
-          <p className="text-[10px]" style={{ color: "#7c7570" }}>{t("fleet.earnings")}</p>
+          <p className="text-[10px]" style={{ color: "#6B7280" }}>{t("fleet.earnings")}</p>
         </div>
       </div>
 
@@ -205,7 +205,7 @@ function SummaryBanner({
   const stats = [
     { key: "total", label: t("fleet.totalRiders"), value: total, dot: null },
     { key: "online", label: t("fleet.onlineRiders"), value: online, dot: "#16a34a" },
-    { key: "delivering", label: t("fleet.occupancy"), value: delivering, dot: "#a03c00" },
+    { key: "delivering", label: t("fleet.occupancy"), value: delivering, dot: "#F57C20" },
     { key: "offline", label: t("fleet.avgRevenue"), value: offline, dot: "#9ca3af" },
   ];
 
@@ -235,7 +235,7 @@ function SummaryBanner({
             </span>
           )}
           {!dot && (
-            <Bike className="h-5 w-5 shrink-0" style={{ color: "#a03c00" }} />
+            <Bike className="h-5 w-5 shrink-0" style={{ color: "#F57C20" }} />
           )}
           <div>
             {loading ? (
@@ -244,8 +244,8 @@ function SummaryBanner({
               <p
                 className="text-xl font-bold leading-none"
                 style={{
-                  fontFamily: "var(--font-newsreader), Georgia, serif",
-                  color: "#1b1c1a",
+                  fontFamily: "var(--font-montserrat), system-ui, sans-serif",
+                  color: "#3D3D3D",
                 }}
               >
                 {value}
@@ -253,7 +253,7 @@ function SummaryBanner({
             )}
             <p
               className="text-[10px] font-semibold uppercase tracking-wider mt-0.5"
-              style={{ color: "#7c7570" }}
+              style={{ color: "#6B7280" }}
             >
               {label}
             </p>
@@ -311,11 +311,11 @@ export default function FleetPage() {
       <div>
         <h1
           className="text-[1.8rem] font-semibold italic leading-tight"
-          style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#1b1c1a" }}
+          style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
         >
           {t("fleet.title")}
         </h1>
-        <p className="mt-1 text-sm" style={{ color: "#7c7570" }}>
+        <p className="mt-1 text-sm" style={{ color: "#6B7280" }}>
           {t("fleet.subtitle")}
         </p>
       </div>
@@ -332,14 +332,14 @@ export default function FleetPage() {
           className="flex flex-1 min-w-[200px] items-center gap-2 rounded-full px-3.5 py-2"
           style={{ backgroundColor: "#f5f3ef" }}
         >
-          <Search className="h-4 w-4 shrink-0" style={{ color: "#7c7570" }} />
+          <Search className="h-4 w-4 shrink-0" style={{ color: "#6B7280" }} />
           <input
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder={t("fleet.searchPlaceholder")}
             className="flex-1 bg-transparent text-sm outline-none"
-            style={{ color: "#1b1c1a" }}
+            style={{ color: "#3D3D3D" }}
           />
         </div>
 
@@ -360,8 +360,8 @@ export default function FleetPage() {
               className="rounded-full px-3 py-1.5 text-xs font-semibold transition-all"
               style={
                 statusFilter === opt.value
-                  ? { background: "linear-gradient(135deg, #a03c00, #c94d00)", color: "#fff" }
-                  : { color: "#7c7570" }
+                  ? { background: "linear-gradient(135deg, #F57C20, #E06A10)", color: "#fff" }
+                  : { color: "#6B7280" }
               }
             >
               {opt.label}
@@ -382,7 +382,7 @@ export default function FleetPage() {
       ) : data?.data.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
           <Bike className="h-10 w-10" style={{ color: "#e8e4de" }} />
-          <p className="text-sm" style={{ color: "#7c7570" }}>
+          <p className="text-sm" style={{ color: "#6B7280" }}>
             {t("fleet.noRider")}
           </p>
         </div>
@@ -397,9 +397,9 @@ export default function FleetPage() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">
-              <p className="text-sm" style={{ color: "#7c7570" }}>
+              <p className="text-sm" style={{ color: "#6B7280" }}>
                 {t("common.page")} {page} {t("common.of")} {totalPages} &bull;{" "}
-                <span className="font-medium" style={{ color: "#1b1c1a" }}>
+                <span className="font-medium" style={{ color: "#3D3D3D" }}>
                   {data?.total.toLocaleString("fr-FR")} livreurs
                 </span>
               </p>
@@ -408,7 +408,7 @@ export default function FleetPage() {
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page <= 1}
                   className="flex items-center gap-1 rounded-full px-4 py-1.5 text-xs font-medium disabled:opacity-40"
-                  style={{ backgroundColor: "#f5f3ef", color: "#1b1c1a" }}
+                  style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
                   {t("common.previous")}
@@ -418,8 +418,8 @@ export default function FleetPage() {
                   disabled={page >= totalPages}
                   className="flex items-center gap-1 rounded-full px-4 py-1.5 text-xs font-medium disabled:opacity-40"
                   style={{
-                    background: page >= totalPages ? "#e8e4de" : "linear-gradient(135deg, #a03c00, #c94d00)",
-                    color: page >= totalPages ? "#7c7570" : "#fff",
+                    background: page >= totalPages ? "#e8e4de" : "linear-gradient(135deg, #F57C20, #E06A10)",
+                    color: page >= totalPages ? "#6B7280" : "#fff",
                   }}
                 >
                   {t("common.next")}
@@ -435,13 +435,13 @@ export default function FleetPage() {
       {!loading && !error && data && data.data.length > 0 && (
         <div
           className="rounded-2xl p-5 flex items-start gap-3"
-          style={{ background: "linear-gradient(135deg, #1b1c1a, #2d2e2b)" }}
+          style={{ background: "linear-gradient(135deg, #3D3D3D, #2d2e2b)" }}
         >
           <TrendingUp className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "#e8c4b0" }} />
           <div>
             <p
               className="text-sm font-semibold"
-              style={{ fontFamily: "var(--font-newsreader), Georgia, serif", color: "#ffffff" }}
+              style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#ffffff" }}
             >
               {t("fleet.fleetPerformance")}
             </p>

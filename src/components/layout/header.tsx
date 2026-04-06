@@ -141,7 +141,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
         onClick={onMenuClick}
         aria-label="Menu"
       >
-        <Menu className="h-5 w-5" style={{ color: "#1b1c1a" }} />
+        <Menu className="h-5 w-5" style={{ color: "#3D3D3D" }} />
       </button>
 
       {/* Search bar -- centered */}
@@ -150,7 +150,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
           className="flex items-center gap-2.5 rounded-full px-3.5 py-2"
           style={{ backgroundColor: "#f5f3ef" }}
         >
-          <Search className="h-3.5 w-3.5 shrink-0" style={{ color: "#7c7570" }} />
+          <Search className="h-3.5 w-3.5 shrink-0" style={{ color: "#6B7280" }} />
           <input
             type="text"
             value={searchQuery}
@@ -159,8 +159,8 @@ export function Header({ user, onMenuClick }: HeaderProps) {
               if (searchQuery.trim()) setSearchOpen(true);
             }}
             placeholder={t("common.search")}
-            className="text-sm bg-transparent border-none outline-none w-full placeholder:text-[#7c7570]"
-            style={{ color: "#1b1c1a" }}
+            className="text-sm bg-transparent border-none outline-none w-full placeholder:text-[#6B7280]"
+            style={{ color: "#3D3D3D" }}
           />
         </div>
 
@@ -171,11 +171,11 @@ export function Header({ user, onMenuClick }: HeaderProps) {
             style={{ backgroundColor: "#ffffff", borderColor: "#f5f3ef" }}
           >
             {isSearching ? (
-              <div className="px-4 py-3 text-sm" style={{ color: "#7c7570" }}>
+              <div className="px-4 py-3 text-sm" style={{ color: "#6B7280" }}>
                 Recherche en cours...
               </div>
             ) : totalResults === 0 ? (
-              <div className="px-4 py-3 text-sm" style={{ color: "#7c7570" }}>
+              <div className="px-4 py-3 text-sm" style={{ color: "#6B7280" }}>
                 Aucun resultat pour &quot;{searchQuery}&quot;
               </div>
             ) : (
@@ -185,7 +185,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                   <div>
                     <div
                       className="px-4 py-2 text-xs font-semibold uppercase tracking-wider"
-                      style={{ color: "#7c7570", backgroundColor: "#fbf9f5" }}
+                      style={{ color: "#6B7280", backgroundColor: "#fbf9f5" }}
                     >
                       Commandes
                     </div>
@@ -193,7 +193,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                       <button
                         key={order.id}
                         className="w-full text-left px-4 py-2 text-sm hover:bg-[#f5f3ef] transition-colors flex items-center justify-between"
-                        style={{ color: "#1b1c1a" }}
+                        style={{ color: "#3D3D3D" }}
                         onClick={() => {
                           router.push("/dashboard/orders");
                           setSearchOpen(false);
@@ -203,7 +203,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                         <span>#{order.id} - {order.clientName}</span>
                         <span
                           className="text-xs px-2 py-0.5 rounded-full"
-                          style={{ backgroundColor: "#f5f3ef", color: "#7c7570" }}
+                          style={{ backgroundColor: "#f5f3ef", color: "#6B7280" }}
                         >
                           {order.status}
                         </span>
@@ -217,7 +217,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                   <div>
                     <div
                       className="px-4 py-2 text-xs font-semibold uppercase tracking-wider"
-                      style={{ color: "#7c7570", backgroundColor: "#fbf9f5" }}
+                      style={{ color: "#6B7280", backgroundColor: "#fbf9f5" }}
                     >
                       Restaurants
                     </div>
@@ -225,7 +225,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                       <button
                         key={restaurant.id}
                         className="w-full text-left px-4 py-2 text-sm hover:bg-[#f5f3ef] transition-colors"
-                        style={{ color: "#1b1c1a" }}
+                        style={{ color: "#3D3D3D" }}
                         onClick={() => {
                           router.push("/dashboard/restaurants");
                           setSearchOpen(false);
@@ -243,7 +243,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                   <div>
                     <div
                       className="px-4 py-2 text-xs font-semibold uppercase tracking-wider"
-                      style={{ color: "#7c7570", backgroundColor: "#fbf9f5" }}
+                      style={{ color: "#6B7280", backgroundColor: "#fbf9f5" }}
                     >
                       Utilisateurs
                     </div>
@@ -251,7 +251,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                       <button
                         key={u.id}
                         className="w-full text-left px-4 py-2 text-sm hover:bg-[#f5f3ef] transition-colors flex items-center justify-between"
-                        style={{ color: "#1b1c1a" }}
+                        style={{ color: "#3D3D3D" }}
                         onClick={() => {
                           router.push("/dashboard/customers");
                           setSearchOpen(false);
@@ -259,7 +259,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
                         }}
                       >
                         <span>{u.name}</span>
-                        <span className="text-xs" style={{ color: "#7c7570" }}>
+                        <span className="text-xs" style={{ color: "#6B7280" }}>
                           {u.phone}
                         </span>
                       </button>
@@ -277,8 +277,8 @@ export function Header({ user, onMenuClick }: HeaderProps) {
         {/* Language selector */}
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 transition-colors hover:bg-[#f5f3ef] outline-none">
-            <Globe className="h-4 w-4" style={{ color: "#7c7570" }} />
-            <span className="text-xs font-semibold" style={{ color: "#1b1c1a" }}>
+            <Globe className="h-4 w-4" style={{ color: "#6B7280" }} />
+            <span className="text-xs font-semibold" style={{ color: "#3D3D3D" }}>
               {LANG_OPTIONS.find((l) => l.value === locale)?.flag}{" "}
               {LANG_OPTIONS.find((l) => l.value === locale)?.label}
             </span>
@@ -302,7 +302,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger className="relative flex items-center justify-center rounded-xl p-2 transition-colors hover:bg-[#f5f3ef] outline-none">
-            <Bell className="h-5 w-5" style={{ color: "#7c7570" }} />
+            <Bell className="h-5 w-5" style={{ color: "#6B7280" }} />
             {unreadCount > 0 && (
               <span
                 className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold text-white"
@@ -314,12 +314,12 @@ export function Header({ user, onMenuClick }: HeaderProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-72">
             <div className="px-3 py-2 flex items-center justify-between">
-              <span className="text-xs font-semibold" style={{ color: "#1b1c1a" }}>
+              <span className="text-xs font-semibold" style={{ color: "#3D3D3D" }}>
                 Notifications
               </span>
               <button
                 className="text-[10px] font-medium hover:underline"
-                style={{ color: "#a03c00" }}
+                style={{ color: "#F57C20" }}
                 onClick={() => setUnreadCount(0)}
               >
                 Tout marquer comme lu
@@ -328,10 +328,10 @@ export function Header({ user, onMenuClick }: HeaderProps) {
             <DropdownMenuSeparator />
             {SIMULATED_NOTIFICATIONS.map((notif) => (
               <DropdownMenuItem key={notif.id} className="flex flex-col items-start gap-0.5 cursor-pointer px-3 py-2">
-                <span className="text-xs" style={{ color: "#1b1c1a" }}>
+                <span className="text-xs" style={{ color: "#3D3D3D" }}>
                   {notif.text}
                 </span>
-                <span className="text-[10px]" style={{ color: "#7c7570" }}>
+                <span className="text-[10px]" style={{ color: "#6B7280" }}>
                   {notif.time}
                 </span>
               </DropdownMenuItem>
@@ -339,7 +339,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-xs justify-center cursor-pointer"
-              style={{ color: "#a03c00" }}
+              style={{ color: "#F57C20" }}
               onClick={() => alert("Fonctionnalite complete bientot disponible")}
             >
               Voir toutes les notifications
@@ -353,7 +353,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
           aria-label={t("nav.settings")}
           onClick={() => router.push("/dashboard/settings")}
         >
-          <Settings className="h-5 w-5" style={{ color: "#7c7570" }} />
+          <Settings className="h-5 w-5" style={{ color: "#6B7280" }} />
         </button>
 
         {/* User avatar + dropdown */}
@@ -361,15 +361,15 @@ export function Header({ user, onMenuClick }: HeaderProps) {
           <DropdownMenuTrigger className="flex items-center gap-2 rounded-xl px-2 py-1.5 transition-colors hover:bg-[#f5f3ef] outline-none">
             <div
               className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white"
-              style={{ backgroundColor: "#a03c00" }}
+              style={{ backgroundColor: "#F57C20" }}
             >
               A
             </div>
             <div className="hidden lg:block text-left">
-              <p className="text-xs font-semibold leading-none" style={{ color: "#1b1c1a" }}>
+              <p className="text-xs font-semibold leading-none" style={{ color: "#3D3D3D" }}>
                 Admin
               </p>
-              <p className="text-[10px] leading-none mt-0.5" style={{ color: "#7c7570" }}>
+              <p className="text-[10px] leading-none mt-0.5" style={{ color: "#6B7280" }}>
                 {user?.phone ?? "Super Admin"}
               </p>
             </div>
