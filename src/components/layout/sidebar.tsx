@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   BarChart3,
   UtensilsCrossed,
+  BookOpen,
   Package,
   Truck,
   Bike,
@@ -25,6 +26,7 @@ import { useSidebar } from "./sidebar-context";
 const NAV_ITEMS = [
   { href: "/dashboard", icon: BarChart3, labelKey: "nav.dashboard" },
   { href: "/dashboard/restaurants", icon: UtensilsCrossed, labelKey: "nav.restaurants" },
+  { href: "/dashboard/menu", icon: BookOpen, labelKey: "nav.menu" },
   { href: "/dashboard/orders", icon: Package, labelKey: "nav.orders" },
   { href: "/dashboard/deliveries", icon: Truck, labelKey: "nav.deliveries" },
   { href: "/dashboard/fleet", icon: Bike, labelKey: "nav.fleet" },

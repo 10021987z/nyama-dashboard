@@ -28,6 +28,7 @@ export const translations = {
     nav: {
       dashboard: "Dashboard",
       restaurants: "Restaurants",
+      menu: "Menu global",
       orders: "Commandes",
       deliveries: "Livraisons",
       fleet: "Flotte",
@@ -391,6 +392,7 @@ export const translations = {
     nav: {
       dashboard: "Dashboard",
       restaurants: "Restaurants",
+      menu: "Menu global",
       orders: "Orders",
       deliveries: "Deliveries",
       fleet: "Fleet",
@@ -754,6 +756,7 @@ export const translations = {
     nav: {
       dashboard: "Dashboard",
       restaurants: "Chop House",
+      menu: "Big Menu",
       orders: "Orders dem",
       deliveries: "Delivery dem",
       fleet: "Bike Boys",
