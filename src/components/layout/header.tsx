@@ -2,7 +2,8 @@
 
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Search, Settings, Menu, Globe } from "lucide-react";
+import { Bell, Search, Settings, Menu, Globe, Command } from "lucide-react";
+import { ThemeToggle } from "./theme-toggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,9 +34,10 @@ const SIMULATED_NOTIFICATIONS = [
 interface HeaderProps {
   user: AuthUser | null;
   onMenuClick: () => void;
+  onOpenPalette?: () => void;
 }
 
-export function Header({ user, onMenuClick }: HeaderProps) {
+export function Header({ user, onMenuClick, onOpenPalette }: HeaderProps) {
   const { locale, setLocale, t } = useLanguage();
   const router = useRouter();
 
@@ -162,6 +164,17 @@ export function Header({ user, onMenuClick }: HeaderProps) {
             className="text-sm bg-transparent border-none outline-none w-full placeholder:text-[#6B7280]"
             style={{ color: "#3D3D3D" }}
           />
+          {onOpenPalette && (
+            <button
+              type="button"
+              onClick={onOpenPalette}
+              className="hidden md:flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold transition-colors hover:bg-white"
+              style={{ borderColor: "rgba(27,28,26,0.08)", color: "#6B7280" }}
+              title="Recherche globale (⌘K)"
+            >
+              <Command className="h-3 w-3" />K
+            </button>
+          )}
         </div>
 
         {/* Search dropdown */}
@@ -346,6 +359,9 @@ export function Header({ user, onMenuClick }: HeaderProps) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* Theme toggle */}
+        <ThemeToggle />
 
         {/* Settings shortcut */}
         <button

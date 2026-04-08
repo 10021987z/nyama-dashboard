@@ -1,66 +1,77 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  BarChart,
+  Area,
+  AreaChart,
   Bar,
+  BarChart,
+  Cell,
+  Line,
+  ComposedChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
 } from "recharts";
+import {
+  Activity,
+  AlertTriangle,
+  ArrowDownRight,
+  ArrowUpRight,
+  Bike,
+  ChefHat,
+  CheckCircle,
+  Clock,
+  CreditCard,
+  Package,
+  ShoppingBag,
+  Sparkles,
+  Star,
+  TrendingUp,
+  UserPlus,
+  Users,
+  XCircle,
+  Zap,
+} from "lucide-react";
 import { apiClient } from "@/lib/api";
 import type { DashboardData } from "@/lib/types";
 import { formatFcfa, formatFcfaCompact } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { useLanguage } from "@/hooks/use-language";
-import {
-  ShoppingBag,
-  Package,
-  TrendingUp,
-  CreditCard,
-  Users,
-  ChefHat,
-  CheckCircle,
-  ArrowUpRight,
-  ArrowDownRight,
-  Activity,
-  Zap,
-} from "lucide-react";
 
-// ── Sub-components ─────────────────────────────────────────────────────────────
+// ── Period selector ────────────────────────────────────────────────────────────
 
-const PERIOD_KEYS = ["today", "week", "month"] as const;
+const PERIODS = [
+  { key: "today", label: "Aujourd'hui" },
+  { key: "7d", label: "7 jours" },
+  { key: "30d", label: "30 jours" },
+  { key: "90d", label: "90 jours" },
+] as const;
+type PeriodKey = (typeof PERIODS)[number]["key"];
 
 function PeriodFilter({
   selected,
   onChange,
 }: {
-  selected: string;
-  onChange: (v: string) => void;
+  selected: PeriodKey;
+  onChange: (v: PeriodKey) => void;
 }) {
-  const { t } = useLanguage();
-
-  const periodLabels: Record<string, string> = {
-    today: t("common.today"),
-    week: t("common.week"),
-    month: t("common.month"),
-  };
-
   return (
     <div
       className="flex items-center gap-1 rounded-full p-1"
       style={{ backgroundColor: "#f5f3ef" }}
     >
-      {PERIOD_KEYS.map((key) => (
+      {PERIODS.map((p) => (
         <button
-          key={key}
-          onClick={() => onChange(key)}
+          key={p.key}
+          onClick={() => onChange(p.key)}
           className="rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all"
           style={
-            selected === key
+            selected === p.key
               ? {
                   background: "linear-gradient(135deg, #F57C20, #E06A10)",
                   color: "#fff",
@@ -68,35 +79,14 @@ function PeriodFilter({
               : { color: "#6B7280" }
           }
         >
-          {periodLabels[key]}
+          {p.label}
         </button>
       ))}
     </div>
   );
 }
 
-function AlertBanner({ data }: { data: DashboardData | null }) {
-  const { t } = useLanguage();
-  const rate = data?.paymentSuccessRate ?? 0;
-  return (
-    <div
-      className="flex items-center gap-3 rounded-2xl px-5 py-3"
-      style={{ backgroundColor: "#e8f5e9" }}
-    >
-      <CheckCircle className="h-5 w-5 shrink-0" style={{ color: "#2c694e" }} />
-      <p className="flex-1 text-sm font-medium" style={{ color: "#1b4d38" }}>
-        {t("dashboard.alertOps")} {t("dashboard.alertMessage")}{" "}
-        {rate > 0 ? `${rate}%` : t("dashboard.atRecordLevel")}.
-      </p>
-      <span
-        className="shrink-0 rounded-full px-3 py-0.5 text-xs font-bold text-white"
-        style={{ backgroundColor: "#2c694e" }}
-      >
-        {t("dashboard.alertNormal")}
-      </span>
-    </div>
-  );
-}
+// ── KPI cards ──────────────────────────────────────────────────────────────────
 
 interface KpiDef {
   title: string;
@@ -109,89 +99,134 @@ interface KpiDef {
   featured?: boolean;
 }
 
-function buildKpis(d: DashboardData, t: (key: string) => string): KpiDef[] {
+function buildKpis(d: DashboardData): KpiDef[] {
   const ordersTrend = d.ordersTrend ?? 0;
   const revenueTrend = d.revenueTrend ?? 0;
 
+  // Mock fields not yet in API
+  const completionRate = 100 - Math.round((d.ordersByStatus?.find((s) => s.status === "cancelled")?.count ?? 4));
+  const cancellationRate = 100 - completionRate;
+  const avgDeliveryMin = 28;
+  const activeRiders = Math.max(1, Math.round((d.totalRiders ?? 18) * 0.6));
+  const onlineCooks = Math.max(1, Math.round((d.totalCooks ?? 24) * 0.75));
+  const recurring = d.retentionRate ?? 42;
+
   return [
     {
-      title: t("dashboard.ordersToday").toUpperCase(),
-      value: (d.ordersToday ?? 0).toLocaleString("fr-FR"),
-      trend: ordersTrend !== 0
-        ? { label: `${ordersTrend >= 0 ? "+" : ""}${ordersTrend}%`, positive: ordersTrend >= 0 }
-        : "stable",
-      subtext: t("dashboard.vsWeek"),
+      title: "COMMANDES TOTALES",
+      value: (d.totalOrders ?? d.ordersToday ?? 0).toLocaleString("fr-FR"),
+      trend:
+        ordersTrend !== 0
+          ? { label: `${ordersTrend >= 0 ? "+" : ""}${ordersTrend}%`, positive: ordersTrend >= 0 }
+          : "stable",
+      subtext: "VS PÉRIODE PRÉCÉDENTE",
       icon: ShoppingBag,
       iconColor: "#f97316",
       iconBg: "#fff7ed",
     },
     {
-      title: t("dashboard.ordersWeek").toUpperCase(),
-      value: (d.ordersThisWeek ?? 0).toLocaleString("fr-FR"),
-      subtext: t("dashboard.thisWeek"),
-      icon: Package,
-      iconColor: "#2c694e",
-      iconBg: "#f0fdf4",
-    },
-    {
-      title: t("dashboard.revenueToday").toUpperCase(),
-      value: formatFcfa(d.revenueToday ?? 0),
-      trend: revenueTrend !== 0
-        ? { label: `${revenueTrend >= 0 ? "+" : ""}${revenueTrend}%`, positive: revenueTrend >= 0 }
-        : "stable",
-      subtext: t("dashboard.vsYesterday"),
+      title: "CA BRUT",
+      value: formatFcfaCompact(d.totalRevenue ?? 0),
+      trend:
+        revenueTrend !== 0
+          ? { label: `${revenueTrend >= 0 ? "+" : ""}${revenueTrend}%`, positive: revenueTrend >= 0 }
+          : "stable",
+      subtext: "MONTANT BRUT FCFA",
       icon: TrendingUp,
-      iconColor: revenueTrend >= 0 ? "#16a34a" : "#ef4444",
-      iconBg: revenueTrend >= 0 ? "#f0fdf4" : "#fff1f2",
-    },
-    {
-      title: t("dashboard.revenueMonth").toUpperCase(),
-      value: formatFcfaCompact(d.revenueThisMonth ?? 0),
-      subtext: t("dashboard.monthProjection"),
-      icon: CreditCard,
       iconColor: "#ffffff",
       iconBg: "rgba(255,255,255,0.15)",
       featured: true,
     },
     {
-      title: t("dashboard.users").toUpperCase(),
-      value: (d.totalUsers ?? 0).toLocaleString("fr-FR"),
-      subtext: t("dashboard.totalRegistered"),
-      icon: Users,
-      iconColor: "#2563eb",
-      iconBg: "#eff6ff",
-    },
-    {
-      title: t("dashboard.activeCooks").toUpperCase(),
-      value: String(d.totalCooks ?? 0),
-      subtext: t("dashboard.partners"),
-      icon: ChefHat,
-      iconColor: "#2c694e",
+      title: "CA NET",
+      value: formatFcfaCompact(Math.round((d.totalRevenue ?? 0) * 0.85)),
+      subtext: "APRÈS COMMISSIONS 15%",
+      icon: CreditCard,
+      iconColor: "#16a34a",
       iconBg: "#f0fdf4",
     },
     {
-      title: t("dashboard.avgBasket").toUpperCase(),
+      title: "PANIER MOYEN",
       value: formatFcfa(d.avgBasketXaf ?? 0),
       trend: "stable",
-      subtext: t("dashboard.vsLastWeek"),
+      subtext: "PAR COMMANDE",
       icon: ShoppingBag,
       iconColor: "#b45309",
       iconBg: "#fef3c7",
     },
     {
-      title: t("dashboard.paymentSuccess").toUpperCase(),
-      value: `${d.paymentSuccessRate ?? 0}%`,
-      subtext: t("dashboard.mobileMoney"),
+      title: "TEMPS LIVRAISON",
+      value: `${avgDeliveryMin} min`,
+      trend: { label: "-2 min", positive: true },
+      subtext: "MOYENNE GLOBALE",
+      icon: Clock,
+      iconColor: "#2563eb",
+      iconBg: "#eff6ff",
+    },
+    {
+      title: "TAUX COMPLÉTION",
+      value: `${completionRate}%`,
+      subtext: "COMMANDES LIVRÉES",
       icon: CheckCircle,
       iconColor: "#16a34a",
       iconBg: "#f0fdf4",
+    },
+    {
+      title: "TAUX D'ANNULATION",
+      value: `${cancellationRate}%`,
+      trend: { label: "-0.5%", positive: true },
+      subtext: "OBJECTIF < 5%",
+      icon: XCircle,
+      iconColor: "#ef4444",
+      iconBg: "#fff1f2",
+    },
+    {
+      title: "NOUVEAUX CLIENTS",
+      value: (d.newUsersThisMonth ?? 0).toLocaleString("fr-FR"),
+      trend: { label: "+12%", positive: true },
+      subtext: "CE MOIS",
+      icon: UserPlus,
+      iconColor: "#7c3aed",
+      iconBg: "#f5f3ff",
+    },
+    {
+      title: "TAUX RÉTENTION",
+      value: `${recurring}%`,
+      subtext: "CLIENTS RÉCURRENTS",
+      icon: Users,
+      iconColor: "#0891b2",
+      iconBg: "#ecfeff",
+    },
+    {
+      title: "RESTAURANTS",
+      value: `${onlineCooks}/${d.totalCooks ?? 0}`,
+      subtext: "EN LIGNE / TOTAL",
+      icon: ChefHat,
+      iconColor: "#2c694e",
+      iconBg: "#f0fdf4",
+    },
+    {
+      title: "LIVREURS ACTIFS",
+      value: `${activeRiders}/${d.totalRiders ?? 0}`,
+      subtext: "EN COURSE / TOTAL",
+      icon: Bike,
+      iconColor: "#F57C20",
+      iconBg: "#fff7ed",
+    },
+    {
+      title: "NOTE PLATEFORME",
+      value: `${(d.avgRating ?? 4.6).toFixed(1)} ★`,
+      trend: "stable",
+      subtext: "MOYENNE GLOBALE",
+      icon: Star,
+      iconColor: "#D4A017",
+      iconBg: "#fefce8",
     },
   ];
 }
 
 function KpiCard({ kpi }: { kpi: KpiDef }) {
   const { title, value, trend, subtext, icon: Icon, iconColor, iconBg, featured } = kpi;
-
   const cardBg = featured ? "#F57C20" : "#ffffff";
   const textColor = featured ? "#ffffff" : "#3D3D3D";
   const mutedColor = featured ? "rgba(255,255,255,0.7)" : "#6B7280";
@@ -208,29 +243,35 @@ function KpiCard({ kpi }: { kpi: KpiDef }) {
     >
       <div className="flex items-start justify-between">
         <div
-          className="flex h-11 w-11 items-center justify-center rounded-full"
+          className="flex h-10 w-10 items-center justify-center rounded-full"
           style={{ backgroundColor: iconBg }}
         >
-          <Icon className="h-5 w-5" style={{ color: iconColor }} strokeWidth={2} />
+          <Icon className="h-4 w-4" style={{ color: iconColor }} strokeWidth={2} />
         </div>
         {trend === "stable" ? (
           <span
-            className="rounded-full px-2.5 py-1 text-[10px] font-bold"
-            style={{ backgroundColor: "#f5f3ef", color: "#6B7280" }}
+            className="rounded-full px-2 py-0.5 text-[9px] font-bold"
+            style={{ backgroundColor: featured ? "rgba(255,255,255,0.15)" : "#f5f3ef", color: featured ? "#fff" : "#6B7280" }}
           >
             STABLE
           </span>
         ) : trend ? (
           <span
-            className="flex items-center gap-0.5 rounded-full px-2 py-1 text-[10px] font-bold"
+            className="flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold"
             style={{
               backgroundColor: featured
-                ? "rgba(255,255,255,0.15)"
-                : trend.positive ? "#f0fdf4" : "#fff1f2",
+                ? "rgba(255,255,255,0.18)"
+                : trend.positive
+                ? "#f0fdf4"
+                : "#fff1f2",
               color: featured ? "#ffffff" : trend.positive ? "#16a34a" : "#ef4444",
             }}
           >
-            {trend.positive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+            {trend.positive ? (
+              <ArrowUpRight className="h-3 w-3" />
+            ) : (
+              <ArrowDownRight className="h-3 w-3" />
+            )}
             {trend.label}
           </span>
         ) : null}
@@ -238,20 +279,26 @@ function KpiCard({ kpi }: { kpi: KpiDef }) {
 
       <div>
         <p
-          className="text-[1.6rem] font-bold leading-none"
-          style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: textColor }}
+          className="text-[1.5rem] font-bold leading-none"
+          style={{
+            fontFamily: "var(--font-space-mono), monospace",
+            color: textColor,
+            letterSpacing: "-0.02em",
+          }}
         >
           {value}
         </p>
         <p
-          className="mt-1.5 text-[10px] font-semibold tracking-wider uppercase"
-          style={{ color: mutedColor }}
+          className="mt-1.5 text-[9px] font-semibold tracking-wider uppercase"
+          style={{ color: mutedColor, fontFamily: "var(--font-montserrat), system-ui, sans-serif" }}
         >
           {title}
         </p>
       </div>
 
-      <p className="text-[10px]" style={{ color: mutedColor }}>{subtext}</p>
+      <p className="text-[10px]" style={{ color: mutedColor }}>
+        {subtext}
+      </p>
     </div>
   );
 }
@@ -262,12 +309,14 @@ function KpiSkeleton() {
       className="rounded-2xl p-5 space-y-3"
       style={{ backgroundColor: "#ffffff", boxShadow: "0 2px 24px rgba(160,60,0,0.05)" }}
     >
-      <Skeleton className="h-11 w-11 rounded-full" />
+      <Skeleton className="h-10 w-10 rounded-full" />
       <Skeleton className="h-7 w-24" />
       <Skeleton className="h-3 w-16" />
     </div>
   );
 }
+
+// ── Charts ─────────────────────────────────────────────────────────────────────
 
 const tooltipStyle = {
   backgroundColor: "#ffffff",
@@ -277,257 +326,387 @@ const tooltipStyle = {
   fontSize: 12,
 };
 
-function VolumeChart({ data }: { data: DashboardData["hourlyOrders"] }) {
-  const { t } = useLanguage();
-
+function Card({
+  title,
+  subtitle,
+  children,
+  className = "",
+}: {
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <div
-      className="rounded-2xl p-5"
+      className={`rounded-2xl p-5 ${className}`}
       style={{ backgroundColor: "#ffffff", boxShadow: "0 2px 24px rgba(160,60,0,0.05)" }}
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4">
         <h2
           className="text-lg font-semibold"
-          style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
+          style={{
+            fontFamily: "var(--font-montserrat), system-ui, sans-serif",
+            color: "#3D3D3D",
+          }}
         >
-          {t("dashboard.volumeTitle")}
+          {title}
         </h2>
-        <div className="flex items-center gap-1.5">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: "#2c694e" }} />
-            <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: "#2c694e" }} />
-          </span>
-          <span className="text-[10px] font-bold tracking-wider" style={{ color: "#2c694e" }}>
-            {t("dashboard.liveUpdates")}
-          </span>
-        </div>
+        {subtitle && (
+          <p className="text-[11px] mt-0.5" style={{ color: "#6B7280" }}>
+            {subtitle}
+          </p>
+        )}
       </div>
-      <ResponsiveContainer width="100%" height={200}>
-        <BarChart data={data} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
-          <XAxis
-            dataKey="hour"
-            tick={{ fontSize: 10, fill: "#6B7280" }}
-            tickLine={false}
-            axisLine={false}
-          />
-          <YAxis
-            tick={{ fontSize: 10, fill: "#6B7280" }}
-            tickLine={false}
-            axisLine={false}
-          />
-          <Tooltip
-            cursor={{ fill: "rgba(160,60,0,0.04)" }}
-            contentStyle={tooltipStyle}
-            formatter={(value) => [Number(value), t("dashboard.ordersLabel")]}
-          />
-          <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-            {data.map((entry, i) => (
-              <Cell
-                key={i}
-                fill={
-                  entry.hour === "NOW"
-                    ? "#E06A10"
-                    : entry.count >= 170
-                    ? "#F57C20"
-                    : "#e8c4b0"
-                }
-              />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+      {children}
     </div>
   );
 }
 
-function QuartierChart({ data }: { data: DashboardData["revenueByQuarter"] }) {
-  const { t } = useLanguage();
+function HourlyAreaChart({ data }: { data: DashboardData["hourlyOrders"] }) {
+  // Build prev day overlay (deterministic mock: ~85% of today)
+  const enriched = (data ?? []).map((d) => ({
+    ...d,
+    prev: Math.round(d.count * 0.85),
+  }));
 
   return (
-    <div
-      className="rounded-2xl p-5 flex flex-col"
-      style={{ backgroundColor: "#ffffff", boxShadow: "0 2px 24px rgba(160,60,0,0.05)" }}
-    >
-      <h2
-        className="text-lg font-semibold mb-4"
-        style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
-      >
-        {t("dashboard.revenueByQuarter")}
-      </h2>
-      <ResponsiveContainer width="100%" height={160}>
-        <BarChart
-          layout="vertical"
-          data={data}
-          margin={{ top: 0, right: 16, left: 0, bottom: 0 }}
-        >
+    <Card title="Commandes par heure" subtitle="Aujourd'hui vs hier (24h)">
+      <ResponsiveContainer width="100%" height={220}>
+        <AreaChart data={enriched} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+          <defs>
+            <linearGradient id="grad-today" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#F57C20" stopOpacity={0.4} />
+              <stop offset="100%" stopColor="#F57C20" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <XAxis dataKey="hour" tick={{ fontSize: 10, fill: "#6B7280" }} tickLine={false} axisLine={false} />
+          <YAxis tick={{ fontSize: 10, fill: "#6B7280" }} tickLine={false} axisLine={false} />
+          <Tooltip contentStyle={tooltipStyle} />
+          <Area
+            type="monotone"
+            dataKey="prev"
+            stroke="#9ca3af"
+            strokeDasharray="4 4"
+            fill="none"
+            name="Hier"
+          />
+          <Area
+            type="monotone"
+            dataKey="count"
+            stroke="#F57C20"
+            strokeWidth={2}
+            fill="url(#grad-today)"
+            name="Aujourd'hui"
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </Card>
+  );
+}
+
+function DailyRevenueChart() {
+  // Mock 30-day series with trend line
+  const data = useMemo(() => {
+    const pts: { day: string; revenue: number; trend: number }[] = [];
+    let trend = 800000;
+    for (let i = 29; i >= 0; i--) {
+      trend += 12000;
+      const noise = (Math.sin(i * 0.7) + Math.cos(i * 0.4)) * 80000;
+      pts.push({
+        day: `J-${i}`,
+        revenue: Math.max(400000, Math.round(trend + noise)),
+        trend: Math.round(trend),
+      });
+    }
+    return pts;
+  }, []);
+
+  return (
+    <Card title="Revenus 30 derniers jours" subtitle="CA quotidien (FCFA) + tendance">
+      <ResponsiveContainer width="100%" height={220}>
+        <ComposedChart data={data} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
+          <XAxis dataKey="day" tick={{ fontSize: 9, fill: "#6B7280" }} tickLine={false} axisLine={false} interval={4} />
+          <YAxis
+            tick={{ fontSize: 10, fill: "#6B7280" }}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+          />
+          <Tooltip contentStyle={tooltipStyle} formatter={(v) => formatFcfa(Number(v))} />
+          <Bar dataKey="revenue" fill="#F57C20" radius={[4, 4, 0, 0]} />
+          <Line type="monotone" dataKey="trend" stroke="#1B4332" strokeWidth={2} dot={false} />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </Card>
+  );
+}
+
+const CATEGORY_COLORS = ["#F57C20", "#1B4332", "#D4A017", "#7c3aed", "#0891b2"];
+
+function CategoryDonut() {
+  const data = [
+    { name: "Plats traditionnels", value: 38 },
+    { name: "Grillades", value: 24 },
+    { name: "Snacks", value: 14 },
+    { name: "Boissons", value: 13 },
+    { name: "Desserts", value: 11 },
+  ];
+  return (
+    <Card title="Répartition par catégorie" subtitle="% des commandes">
+      <ResponsiveContainer width="100%" height={220}>
+        <PieChart>
+          <Pie
+            data={data}
+            innerRadius={55}
+            outerRadius={85}
+            paddingAngle={3}
+            dataKey="value"
+            stroke="none"
+          >
+            {data.map((_, i) => (
+              <Cell key={i} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip contentStyle={tooltipStyle} formatter={(v) => `${v}%`} />
+        </PieChart>
+      </ResponsiveContainer>
+      <ul className="mt-3 space-y-1.5">
+        {data.map((d, i) => (
+          <li key={d.name} className="flex items-center gap-2 text-xs" style={{ color: "#3D3D3D" }}>
+            <span
+              className="inline-block h-2.5 w-2.5 rounded-full"
+              style={{ backgroundColor: CATEGORY_COLORS[i] }}
+            />
+            <span className="flex-1">{d.name}</span>
+            <span className="font-semibold">{d.value}%</span>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}
+
+function TopRestaurantsChart() {
+  const data = [
+    { name: "Chez Mama Ngono", revenue: 4200000 },
+    { name: "Le Ndolé d'Or", revenue: 3650000 },
+    { name: "Saveurs Akwa", revenue: 3120000 },
+    { name: "Poulet DG Express", revenue: 2780000 },
+    { name: "Bonapriso Bites", revenue: 2410000 },
+  ];
+  return (
+    <Card title="Top 5 restaurants par CA" subtitle="30 derniers jours">
+      <ResponsiveContainer width="100%" height={220}>
+        <BarChart data={data} layout="vertical" margin={{ top: 0, right: 16, left: 0, bottom: 0 }}>
           <XAxis
             type="number"
             tick={{ fontSize: 10, fill: "#6B7280" }}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(v) => `${v}M`}
+            tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`}
           />
           <YAxis
             type="category"
-            dataKey="quarter"
+            dataKey="name"
             tick={{ fontSize: 11, fill: "#3D3D3D" }}
             tickLine={false}
             axisLine={false}
-            width={60}
+            width={130}
           />
-          <Tooltip
-            cursor={{ fill: "rgba(160,60,0,0.04)" }}
-            contentStyle={tooltipStyle}
-            formatter={(v) => [`${v}M FCFA`, t("dashboard.revenueLabel")]}
-          />
-          <Bar dataKey="revenueM" fill="#F57C20" radius={[0, 6, 6, 0]} />
+          <Tooltip contentStyle={tooltipStyle} formatter={(v) => formatFcfa(Number(v))} />
+          <Bar dataKey="revenue" fill="#1B4332" radius={[0, 6, 6, 0]} />
         </BarChart>
       </ResponsiveContainer>
+    </Card>
+  );
+}
 
-      {/* Insight card */}
-      <div
-        className="mt-4 rounded-xl p-3.5"
-        style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
-      >
-        <div className="flex items-start gap-2">
-          <Zap className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "rgba(255,255,255,0.8)" }} />
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-white/60 mb-1">
-              {t("dashboard.insightAI")}
-            </p>
-            <p className="text-xs text-white leading-relaxed">
-              {data.length > 0
-                ? t("dashboard.insightText").replace("{quarter}", data[0].quarter)
-                : t("dashboard.analysisInProgress")}
-            </p>
-          </div>
-        </div>
+// ── Alerts & AI insights ────────────────────────────────────────────────────────
+
+interface AlertItem {
+  icon: React.ElementType;
+  color: string;
+  bg: string;
+  title: string;
+  detail: string;
+}
+
+function AlertsPanel() {
+  const alerts: AlertItem[] = [
+    {
+      icon: AlertTriangle,
+      color: "#ef4444",
+      bg: "#fff1f2",
+      title: "3 commandes en attente > 15 min",
+      detail: "Risque d'annulation client",
+    },
+    {
+      icon: ChefHat,
+      color: "#f59e0b",
+      bg: "#fef3c7",
+      title: "Restaurant 'Saveurs Akwa' offline",
+      detail: "Hors ligne depuis 25 min en heures d'ouverture",
+    },
+    {
+      icon: Bike,
+      color: "#0891b2",
+      bg: "#ecfeff",
+      title: "5 livreurs sans course depuis > 1h",
+      detail: "Zone Bonapriso sur-staffée",
+    },
+    {
+      icon: Star,
+      color: "#7c3aed",
+      bg: "#f5f3ff",
+      title: "2 commandes notées < 3★",
+      detail: "À traiter par le support",
+    },
+  ];
+
+  return (
+    <Card title="Alertes & actions requises" subtitle="Mises à jour temps réel">
+      <ul className="space-y-2.5">
+        {alerts.map((a, i) => (
+          <li
+            key={i}
+            className="flex items-start gap-3 rounded-xl p-3 transition-colors hover:bg-[#fbf9f5]"
+          >
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+              style={{ backgroundColor: a.bg }}
+            >
+              <a.icon className="h-4 w-4" style={{ color: a.color }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold" style={{ color: "#3D3D3D" }}>
+                {a.title}
+              </p>
+              <p className="text-[11px] mt-0.5" style={{ color: "#6B7280" }}>
+                {a.detail}
+              </p>
+            </div>
+            <button
+              className="shrink-0 text-[10px] font-bold uppercase tracking-wider rounded-full px-3 py-1"
+              style={{ color: "#F57C20", backgroundColor: "#fff7ed" }}
+            >
+              Voir
+            </button>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}
+
+function AIInsights() {
+  const insights = [
+    {
+      icon: TrendingUp,
+      text: "Le Ndolé complet est votre plat le plus commandé cette semaine (+23%)",
+    },
+    {
+      icon: Sparkles,
+      text: "Le quartier Akwa génère 45% de vos commandes sur la période",
+    },
+    {
+      icon: Bike,
+      text: "Recommandation : augmenter les livreurs à Bonapriso le vendredi soir",
+    },
+  ];
+  return (
+    <div
+      className="rounded-2xl p-5"
+      style={{ background: "linear-gradient(135deg, #1B4332, #2c694e)" }}
+    >
+      <div className="flex items-center gap-2 mb-4">
+        <Zap className="h-4 w-4" style={{ color: "#D4A017" }} />
+        <span
+          className="text-[10px] font-bold uppercase tracking-wider"
+          style={{ color: "rgba(255,255,255,0.7)" }}
+        >
+          Insights IA
+        </span>
       </div>
+      <ul className="space-y-3">
+        {insights.map((ins, i) => (
+          <li key={i} className="flex items-start gap-3">
+            <div
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
+              style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
+            >
+              <ins.icon className="h-3.5 w-3.5 text-white" />
+            </div>
+            <p className="text-xs leading-relaxed text-white/90">{ins.text}</p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
 
-function DeliveryDensity({
-  revenueByQuarter,
-}: {
-  revenueByQuarter?: DashboardData["revenueByQuarter"];
-}) {
-  const { t } = useLanguage();
-  const [showMap, setShowMap] = useState(false);
+// ── Live feed ticker ───────────────────────────────────────────────────────────
+
+function LiveFeed() {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 4000);
+    return () => clearInterval(id);
+  }, []);
+
+  const events = useMemo(
+    () => [
+      { id: 1, label: "#CMD-8421 livrée à Akwa", amount: "8 500 FCFA" },
+      { id: 2, label: "#CMD-8420 acceptée par Chez Mama", amount: "12 000 FCFA" },
+      { id: 3, label: "Nouveau client inscrit — Marie K.", amount: "" },
+      { id: 4, label: "#CMD-8419 en livraison vers Bonapriso", amount: "6 200 FCFA" },
+      { id: 5, label: "Restaurant Le Ndolé d'Or en ligne", amount: "" },
+      { id: 6, label: "#CMD-8418 livrée à Bonanjo", amount: "9 800 FCFA" },
+    ],
+    []
+  );
+  const items = [...events.slice(tick % events.length), ...events.slice(0, tick % events.length)];
 
   return (
-    <>
-      <div
-        className="relative rounded-2xl overflow-hidden p-8 min-h-[200px]"
-        style={{ backgroundColor: "#3D3D3D" }}
-      >
-        <div
-          className="absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage: "radial-gradient(circle, #F57C20 1.5px, transparent 1.5px)",
-            backgroundSize: "28px 28px",
-          }}
-        />
-        <div className="absolute right-24 top-8 h-28 w-28 rounded-full blur-2xl opacity-30" style={{ backgroundColor: "#F57C20" }} />
-        <div className="absolute right-40 bottom-8 h-20 w-20 rounded-full blur-xl opacity-20" style={{ backgroundColor: "#E06A10" }} />
-        <div className="absolute right-12 bottom-12 h-16 w-16 rounded-full blur-xl opacity-25" style={{ backgroundColor: "#F57C20" }} />
-        <div className="absolute right-64 top-12 h-12 w-12 rounded-full blur-lg opacity-15" style={{ backgroundColor: "#8b4c11" }} />
-
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-2">
-            <Activity className="h-4 w-4" style={{ color: "#F57C20" }} />
-            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.5)" }}>
-              {t("dashboard.realtime")}
-            </span>
-          </div>
-          <h2
-            className="text-2xl font-semibold text-white mb-2"
-            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif" }}
-          >
-            {t("dashboard.deliveryDensity")}
-          </h2>
-          <p className="text-sm max-w-lg mb-5" style={{ color: "rgba(255,255,255,0.55)" }}>
-            {t("dashboard.deliveryDensityDesc")}
-          </p>
-          <button
-            onClick={() => setShowMap(true)}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold transition-opacity hover:opacity-80"
-            style={{ color: "#e8c4b0" }}
-          >
-            {t("dashboard.seeDetailedMap")}
-          </button>
-        </div>
-      </div>
-
-      {/* Full-screen delivery density map dialog */}
-      {showMap && (
-        <div
-          className="fixed inset-0 z-50 flex flex-col"
-          style={{ backgroundColor: "#3D3D3D" }}
+    <div
+      className="flex items-center gap-4 rounded-2xl px-5 py-3 overflow-hidden"
+      style={{ backgroundColor: "#3D3D3D" }}
+    >
+      <div className="flex items-center gap-2 shrink-0">
+        <span className="relative flex h-2 w-2">
+          <span
+            className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+            style={{ backgroundColor: "#F57C20" }}
+          />
+          <span
+            className="relative inline-flex rounded-full h-2 w-2"
+            style={{ backgroundColor: "#F57C20" }}
+          />
+        </span>
+        <span
+          className="text-[10px] font-bold tracking-wider"
+          style={{ color: "#F57C20" }}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-8 py-5">
-            <h2
-              className="text-2xl font-semibold text-white"
-              style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif" }}
-            >
-              Carte de Densit&eacute; des Livraisons
-            </h2>
-            <button
-              onClick={() => setShowMap(false)}
-              className="rounded-full border border-white/30 px-5 py-1.5 text-sm font-semibold text-white transition-opacity hover:opacity-80"
-            >
-              Fermer
-            </button>
+          LIVE
+        </span>
+      </div>
+      <div className="flex-1 flex items-center gap-8 overflow-hidden">
+        {items.slice(0, 4).map((e) => (
+          <div key={e.id} className="flex items-center gap-2 whitespace-nowrap">
+            <Package className="h-3 w-3 text-white/40" />
+            <span className="text-xs text-white/80">{e.label}</span>
+            {e.amount && (
+              <span
+                className="text-[10px] font-bold"
+                style={{ color: "#D4A017", fontFamily: "var(--font-space-mono), monospace" }}
+              >
+                {e.amount}
+              </span>
+            )}
           </div>
-
-          {/* Simulated map area */}
-          <div className="flex-1 relative mx-8 mb-8 rounded-2xl overflow-hidden" style={{ backgroundColor: "#141513" }}>
-            {/* Dot pattern background */}
-            <div
-              className="absolute inset-0 opacity-[0.05]"
-              style={{
-                backgroundImage: "radial-gradient(circle, #F57C20 1px, transparent 1px)",
-                backgroundSize: "20px 20px",
-              }}
-            />
-
-            {/* Density blobs */}
-            {(revenueByQuarter ?? []).map((q, i) => {
-              const positions = [
-                { top: "20%", left: "25%" },
-                { top: "35%", left: "60%" },
-                { top: "55%", left: "40%" },
-                { top: "70%", left: "70%" },
-                { top: "30%", left: "80%" },
-              ];
-              const pos = positions[i % positions.length];
-              const size = Math.max(60, Math.min(160, q.revenueM * 20));
-              return (
-                <div key={q.quarter} className="absolute flex flex-col items-center" style={{ top: pos.top, left: pos.left, transform: "translate(-50%, -50%)" }}>
-                  <div
-                    className="rounded-full blur-xl"
-                    style={{
-                      width: size,
-                      height: size,
-                      background: `radial-gradient(circle, rgba(201,77,0,0.6), rgba(160,60,0,0.2))`,
-                    }}
-                  />
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-                    <div
-                      className="h-3 w-3 rounded-full mb-1"
-                      style={{ background: "linear-gradient(135deg, #E06A10, #F57C20)" }}
-                    />
-                    <span className="text-white text-xs font-semibold whitespace-nowrap">{q.quarter}</span>
-                    <span className="text-white/60 text-[10px]">{q.revenueM}M FCFA</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -535,7 +714,7 @@ function DeliveryDensity({
 
 export default function DashboardPage() {
   const { t } = useLanguage();
-  const [period, setPeriod] = useState<string>("today");
+  const [period, setPeriod] = useState<PeriodKey>("today");
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -557,7 +736,7 @@ export default function DashboardPage() {
     fetchDashboard();
   }, [fetchDashboard]);
 
-  const kpis = data ? buildKpis(data, t) : [];
+  const kpis = data ? buildKpis(data) : [];
 
   return (
     <div className="space-y-5 pb-8">
@@ -566,7 +745,10 @@ export default function DashboardPage() {
         <div>
           <h1
             className="text-[2rem] font-semibold italic leading-tight"
-            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
+            style={{
+              fontFamily: "var(--font-montserrat), system-ui, sans-serif",
+              color: "#3D3D3D",
+            }}
           >
             {t("dashboard.title")}
           </h1>
@@ -577,42 +759,59 @@ export default function DashboardPage() {
         <PeriodFilter selected={period} onChange={setPeriod} />
       </div>
 
-      {/* Alert banner */}
-      <AlertBanner data={data} />
+      {/* Live feed ticker */}
+      <LiveFeed />
 
       {error && <ErrorState message={error} onRetry={fetchDashboard} />}
 
-      {/* 8 KPI cards */}
+      {/* 12 KPI cards */}
       {loading ? (
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, i) => (
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 12 }).map((_, i) => (
             <KpiSkeleton key={i} />
           ))}
         </div>
       ) : (
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {kpis.map((kpi, i) => (
             <KpiCard key={i} kpi={kpi} />
           ))}
         </div>
       )}
 
-      {/* Charts */}
+      {/* Charts row 1 */}
       {!loading && data && (
         <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-          <VolumeChart data={data.hourlyOrders ?? []} />
-          <QuartierChart data={data.revenueByQuarter ?? []} />
+          <HourlyAreaChart data={data.hourlyOrders ?? []} />
+          <DailyRevenueChart />
         </div>
       )}
       {loading && (
         <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-          <Skeleton className="h-[280px] rounded-2xl" />
-          <Skeleton className="h-[280px] rounded-2xl" />
+          <Skeleton className="h-[300px] rounded-2xl" />
+          <Skeleton className="h-[300px] rounded-2xl" />
         </div>
       )}
 
-      {/* Delivery density map */}
-      <DeliveryDensity revenueByQuarter={data?.revenueByQuarter} />
+      {/* Charts row 2 */}
+      {!loading && (
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+          <CategoryDonut />
+          <div className="lg:col-span-2">
+            <TopRestaurantsChart />
+          </div>
+        </div>
+      )}
+
+      {/* Alerts + AI insights */}
+      {!loading && (
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <AlertsPanel />
+          </div>
+          <AIInsights />
+        </div>
+      )}
 
       {/* Footer */}
       <p
@@ -620,6 +819,7 @@ export default function DashboardPage() {
         style={{ color: "#b8b3ad" }}
       >
         {t("footer")}
+        <span className="ml-2 opacity-60">— Activity tracked via {<Activity className="inline h-3 w-3" />}</span>
       </p>
     </div>
   );

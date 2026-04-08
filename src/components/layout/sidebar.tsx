@@ -13,11 +13,14 @@ import {
   MessageSquare,
   Settings,
   Download,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/use-language";
 import { apiClient } from "@/lib/api";
 import type { DashboardData } from "@/lib/types";
+import { useSidebar } from "./sidebar-context";
 
 const NAV_ITEMS = [
   { href: "/dashboard", icon: BarChart3, labelKey: "nav.dashboard" },
@@ -33,11 +36,14 @@ const NAV_ITEMS = [
 
 interface SidebarProps {
   onNavigate?: () => void;
+  forceExpanded?: boolean;
 }
 
-export function Sidebar({ onNavigate }: SidebarProps) {
+export function Sidebar({ onNavigate, forceExpanded = false }: SidebarProps) {
   const pathname = usePathname();
   const { t } = useLanguage();
+  const { collapsed: ctxCollapsed, toggle } = useSidebar();
+  const collapsed = forceExpanded ? false : ctxCollapsed;
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
@@ -46,31 +52,56 @@ export function Sidebar({ onNavigate }: SidebarProps) {
 
   return (
     <div
-      className="flex h-full flex-col"
+      className="flex h-full flex-col transition-all duration-200"
       style={{ backgroundColor: "#3D3D3D" }}
     >
-      {/* Logo */}
-      <div className="flex h-16 items-center px-5">
-        <div>
-          <p
-            className="text-xl font-bold leading-tight"
-            style={{
-              fontFamily: "var(--font-montserrat), system-ui, sans-serif",
-              color: "#F57C20",
-            }}
+      {/* Logo + collapse */}
+      <div className="flex h-16 items-center justify-between px-4">
+        {!collapsed ? (
+          <div>
+            <p
+              className="text-xl font-bold leading-tight"
+              style={{
+                fontFamily: "var(--font-montserrat), system-ui, sans-serif",
+                color: "#F57C20",
+              }}
+            >
+              Nyama Admin
+            </p>
+            <p
+              className="text-[9px] tracking-[0.15em] uppercase leading-none mt-0.5"
+              style={{ color: "rgba(255,255,255,0.5)" }}
+            >
+              Cuisine camerounaise
+            </p>
+          </div>
+        ) : (
+          <div
+            className="mx-auto flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold text-white"
+            style={{ backgroundColor: "#F57C20" }}
           >
-            Nyama Admin
-          </p>
-          <p
-            className="text-[9px] tracking-[0.15em] uppercase leading-none mt-0.5"
-            style={{ color: "rgba(255,255,255,0.5)" }}
+            N
+          </div>
+        )}
+        {!forceExpanded && (
+          <button
+            onClick={toggle}
+            className={cn(
+              "flex items-center justify-center rounded-lg p-1.5 transition-colors hover:bg-white/10",
+              collapsed && "absolute top-3 right-2"
+            )}
+            aria-label={collapsed ? "Déplier" : "Replier"}
+            title={collapsed ? "Déplier" : "Replier"}
           >
-            Cuisine camerounaise
-          </p>
-        </div>
+            {collapsed ? (
+              <ChevronsRight className="h-4 w-4 text-white/60" />
+            ) : (
+              <ChevronsLeft className="h-4 w-4 text-white/60" />
+            )}
+          </button>
+        )}
       </div>
 
-      {/* Divider */}
       <div className="mx-4 h-px" style={{ backgroundColor: "rgba(255,255,255,0.1)" }} />
 
       {/* Navigation */}
@@ -82,19 +113,16 @@ export function Sidebar({ onNavigate }: SidebarProps) {
               key={href}
               href={href}
               onClick={onNavigate}
+              title={collapsed ? t(labelKey) : undefined}
               className={cn(
-                "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
-                active
-                  ? "text-[#F57C20] font-semibold"
-                  : "text-white/60 hover:text-white/90"
+                "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
+                collapsed && "justify-center px-2",
+                active ? "text-[#F57C20] font-semibold" : "text-white/60 hover:text-white/90"
               )}
               style={
-                active
-                  ? { backgroundColor: "rgba(245, 124, 32, 0.15)" }
-                  : undefined
+                active ? { backgroundColor: "rgba(245, 124, 32, 0.15)" } : undefined
               }
             >
-              {/* Left accent bar */}
               {active && (
                 <span
                   className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full"
@@ -106,13 +134,22 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                 strokeWidth={active ? 2.5 : 2}
                 style={{ color: active ? "#F57C20" : "rgba(255,255,255,0.5)" }}
               />
-              {t(labelKey)}
+              {!collapsed && t(labelKey)}
+
+              {/* Tooltip when collapsed */}
+              {collapsed && (
+                <span
+                  className="pointer-events-none absolute left-full ml-2 whitespace-nowrap rounded-md px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 z-50"
+                  style={{ backgroundColor: "#1a1a1a" }}
+                >
+                  {t(labelKey)}
+                </span>
+              )}
             </Link>
           );
         })}
       </nav>
 
-      {/* Divider */}
       <div className="mx-4 h-px" style={{ backgroundColor: "rgba(255,255,255,0.1)" }} />
 
       {/* Bottom: Export + Avatar */}
@@ -148,29 +185,35 @@ export function Sidebar({ onNavigate }: SidebarProps) {
               window.alert("Erreur lors de l'export du rapport.");
             }
           }}
-          className="flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          title={collapsed ? t("nav.exportReport") : undefined}
+          className={cn(
+            "flex w-full items-center justify-center gap-2 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90",
+            collapsed ? "p-2" : "py-2.5"
+          )}
           style={{
             background: "linear-gradient(135deg, #F57C20, #E06A10)",
           }}
         >
           <Download className="h-3.5 w-3.5" />
-          {t("nav.exportReport")}
+          {!collapsed && t("nav.exportReport")}
         </button>
 
-        <div className="flex items-center gap-2.5 px-1">
-          <div
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-            style={{ backgroundColor: "#F57C20" }}
-          >
-            A
+        {!collapsed && (
+          <div className="flex items-center gap-2.5 px-1">
+            <div
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+              style={{ backgroundColor: "#F57C20" }}
+            >
+              A
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-white truncate">
+                Administrateur
+              </p>
+              <p className="text-[10px] text-white/50 truncate">Super Admin</p>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-[#3D3D3D] truncate">
-              Administrateur
-            </p>
-            <p className="text-[10px] text-[#6B7280] truncate">Super Admin</p>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

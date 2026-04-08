@@ -20,7 +20,7 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
         <SheetHeader className="sr-only">
           <SheetTitle>Navigation</SheetTitle>
         </SheetHeader>
-        <Sidebar onNavigate={onClose} />
+        <Sidebar onNavigate={onClose} forceExpanded />
       </SheetContent>
     </Sheet>
   );
