@@ -30,7 +30,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
-import { ChevronLeft, ChevronRight, Filter, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, Filter, RotateCcw, LayoutGrid, List as ListIcon } from "lucide-react";
+import { OrdersKanban } from "@/components/dashboard/orders-kanban";
+import type { OrderStatus } from "@/lib/types";
 
 const LIMIT = 20;
 
@@ -230,6 +232,8 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [view, setView] = useState<"kanban" | "list">("kanban");
+  const [statusOverrides, setStatusOverrides] = useState<Record<string, OrderStatus>>({});
 
   const statusOptions = useMemo(
     () => [
@@ -274,8 +278,55 @@ export default function OrdersPage() {
     setPage(1);
   }
 
+  const liveOrders = (data?.data ?? []).map((o) =>
+    statusOverrides[o.id] ? { ...o, status: statusOverrides[o.id] } : o
+  );
+
   return (
     <div className="space-y-6">
+      {/* View switcher */}
+      <div
+        className="inline-flex items-center gap-1 rounded-full p-1 self-start"
+        style={{ backgroundColor: "#f5f3ef" }}
+      >
+        <button
+          onClick={() => setView("kanban")}
+          className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all"
+          style={
+            view === "kanban"
+              ? { background: "linear-gradient(135deg, #F57C20, #E06A10)", color: "#fff" }
+              : { color: "#6B7280" }
+          }
+        >
+          <LayoutGrid className="h-3.5 w-3.5" />
+          Kanban temps réel
+        </button>
+        <button
+          onClick={() => setView("list")}
+          className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all"
+          style={
+            view === "list"
+              ? { background: "linear-gradient(135deg, #F57C20, #E06A10)", color: "#fff" }
+              : { color: "#6B7280" }
+          }
+        >
+          <ListIcon className="h-3.5 w-3.5" />
+          Historique
+        </button>
+      </div>
+
+      {view === "kanban" && !loading && data && (
+        <OrdersKanban
+          orders={liveOrders}
+          onSelect={(o) => setSelectedOrder(o)}
+          onMoveStatus={(id, s) =>
+            setStatusOverrides((prev) => ({ ...prev, [id]: s }))
+          }
+        />
+      )}
+
+      {view === "list" && (
+      <>
       {/* Filters */}
       <Card className="shadow-sm">
         <CardContent className="p-4">
@@ -457,6 +508,9 @@ export default function OrdersPage() {
           )}
         </CardContent>
       </Card>
+
+      </>
+      )}
 
       <OrderDetailDialog
         order={selectedOrder}

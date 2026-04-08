@@ -7,7 +7,8 @@ import { formatFcfaCompact } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { useLanguage } from "@/hooks/use-language";
-import { Search, Star, Package, TrendingUp, ChefHat, RotateCcw, ChevronLeft, ChevronRight, Eye, Pencil, Ban, X } from "lucide-react";
+import { Search, Star, Package, TrendingUp, ChefHat, RotateCcw, ChevronLeft, ChevronRight, Eye, Pencil, Ban, X, LayoutGrid, Table as TableIcon } from "lucide-react";
+import { RestaurantsTable } from "@/components/dashboard/restaurants-table";
 
 const LIMIT = 20;
 
@@ -511,6 +512,8 @@ export default function RestaurantsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [view, setView] = useState<"cards" | "table">("cards");
+
   // Dialog state
   const [viewRestaurant, setViewRestaurant] = useState<Restaurant | null>(null);
   const [editRestaurant, setEditRestaurant] = useState<Restaurant | null>(null);
@@ -638,6 +641,37 @@ export default function RestaurantsPage() {
         />
       </div>
 
+      {/* View switcher */}
+      <div
+        className="inline-flex items-center gap-1 rounded-full p-1 self-start"
+        style={{ backgroundColor: "#f5f3ef" }}
+      >
+        <button
+          onClick={() => setView("cards")}
+          className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all"
+          style={
+            view === "cards"
+              ? { background: "linear-gradient(135deg, #F57C20, #E06A10)", color: "#fff" }
+              : { color: "#6B7280" }
+          }
+        >
+          <LayoutGrid className="h-3.5 w-3.5" />
+          Cartes
+        </button>
+        <button
+          onClick={() => setView("table")}
+          className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all"
+          style={
+            view === "table"
+              ? { background: "linear-gradient(135deg, #F57C20, #E06A10)", color: "#fff" }
+              : { color: "#6B7280" }
+          }
+        >
+          <TableIcon className="h-3.5 w-3.5" />
+          Tableau
+        </button>
+      </div>
+
       {/* Filters */}
       <div
         className="rounded-2xl p-4 flex flex-wrap items-end gap-3"
@@ -712,19 +746,27 @@ export default function RestaurantsPage() {
         </div>
       ) : (
         <>
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {data?.data.map((r) => {
-              const merged = mergeOverrides(r);
-              return (
-                <RestaurantCard
-                  key={r.id}
-                  r={merged}
-                  onView={setViewRestaurant}
-                  onEdit={setEditRestaurant}
-                />
-              );
-            })}
-          </div>
+          {view === "cards" ? (
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {data?.data.map((r) => {
+                const merged = mergeOverrides(r);
+                return (
+                  <RestaurantCard
+                    key={r.id}
+                    r={merged}
+                    onView={setViewRestaurant}
+                    onEdit={setEditRestaurant}
+                  />
+                );
+              })}
+            </div>
+          ) : (
+            <RestaurantsTable
+              rows={(data?.data ?? []).map(mergeOverrides)}
+              onView={setViewRestaurant}
+              onEdit={setEditRestaurant}
+            />
+          )}
 
           {/* Pagination */}
           {totalPages > 1 && (

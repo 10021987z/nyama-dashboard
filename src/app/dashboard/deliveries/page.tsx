@@ -9,8 +9,9 @@ import { ErrorState } from "@/components/ui/error-state";
 import { useLanguage } from "@/hooks/use-language";
 import {
   Truck, Clock, CheckCircle2, XCircle, Package, ChevronLeft, ChevronRight,
-  MapPin, User, Bike, Activity,
+  MapPin, User, Bike, Activity, Map as MapIcon, List as ListIcon,
 } from "lucide-react";
+import { DeliveriesMap } from "@/components/dashboard/deliveries-map";
 
 const LIMIT = 20;
 
@@ -177,6 +178,7 @@ function DeliveryRow({ d }: { d: Delivery }) {
 
 export default function DeliveriesPage() {
   const { t } = useLanguage();
+  const [view, setView] = useState<"map" | "list">("map");
   const [statusTab, setStatusTab] = useState("");
   const [page, setPage] = useState(1);
   const [data, setData] = useState<DeliveriesResponse | null>(null);
@@ -249,6 +251,43 @@ export default function DeliveriesPage() {
         <StatCard icon={<XCircle className="h-5 w-5" />} label={t("deliveries.availableRiders")} value={loading ? "—" : failed} color="#ef4444" loading={loading} />
       </div>
 
+      {/* View switcher */}
+      <div
+        className="inline-flex items-center gap-1 rounded-full p-1 self-start"
+        style={{ backgroundColor: "#f5f3ef" }}
+      >
+        <button
+          onClick={() => setView("map")}
+          className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all"
+          style={
+            view === "map"
+              ? { background: "linear-gradient(135deg, #F57C20, #E06A10)", color: "#fff" }
+              : { color: "#6B7280" }
+          }
+        >
+          <MapIcon className="h-3.5 w-3.5" />
+          Carte temps réel
+        </button>
+        <button
+          onClick={() => setView("list")}
+          className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all"
+          style={
+            view === "list"
+              ? { background: "linear-gradient(135deg, #F57C20, #E06A10)", color: "#fff" }
+              : { color: "#6B7280" }
+          }
+        >
+          <ListIcon className="h-3.5 w-3.5" />
+          Historique
+        </button>
+      </div>
+
+      {view === "map" && !loading && data && (
+        <DeliveriesMap deliveries={data.data} />
+      )}
+
+      {view === "list" && (
+      <>
       {/* Status tabs */}
       <div
         className="rounded-2xl p-1 flex gap-0.5 overflow-x-auto"
@@ -369,6 +408,9 @@ export default function DeliveriesPage() {
           </>
         )}
       </div>
+
+      </>
+      )}
 
       {/* Footer */}
       <p
