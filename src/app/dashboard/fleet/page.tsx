@@ -8,9 +8,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { useLanguage } from "@/hooks/use-language";
 import { FleetTable } from "@/components/dashboard/fleet-table";
+import { CreateUserDialog } from "@/components/dashboard/create-user-dialog";
+import { VerifyRiderDialog } from "@/components/dashboard/verify-rider-dialog";
 import {
   Bike, Star, TrendingUp, Search, ChevronLeft, ChevronRight, MapPin,
-  LayoutGrid, List,
+  LayoutGrid, List, UserPlus,
 } from "lucide-react";
 
 const LIMIT = 20;
@@ -275,6 +277,11 @@ export default function FleetPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
   const [view, setView] = useState<"cards" | "table">("cards");
+  const [verifiedSet, setVerifiedSet] = useState<Set<string>>(new Set());
+  const [suspendedSet, setSuspendedSet] = useState<Set<string>>(new Set());
+  const [showCreateUser, setShowCreateUser] = useState(false);
+  const [verifyRider, setVerifyRider] = useState<FleetRider | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
   const [data, setData] = useState<FleetResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -311,16 +318,26 @@ export default function FleetPage() {
   return (
     <div className="space-y-5 pb-8">
       {/* Title */}
-      <div>
-        <h1
-          className="text-[1.8rem] font-semibold italic leading-tight"
-          style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1
+            className="text-[1.8rem] font-semibold italic leading-tight"
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
+          >
+            {t("fleet.title")}
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: "#6B7280" }}>
+            {t("fleet.subtitle")}
+          </p>
+        </div>
+        <button
+          onClick={() => setShowCreateUser(true)}
+          className="flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-white"
+          style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
         >
-          {t("fleet.title")}
-        </h1>
-        <p className="mt-1 text-sm" style={{ color: "#6B7280" }}>
-          {t("fleet.subtitle")}
-        </p>
+          <UserPlus className="h-4 w-4" />
+          Ajouter un livreur
+        </button>
       </div>
 
       {/* Summary stats */}
@@ -415,15 +432,22 @@ export default function FleetPage() {
         </div>
       ) : (
         <>
-          {view === "cards" ? (
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {data?.data.map((rider) => (
-                <RiderCard key={rider.id} rider={rider} />
-              ))}
-            </div>
-          ) : (
-            <FleetTable rows={data?.data ?? []} />
-          )}
+          {(() => {
+            const visible = (data?.data ?? []).filter((r) => !suspendedSet.has(r.id));
+            return view === "cards" ? (
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {visible.map((rider) => (
+                  <RiderCard key={rider.id} rider={rider} />
+                ))}
+              </div>
+            ) : (
+              <FleetTable
+                rows={visible}
+                verifiedSet={verifiedSet}
+                onVerify={(r) => setVerifyRider(r)}
+              />
+            );
+          })()}
 
           {/* Pagination */}
           {totalPages > 1 && (
@@ -501,6 +525,38 @@ export default function FleetPage() {
       >
         {t("footer")}
       </p>
+
+      <CreateUserDialog
+        open={showCreateUser}
+        defaultRole="RIDER"
+        lockRole
+        onClose={() => setShowCreateUser(false)}
+        onCreated={(u) => setToast(`Livreur ${u.name} créé ✓`)}
+      />
+
+      <VerifyRiderDialog
+        rider={verifyRider}
+        onClose={() => setVerifyRider(null)}
+        onApprove={(id) => {
+          setVerifiedSet((prev) => new Set(prev).add(id));
+          setToast("Livreur approuvé ✓");
+        }}
+        onReject={(id) => {
+          setSuspendedSet((prev) => new Set(prev).add(id));
+          setToast("Livreur rejeté");
+        }}
+      />
+
+      {toast && (
+        <div
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] rounded-2xl px-5 py-3 text-sm font-semibold text-white shadow-lg"
+          style={{ backgroundColor: "#F57C20" }}
+          onAnimationEnd={() => setToast(null)}
+        >
+          {toast}
+          <button onClick={() => setToast(null)} className="ml-3 opacity-70 hover:opacity-100">×</button>
+        </div>
+      )}
     </div>
   );
 }

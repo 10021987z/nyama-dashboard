@@ -2,12 +2,16 @@
 
 import type { Restaurant } from "@/lib/types";
 import { formatFcfaCompact } from "@/lib/utils";
-import { Eye, Pencil, Star } from "lucide-react";
+import { Eye, Pencil, Star, ShieldCheck, Ban, Check } from "lucide-react";
 
 interface RestaurantsTableProps {
   rows: Restaurant[];
+  verifiedSet?: Set<string>;
   onView: (r: Restaurant) => void;
   onEdit: (r: Restaurant) => void;
+  onValidate?: (r: Restaurant) => void;
+  onSuspend?: (r: Restaurant) => void;
+  onToggleVerified?: (r: Restaurant) => void;
 }
 
 function initials(name?: string | null): string {
@@ -53,7 +57,15 @@ function StarRow({ value }: { value: number }) {
   );
 }
 
-export function RestaurantsTable({ rows, onView, onEdit }: RestaurantsTableProps) {
+export function RestaurantsTable({
+  rows,
+  verifiedSet,
+  onView,
+  onEdit,
+  onValidate,
+  onSuspend,
+  onToggleVerified,
+}: RestaurantsTableProps) {
   return (
     <div
       className="rounded-2xl overflow-hidden"
@@ -69,11 +81,14 @@ export function RestaurantsTable({ rows, onView, onEdit }: RestaurantsTableProps
               <Th>Commandes</Th>
               <Th>CA total</Th>
               <Th>Statut</Th>
+              <Th>Vérifié</Th>
               <Th align="right">Actions</Th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
+            {rows.map((r) => {
+              const isVerified = verifiedSet?.has(r.id) ?? false;
+              return (
               <tr
                 key={r.id}
                 className="hover:bg-[#fbf9f5] transition-colors border-t"
@@ -149,6 +164,26 @@ export function RestaurantsTable({ rows, onView, onEdit }: RestaurantsTableProps
                   </span>
                 </td>
                 <td className="px-4 py-3">
+                  <button
+                    onClick={() => onToggleVerified?.(r)}
+                    className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[10px] font-bold transition-colors"
+                    style={
+                      isVerified
+                        ? { backgroundColor: "#dcfce7", color: "#166534" }
+                        : { backgroundColor: "#fef3c7", color: "#b45309" }
+                    }
+                    title="Toggle vérifié"
+                  >
+                    <span
+                      className="flex h-3 w-3 items-center justify-center rounded-full"
+                      style={{ backgroundColor: isVerified ? "#16a34a" : "#d97706" }}
+                    >
+                      {isVerified && <Check className="h-2 w-2 text-white" strokeWidth={4} />}
+                    </span>
+                    {isVerified ? "VÉRIFIÉ" : "EN ATTENTE"}
+                  </button>
+                </td>
+                <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-1">
                     <button
                       onClick={() => onView(r)}
@@ -164,10 +199,29 @@ export function RestaurantsTable({ rows, onView, onEdit }: RestaurantsTableProps
                     >
                       <Pencil className="h-3.5 w-3.5" style={{ color: "#F57C20" }} />
                     </button>
+                    {!isVerified && onValidate && (
+                      <button
+                        onClick={() => onValidate(r)}
+                        className="rounded-lg p-1.5 transition-colors hover:bg-[#dcfce7]"
+                        title="Valider"
+                      >
+                        <ShieldCheck className="h-3.5 w-3.5" style={{ color: "#166534" }} />
+                      </button>
+                    )}
+                    {r.isActive && onSuspend && (
+                      <button
+                        onClick={() => onSuspend(r)}
+                        className="rounded-lg p-1.5 transition-colors hover:bg-[#fee2e2]"
+                        title="Suspendre"
+                      >
+                        <Ban className="h-3.5 w-3.5" style={{ color: "#991b1b" }} />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

@@ -7,8 +7,11 @@ import { formatFcfaCompact } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { useLanguage } from "@/hooks/use-language";
-import { Search, Star, Package, TrendingUp, ChefHat, RotateCcw, ChevronLeft, ChevronRight, Eye, Pencil, Ban, X, LayoutGrid, Table as TableIcon } from "lucide-react";
+import { Search, Star, Package, TrendingUp, ChefHat, RotateCcw, ChevronLeft, ChevronRight, Eye, Pencil, Ban, X, LayoutGrid, Table as TableIcon, UserPlus, Plus } from "lucide-react";
 import { RestaurantsTable } from "@/components/dashboard/restaurants-table";
+import { CreateUserDialog } from "@/components/dashboard/create-user-dialog";
+import { AddRestaurantWizard } from "@/components/dashboard/add-restaurant-wizard";
+import { patchRestaurant } from "@/lib/admin-mutations";
 
 const LIMIT = 20;
 
@@ -520,6 +523,10 @@ export default function RestaurantsPage() {
 
   // Local overrides for edited restaurants
   const [localOverrides, setLocalOverrides] = useState<Map<string, Partial<Restaurant>>>(new Map());
+  const [verifiedSet, setVerifiedSet] = useState<Set<string>>(new Set());
+  const [extraRestaurants, setExtraRestaurants] = useState<Restaurant[]>([]);
+  const [showCreateUser, setShowCreateUser] = useState(false);
+  const [showAddRestaurant, setShowAddRestaurant] = useState(false);
 
   // Toast state
   const [toast, setToast] = useState<string | null>(null);
@@ -556,11 +563,41 @@ export default function RestaurantsPage() {
         next.set(id, { ...(prev.get(id) ?? {}), isActive: newActive });
         return next;
       });
+      void patchRestaurant(id, { isActive: newActive });
       setEditRestaurant(null);
       setToast(newActive ? "Restaurant r\u00e9activ\u00e9" : "Restaurant suspendu");
     },
     [],
   );
+
+  const handleValidate = useCallback((r: Restaurant) => {
+    setVerifiedSet((prev) => {
+      const next = new Set(prev);
+      next.add(r.id);
+      return next;
+    });
+    void patchRestaurant(r.id, { isVerified: true });
+    setToast("Restaurant validé ✓");
+  }, []);
+
+  const handleSuspendQuick = useCallback((r: Restaurant) => {
+    setLocalOverrides((prev) => {
+      const next = new Map(prev);
+      next.set(r.id, { ...(prev.get(r.id) ?? {}), isActive: false });
+      return next;
+    });
+    void patchRestaurant(r.id, { isActive: false });
+    setToast("Restaurant suspendu");
+  }, []);
+
+  const handleToggleVerified = useCallback((r: Restaurant) => {
+    setVerifiedSet((prev) => {
+      const next = new Set(prev);
+      if (next.has(r.id)) next.delete(r.id); else next.add(r.id);
+      void patchRestaurant(r.id, { isVerified: next.has(r.id) });
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
@@ -600,16 +637,36 @@ export default function RestaurantsPage() {
   return (
     <div className="space-y-5 pb-8">
       {/* Title */}
-      <div>
-        <h1
-          className="text-[1.8rem] font-semibold italic leading-tight"
-          style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
-        >
-          {t("restaurants.title")}
-        </h1>
-        <p className="mt-1 text-sm" style={{ color: "#6B7280" }}>
-          {t("restaurants.subtitle")}
-        </p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1
+            className="text-[1.8rem] font-semibold italic leading-tight"
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
+          >
+            {t("restaurants.title")}
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: "#6B7280" }}>
+            {t("restaurants.subtitle")}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowCreateUser(true)}
+            className="flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-colors"
+            style={{ border: "1.5px solid #F57C20", color: "#F57C20", backgroundColor: "transparent" }}
+          >
+            <UserPlus className="h-4 w-4" />
+            Ajouter un utilisateur
+          </button>
+          <button
+            onClick={() => setShowAddRestaurant(true)}
+            className="flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-white"
+            style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
+          >
+            <Plus className="h-4 w-4" />
+            Ajouter un restaurant
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -748,7 +805,7 @@ export default function RestaurantsPage() {
         <>
           {view === "cards" ? (
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {data?.data.map((r) => {
+              {[...extraRestaurants, ...(data?.data ?? [])].map((r) => {
                 const merged = mergeOverrides(r);
                 return (
                   <RestaurantCard
@@ -762,9 +819,13 @@ export default function RestaurantsPage() {
             </div>
           ) : (
             <RestaurantsTable
-              rows={(data?.data ?? []).map(mergeOverrides)}
+              rows={[...extraRestaurants, ...(data?.data ?? [])].map(mergeOverrides)}
+              verifiedSet={verifiedSet}
               onView={setViewRestaurant}
               onEdit={setEditRestaurant}
+              onValidate={handleValidate}
+              onSuspend={handleSuspendQuick}
+              onToggleVerified={handleToggleVerified}
             />
           )}
 
@@ -832,6 +893,36 @@ export default function RestaurantsPage() {
 
       {/* Toast */}
       {toast && <Toast message={toast} onDone={toastCb} />}
+
+      <CreateUserDialog
+        open={showCreateUser}
+        onClose={() => setShowCreateUser(false)}
+        onCreated={(u) => setToast(`Utilisateur ${u.name} créé ✓`)}
+      />
+
+      <AddRestaurantWizard
+        open={showAddRestaurant}
+        onClose={() => setShowAddRestaurant(false)}
+        onCreated={(r) => {
+          setExtraRestaurants((prev) => [
+            {
+              id: r.id,
+              name: r.name,
+              phone: r.phone,
+              city: r.city,
+              neighborhood: r.neighborhood,
+              specialty: r.specialty,
+              avgRating: r.avgRating,
+              totalOrders: r.totalOrders,
+              totalRevenue: r.totalRevenue,
+              isActive: r.isActive,
+              createdAt: r.createdAt,
+            } as Restaurant,
+            ...prev,
+          ]);
+          setToast(`Restaurant ${r.name} ajouté ✓`);
+        }}
+      />
     </div>
   );
 }
