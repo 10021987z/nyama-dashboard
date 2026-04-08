@@ -7,8 +7,10 @@ import { formatFcfaCompact, formatDate } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { useLanguage } from "@/hooks/use-language";
+import { FleetTable } from "@/components/dashboard/fleet-table";
 import {
   Bike, Star, TrendingUp, Search, ChevronLeft, ChevronRight, MapPin,
+  LayoutGrid, List,
 } from "lucide-react";
 
 const LIMIT = 20;
@@ -272,6 +274,7 @@ export default function FleetPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
+  const [view, setView] = useState<"cards" | "table">("cards");
   const [data, setData] = useState<FleetResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -322,6 +325,30 @@ export default function FleetPage() {
 
       {/* Summary stats */}
       <SummaryBanner data={data} loading={loading} />
+
+      {/* View switcher */}
+      <div className="flex justify-end">
+        <div className="inline-flex gap-1 rounded-full p-1" style={{ backgroundColor: "#f5f3ef" }}>
+          {[
+            { v: "cards" as const, label: "Cartes", Icon: LayoutGrid },
+            { v: "table" as const, label: "Tableau", Icon: List },
+          ].map(({ v, label, Icon }) => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all"
+              style={
+                view === v
+                  ? { background: "linear-gradient(135deg, #F57C20, #E06A10)", color: "#fff" }
+                  : { color: "#6B7280" }
+              }
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Filters */}
       <div
@@ -388,11 +415,15 @@ export default function FleetPage() {
         </div>
       ) : (
         <>
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {data?.data.map((rider) => (
-              <RiderCard key={rider.id} rider={rider} />
-            ))}
-          </div>
+          {view === "cards" ? (
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {data?.data.map((rider) => (
+                <RiderCard key={rider.id} rider={rider} />
+              ))}
+            </div>
+          ) : (
+            <FleetTable rows={data?.data ?? []} />
+          )}
 
           {/* Pagination */}
           {totalPages > 1 && (

@@ -7,6 +7,7 @@ import { formatFcfa, formatDate, formatRelative } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { useLanguage } from "@/hooks/use-language";
+import { CustomerSegments, computeSegments } from "@/components/dashboard/customer-segments";
 import {
   Users, Zap, UserPlus, ShieldCheck, Search, RotateCcw,
   ChevronLeft, ChevronRight, Eye, Pencil, Download, X,
@@ -486,6 +487,14 @@ export default function CustomersPage() {
           loading={loading}
         />
       </div>
+
+      {/* Segments automatiques */}
+      {!loading && data?.data && data.data.length > 0 && (
+        <CustomerSegments
+          counts={computeSegments(data.data.map(getCustomer))}
+          total={data.data.length}
+        />
+      )}
 
       {/* Filters */}
       <div
