@@ -904,23 +904,8 @@ export default function RestaurantsPage() {
         open={showAddRestaurant}
         onClose={() => setShowAddRestaurant(false)}
         onCreated={(r) => {
-          setExtraRestaurants((prev) => [
-            {
-              id: r.id,
-              name: r.name,
-              phone: r.phone,
-              city: r.city,
-              neighborhood: r.neighborhood,
-              specialty: r.specialty,
-              avgRating: r.avgRating,
-              totalOrders: r.totalOrders,
-              totalRevenue: r.totalRevenue,
-              isActive: r.isActive,
-              createdAt: r.createdAt,
-            } as Restaurant,
-            ...prev,
-          ]);
-          setToast(`Restaurant ${r.name} ajouté ✓`);
+          setToast(`Restaurant ${r.displayName} ajouté ✓`);
+          fetchRestaurants();
         }}
       />
     </div>

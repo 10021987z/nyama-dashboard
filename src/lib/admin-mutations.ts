@@ -1,11 +1,8 @@
 import { apiClient } from "./api";
 
-/**
- * Admin mutation helpers — try real API, fall back to local mock if endpoint absent.
- * Each function resolves with a synthetic record so the UI stays functional even
- * when the backend is not yet wired.
- */
-
+// ─────────────────────────────────────────────────────────────
+// POST /admin/users
+// ─────────────────────────────────────────────────────────────
 export interface CreateUserPayload {
   name: string;
   phone: string;
@@ -18,88 +15,112 @@ export interface CreatedUser {
   phone: string;
   role: CreateUserPayload["role"];
   createdAt: string;
-  _mocked?: boolean;
-}
-
-function genId(prefix: string) {
-  return `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
 export async function createUser(payload: CreateUserPayload): Promise<CreatedUser> {
-  try {
-    const res = await apiClient.post<CreatedUser>("/admin/users", payload);
-    return res;
-  } catch {
-    return {
-      id: genId("usr"),
-      ...payload,
-      createdAt: new Date().toISOString(),
-      _mocked: true,
-    };
-  }
+  return apiClient.post<CreatedUser>("/admin/users", payload);
 }
 
+// ─────────────────────────────────────────────────────────────
+// POST /admin/restaurants
+// ─────────────────────────────────────────────────────────────
 export interface CreateRestaurantPayload {
-  ownerId: string;
-  name: string;
-  phone: string;
-  city: string;
-  neighborhood: string;
-  specialty: string;
-  hours?: string;
+  userId: string;
+  displayName: string;
+  specialty: string[];
+  description?: string;
+  quarterId: string;
+  momoPhone?: string;
+  momoProvider?: "mtn" | "orange";
+  locationLat: number;
+  locationLng: number;
+  landmark?: string;
 }
 
 export interface CreatedRestaurant {
   id: string;
-  name: string;
-  phone: string;
-  city: string;
-  neighborhood: string;
+  userId: string;
+  displayName: string;
   specialty: string;
+  description?: string | null;
   isActive: boolean;
   isVerified: boolean;
   avgRating: number;
   totalOrders: number;
-  totalRevenue: number;
+  quarterId: string;
+  locationLat: number;
+  locationLng: number;
+  landmark?: string | null;
+  momoPhone?: string | null;
+  momoProvider?: string | null;
   createdAt: string;
-  _mocked?: boolean;
 }
 
-export async function createRestaurant(payload: CreateRestaurantPayload): Promise<CreatedRestaurant> {
-  try {
-    const res = await apiClient.post<CreatedRestaurant>("/admin/restaurants", payload);
-    return res;
-  } catch {
-    return {
-      id: genId("rst"),
-      name: payload.name,
-      phone: payload.phone,
-      city: payload.city,
-      neighborhood: payload.neighborhood,
-      specialty: payload.specialty,
-      isActive: true,
-      isVerified: false,
-      avgRating: 0,
-      totalOrders: 0,
-      totalRevenue: 0,
-      createdAt: new Date().toISOString(),
-      _mocked: true,
-    };
-  }
+export async function createRestaurant(
+  payload: CreateRestaurantPayload,
+): Promise<CreatedRestaurant> {
+  return apiClient.post<CreatedRestaurant>("/admin/restaurants", payload);
 }
 
-export async function patchRestaurant(id: string, patch: Record<string, unknown>): Promise<void> {
+export async function patchRestaurant(
+  id: string,
+  patch: { isVerified?: boolean; isActive?: boolean; subscriptionPlan?: string },
+): Promise<void> {
   try {
     await apiClient.patch(`/admin/restaurants/${id}`, patch);
   } catch {
-    // silent fallback — UI handles state locally
+    // silent — UI toggles are optimistic
   }
 }
 
-export async function patchFleetRider(id: string, patch: Record<string, unknown>): Promise<void> {
+// ─────────────────────────────────────────────────────────────
+// POST /admin/fleet
+// ─────────────────────────────────────────────────────────────
+export interface CreateFleetRiderPayload {
+  userId: string;
+  vehicleType: "MOTO" | "VELO" | "VOITURE";
+  plateNumber?: string;
+  momoPhone?: string;
+  momoProvider?: "mtn" | "orange";
+}
+
+export interface CreatedFleetRider {
+  id: string;
+  userId: string;
+  vehicleType: string;
+  plateNumber?: string | null;
+  isVerified: boolean;
+  isOnline: boolean;
+  createdAt: string;
+}
+
+export async function createFleetRider(
+  payload: CreateFleetRiderPayload,
+): Promise<CreatedFleetRider> {
+  return apiClient.post<CreatedFleetRider>("/admin/fleet", payload);
+}
+
+export async function patchFleetRider(
+  id: string,
+  patch: { isVerified?: boolean; status?: "ACTIVE" | "SUSPENDED" },
+): Promise<void> {
   try {
     await apiClient.patch(`/admin/fleet/${id}`, patch);
   } catch {
-    // silent fallback
+    // silent — UI toggles are optimistic
   }
+}
+
+// ─────────────────────────────────────────────────────────────
+// GET /admin/quarters
+// ─────────────────────────────────────────────────────────────
+export interface Quarter {
+  id: string;
+  name: string;
+  city: string;
+}
+
+export async function getQuarters(): Promise<Quarter[]> {
+  const res = await apiClient.get<{ data: Quarter[] }>("/admin/quarters");
+  return res.data;
 }

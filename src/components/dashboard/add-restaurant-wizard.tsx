@@ -1,8 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Store, ChevronRight, UserPlus } from "lucide-react";
-import { createUser, createRestaurant, type CreatedRestaurant, type CreatedUser } from "@/lib/admin-mutations";
+import {
+  createUser,
+  createRestaurant,
+  getQuarters,
+  type CreatedRestaurant,
+  type CreatedUser,
+  type Quarter,
+} from "@/lib/admin-mutations";
 
 interface Props {
   open: boolean;
@@ -21,15 +28,35 @@ export function AddRestaurantWizard({ open, onClose, onCreated }: Props) {
   const [createdOwner, setCreatedOwner] = useState<CreatedUser | null>(null);
 
   // Step 2 — restaurant
-  const [name, setName] = useState("");
-  const [city, setCity] = useState<"Douala" | "Yaoundé">("Douala");
-  const [neighborhood, setNeighborhood] = useState("");
-  const [specialty, setSpecialty] = useState("");
-  const [hours, setHours] = useState("10h - 22h");
-  const [phone, setPhone] = useState("+237");
+  const [displayName, setDisplayName] = useState("");
+  const [specialty, setSpecialty] = useState(""); // comma-separated
+  const [description, setDescription] = useState("");
+  const [quarterId, setQuarterId] = useState("");
+  const [momoPhone, setMomoPhone] = useState("+237");
+  const [momoProvider, setMomoProvider] = useState<"mtn" | "orange">("mtn");
+  const [locationLat, setLocationLat] = useState("");
+  const [locationLng, setLocationLng] = useState("");
+  const [landmark, setLandmark] = useState("");
+
+  // Quarters
+  const [quarters, setQuarters] = useState<Quarter[]>([]);
+  const [loadingQuarters, setLoadingQuarters] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    setLoadingQuarters(true);
+    getQuarters()
+      .then((qs) => {
+        setQuarters(qs);
+        if (qs.length > 0 && !quarterId) setQuarterId(qs[0].id);
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : "Erreur chargement quartiers"))
+      .finally(() => setLoadingQuarters(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   if (!open) return null;
 
@@ -40,25 +67,37 @@ export function AddRestaurantWizard({ open, onClose, onCreated }: Props) {
     setOwnerPhone("+237");
     setOwnerId("");
     setCreatedOwner(null);
-    setName("");
-    setNeighborhood("");
+    setDisplayName("");
     setSpecialty("");
-    setHours("10h - 22h");
-    setPhone("+237");
+    setDescription("");
+    setQuarterId(quarters[0]?.id ?? "");
+    setMomoPhone("+237");
+    setMomoProvider("mtn");
+    setLocationLat("");
+    setLocationLng("");
+    setLandmark("");
     setError(null);
     setSubmitting(false);
   };
 
-  const handleClose = () => { reset(); onClose(); };
+  const handleClose = () => {
+    reset();
+    onClose();
+  };
 
   const handleNext = async () => {
     setError(null);
     if (mode === "new") {
       if (!ownerName.trim()) return setError("Nom du cuisinier requis");
-      if (!/^\+237\d{9}$/.test(ownerPhone.replace(/\s/g, ""))) return setError("Téléphone cuisinier invalide");
+      if (!/^\+237\d{9}$/.test(ownerPhone.replace(/\s/g, "")))
+        return setError("Téléphone cuisinier invalide (format +237XXXXXXXXX)");
       setSubmitting(true);
       try {
-        const u = await createUser({ name: ownerName.trim(), phone: ownerPhone.replace(/\s/g, ""), role: "COOK" });
+        const u = await createUser({
+          name: ownerName.trim(),
+          phone: ownerPhone.replace(/\s/g, ""),
+          role: "COOK",
+        });
         setCreatedOwner(u);
         setOwnerId(u.id);
         setStep(2);
@@ -75,18 +114,34 @@ export function AddRestaurantWizard({ open, onClose, onCreated }: Props) {
 
   const handleSubmit = async () => {
     setError(null);
-    if (!name.trim()) return setError("Nom du restaurant requis");
-    if (!neighborhood.trim()) return setError("Quartier requis");
+    if (!displayName.trim()) return setError("Nom du restaurant requis");
+    if (!quarterId) return setError("Quartier requis");
+    const lat = parseFloat(locationLat);
+    const lng = parseFloat(locationLng);
+    if (Number.isNaN(lat) || lat < -90 || lat > 90)
+      return setError("Latitude invalide");
+    if (Number.isNaN(lng) || lng < -180 || lng > 180)
+      return setError("Longitude invalide");
+
+    const specialtyArr = specialty
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (specialtyArr.length === 0) return setError("Au moins une spécialité requise");
+
     setSubmitting(true);
     try {
       const r = await createRestaurant({
-        ownerId,
-        name: name.trim(),
-        phone: phone.replace(/\s/g, ""),
-        city,
-        neighborhood: neighborhood.trim(),
-        specialty: specialty.trim(),
-        hours,
+        userId: ownerId,
+        displayName: displayName.trim(),
+        specialty: specialtyArr,
+        description: description.trim() || undefined,
+        quarterId,
+        momoPhone: momoPhone.replace(/\s/g, "") || undefined,
+        momoProvider,
+        locationLat: lat,
+        locationLng: lng,
+        landmark: landmark.trim() || undefined,
       });
       onCreated(r);
       handleClose();
@@ -96,6 +151,10 @@ export function AddRestaurantWizard({ open, onClose, onCreated }: Props) {
     }
   };
 
+  const inputStyle = { backgroundColor: "#f5f3ef", color: "#3D3D3D" } as const;
+  const labelCls =
+    "block text-[10px] font-bold uppercase tracking-wider mb-1.5";
+
   return (
     <div
       className="fixed inset-0 z-[9000] flex items-center justify-center p-4"
@@ -103,7 +162,7 @@ export function AddRestaurantWizard({ open, onClose, onCreated }: Props) {
       onClick={handleClose}
     >
       <div
-        className="relative w-full max-w-lg rounded-2xl p-6"
+        className="relative w-full max-w-lg rounded-2xl p-6 max-h-[92vh] overflow-y-auto"
         style={{ backgroundColor: "#fff", boxShadow: "0 8px 40px rgba(0,0,0,0.18)" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -124,7 +183,10 @@ export function AddRestaurantWizard({ open, onClose, onCreated }: Props) {
           <div>
             <h2
               className="text-lg font-semibold italic"
-              style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
+              style={{
+                fontFamily: "var(--font-montserrat), system-ui, sans-serif",
+                color: "#3D3D3D",
+              }}
             >
               Nouveau restaurant
             </h2>
@@ -151,14 +213,22 @@ export function AddRestaurantWizard({ open, onClose, onCreated }: Props) {
               <button
                 onClick={() => setMode("new")}
                 className="flex-1 rounded-xl py-2.5 text-xs font-semibold"
-                style={mode === "new" ? { background: "linear-gradient(135deg, #F57C20, #E06A10)", color: "#fff" } : { backgroundColor: "#f5f3ef", color: "#6B7280" }}
+                style={
+                  mode === "new"
+                    ? { background: "linear-gradient(135deg, #F57C20, #E06A10)", color: "#fff" }
+                    : { backgroundColor: "#f5f3ef", color: "#6B7280" }
+                }
               >
                 Nouveau cuisinier
               </button>
               <button
                 onClick={() => setMode("existing")}
                 className="flex-1 rounded-xl py-2.5 text-xs font-semibold"
-                style={mode === "existing" ? { background: "linear-gradient(135deg, #F57C20, #E06A10)", color: "#fff" } : { backgroundColor: "#f5f3ef", color: "#6B7280" }}
+                style={
+                  mode === "existing"
+                    ? { background: "linear-gradient(135deg, #F57C20, #E06A10)", color: "#fff" }
+                    : { backgroundColor: "#f5f3ef", color: "#6B7280" }
+                }
               >
                 Cuisinier existant
               </button>
@@ -167,41 +237,50 @@ export function AddRestaurantWizard({ open, onClose, onCreated }: Props) {
             {mode === "new" ? (
               <>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "#6B7280" }}>Nom complet</label>
+                  <label className={labelCls} style={{ color: "#6B7280" }}>
+                    Nom complet
+                  </label>
                   <input
                     type="text"
                     value={ownerName}
                     onChange={(e) => setOwnerName(e.target.value)}
                     placeholder="Ex : Mama Africa"
                     className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
-                    style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
+                    style={inputStyle}
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "#6B7280" }}>Téléphone</label>
+                  <label className={labelCls} style={{ color: "#6B7280" }}>
+                    Téléphone
+                  </label>
                   <input
                     type="tel"
                     value={ownerPhone}
                     onChange={(e) => setOwnerPhone(e.target.value)}
                     className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
-                    style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
+                    style={inputStyle}
                   />
                 </div>
-                <p className="text-[10px] flex items-center gap-1.5" style={{ color: "#6B7280" }}>
+                <p
+                  className="text-[10px] flex items-center gap-1.5"
+                  style={{ color: "#6B7280" }}
+                >
                   <UserPlus className="h-3 w-3" />
                   Un compte COOK sera créé automatiquement
                 </p>
               </>
             ) : (
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "#6B7280" }}>ID utilisateur COOK existant</label>
+                <label className={labelCls} style={{ color: "#6B7280" }}>
+                  ID utilisateur COOK existant
+                </label>
                 <input
                   type="text"
                   value={ownerId}
                   onChange={(e) => setOwnerId(e.target.value)}
-                  placeholder="usr_xxxxxxxx"
+                  placeholder="uuid de l'utilisateur"
                   className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
-                  style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
+                  style={inputStyle}
                 />
               </div>
             )}
@@ -211,83 +290,153 @@ export function AddRestaurantWizard({ open, onClose, onCreated }: Props) {
         {step === 2 && (
           <div className="space-y-3">
             {createdOwner && (
-              <div className="rounded-xl px-3 py-2 text-xs" style={{ backgroundColor: "#dcfce7", color: "#166534" }}>
+              <div
+                className="rounded-xl px-3 py-2 text-xs"
+                style={{ backgroundColor: "#dcfce7", color: "#166534" }}
+              >
                 ✓ Cuisinier créé : <strong>{createdOwner.name}</strong>
               </div>
             )}
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "#6B7280" }}>Nom du restaurant</label>
+              <label className={labelCls} style={{ color: "#6B7280" }}>
+                Nom du restaurant
+              </label>
               <input
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Ex : Chez Mama Africa"
                 className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
-                style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
+                style={inputStyle}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "#6B7280" }}>Ville</label>
-                <select
-                  value={city}
-                  onChange={(e) => setCity(e.target.value as "Douala" | "Yaoundé")}
-                  className="w-full rounded-xl px-4 py-2.5 text-sm outline-none cursor-pointer"
-                  style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
-                >
-                  <option>Douala</option>
-                  <option>Yaoundé</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "#6B7280" }}>Quartier</label>
-                <input
-                  type="text"
-                  value={neighborhood}
-                  onChange={(e) => setNeighborhood(e.target.value)}
-                  placeholder="Ex : Bonapriso"
-                  className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
-                  style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
-                />
-              </div>
-            </div>
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "#6B7280" }}>Spécialités (séparées par virgules)</label>
+              <label className={labelCls} style={{ color: "#6B7280" }}>
+                Spécialités (séparées par virgules)
+              </label>
               <input
                 type="text"
                 value={specialty}
                 onChange={(e) => setSpecialty(e.target.value)}
                 placeholder="Ndolè, Poulet DG, Eru"
                 className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
-                style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label className={labelCls} style={{ color: "#6B7280" }}>
+                Description
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={2}
+                placeholder="Courte description (facultatif)"
+                className="w-full rounded-xl px-4 py-2.5 text-sm outline-none resize-none"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label className={labelCls} style={{ color: "#6B7280" }}>
+                Quartier
+              </label>
+              <select
+                value={quarterId}
+                onChange={(e) => setQuarterId(e.target.value)}
+                disabled={loadingQuarters || quarters.length === 0}
+                className="w-full rounded-xl px-4 py-2.5 text-sm outline-none cursor-pointer disabled:opacity-60"
+                style={inputStyle}
+              >
+                {loadingQuarters && <option>Chargement...</option>}
+                {!loadingQuarters && quarters.length === 0 && (
+                  <option value="">Aucun quartier disponible</option>
+                )}
+                {quarters.map((q) => (
+                  <option key={q.id} value={q.id}>
+                    {q.city} — {q.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelCls} style={{ color: "#6B7280" }}>
+                  Latitude
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  value={locationLat}
+                  onChange={(e) => setLocationLat(e.target.value)}
+                  placeholder="4.0511"
+                  className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label className={labelCls} style={{ color: "#6B7280" }}>
+                  Longitude
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  value={locationLng}
+                  onChange={(e) => setLocationLng(e.target.value)}
+                  placeholder="9.7679"
+                  className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
+                  style={inputStyle}
+                />
+              </div>
+            </div>
+            <div>
+              <label className={labelCls} style={{ color: "#6B7280" }}>
+                Point de repère
+              </label>
+              <input
+                type="text"
+                value={landmark}
+                onChange={(e) => setLandmark(e.target.value)}
+                placeholder="Ex : en face du marché central"
+                className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
+                style={inputStyle}
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "#6B7280" }}>Horaires</label>
+                <label className={labelCls} style={{ color: "#6B7280" }}>
+                  Téléphone MoMo
+                </label>
                 <input
-                  type="text"
-                  value={hours}
-                  onChange={(e) => setHours(e.target.value)}
+                  type="tel"
+                  value={momoPhone}
+                  onChange={(e) => setMomoPhone(e.target.value)}
                   className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
-                  style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
+                  style={inputStyle}
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "#6B7280" }}>Téléphone MoMo</label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
-                  style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
-                />
+                <label className={labelCls} style={{ color: "#6B7280" }}>
+                  Opérateur
+                </label>
+                <select
+                  value={momoProvider}
+                  onChange={(e) => setMomoProvider(e.target.value as "mtn" | "orange")}
+                  className="w-full rounded-xl px-4 py-2.5 text-sm outline-none cursor-pointer"
+                  style={inputStyle}
+                >
+                  <option value="mtn">MTN MoMo</option>
+                  <option value="orange">Orange Money</option>
+                </select>
               </div>
             </div>
           </div>
         )}
 
-        {error && <p className="mt-3 text-xs font-semibold" style={{ color: "#991b1b" }}>{error}</p>}
+        {error && (
+          <p className="mt-3 text-xs font-semibold" style={{ color: "#991b1b" }}>
+            {error}
+          </p>
+        )}
 
         <div className="mt-5 flex gap-3">
           {step === 2 && (

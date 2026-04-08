@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { useLanguage } from "@/hooks/use-language";
 import { FleetTable } from "@/components/dashboard/fleet-table";
-import { CreateUserDialog } from "@/components/dashboard/create-user-dialog";
+import { AddRiderDialog } from "@/components/dashboard/add-rider-dialog";
 import { VerifyRiderDialog } from "@/components/dashboard/verify-rider-dialog";
 import {
   Bike, Star, TrendingUp, Search, ChevronLeft, ChevronRight, MapPin,
@@ -526,12 +526,13 @@ export default function FleetPage() {
         {t("footer")}
       </p>
 
-      <CreateUserDialog
+      <AddRiderDialog
         open={showCreateUser}
-        defaultRole="RIDER"
-        lockRole
         onClose={() => setShowCreateUser(false)}
-        onCreated={(u) => setToast(`Livreur ${u.name} créé ✓`)}
+        onCreated={(_r, name) => {
+          setToast(`Livreur ${name} créé ✓`);
+          fetchFleet();
+        }}
       />
 
       <VerifyRiderDialog
