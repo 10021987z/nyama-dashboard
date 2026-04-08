@@ -104,7 +104,7 @@ function buildKpis(d: DashboardData): KpiDef[] {
   const revenueTrend = d.revenueTrend ?? 0;
 
   // Mock fields not yet in API
-  const completionRate = 100 - Math.round((d.ordersByStatus?.find((s) => s.status === "cancelled")?.count ?? 4));
+  const completionRate = 100 - Math.round((Array.isArray(d.ordersByStatus) ? (d.ordersByStatus.find((s: any) => s.status === "cancelled")?.count ?? 4) : 4));
   const cancellationRate = 100 - completionRate;
   const avgDeliveryMin = 28;
   const activeRiders = Math.max(1, Math.round((d.totalRiders ?? 18) * 0.6));
