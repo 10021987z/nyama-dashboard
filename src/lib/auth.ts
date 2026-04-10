@@ -1,16 +1,29 @@
 import { authService } from "./auth-service";
-import type { AuthUser, JwtPayload } from "./types";
+import type { AuthUser } from "./types";
 
 export function logout(): void {
   authService.logout();
   window.location.href = "/login";
 }
 
-export function decodeToken(token: string): JwtPayload | null {
+interface TokenPayload {
+  sub: string;
+  exp: number;
+  iat: number;
+  // Backend JWT fields
+  role?: string;
+  phone?: string;
+  // Admin JWT fields
+  adminRole?: string;
+  username?: string;
+  displayName?: string;
+}
+
+export function decodeToken(token: string): TokenPayload | null {
   try {
     const parts = token.split(".");
     if (parts.length !== 3) return null;
-    const payload = JSON.parse(atob(parts[1])) as JwtPayload;
+    const payload = JSON.parse(atob(parts[1])) as TokenPayload;
     return payload;
   } catch {
     return null;
@@ -27,7 +40,7 @@ export function getUser(): AuthUser | null {
       const parsed = JSON.parse(stored);
       return {
         sub: parsed.id || parsed.sub || "",
-        role: parsed.role || parsed.adminRole || "",
+        role: parsed.role || parsed.adminRole || "ADMIN",
         phone: parsed.phone || "",
         name: parsed.displayName || parsed.name,
         email: parsed.email,
@@ -41,7 +54,12 @@ export function getUser(): AuthUser | null {
   if (!token) return null;
   const payload = decodeToken(token);
   if (!payload) return null;
-  return { sub: payload.sub, role: payload.role, phone: payload.phone };
+  return {
+    sub: payload.sub,
+    role: payload.role || payload.adminRole || "",
+    phone: payload.phone || "",
+    name: payload.displayName,
+  };
 }
 
 export function isAuthenticated(): boolean {
@@ -49,6 +67,6 @@ export function isAuthenticated(): boolean {
   const token = localStorage.getItem("accessToken");
   if (!token) return false;
   const payload = decodeToken(token);
-  if (!payload) return false;
+  if (!payload || !payload.exp) return false;
   return payload.exp * 1000 > Date.now();
 }

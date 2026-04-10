@@ -9,18 +9,19 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isAuthenticated()) {
+      // No valid token — redirect to login
+      window.location.href = "/login";
+      return;
+    }
     const u = getUser();
     setUser(u);
     setLoading(false);
-
-    if (!isAuthenticated()) {
-      window.location.href = "/login";
-    }
   }, []);
 
   const logout = useCallback(() => {
     authLogout();
   }, []);
 
-  return { user, loading, logout, isAuthenticated: isAuthenticated() };
+  return { user, loading, logout, isAuthenticated: !loading && !!user };
 }

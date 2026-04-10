@@ -41,7 +41,7 @@ export const authService = {
     // Store in localStorage + cookie for proxy auth
     localStorage.setItem("accessToken", response.accessToken);
     localStorage.setItem("nyama_user", JSON.stringify(response.user));
-    document.cookie = `auth-token=${response.accessToken}; path=/; max-age=7200; SameSite=Strict`;
+    document.cookie = `auth-token=${response.accessToken}; path=/; max-age=7200; SameSite=Lax`;
     return response;
   },
 

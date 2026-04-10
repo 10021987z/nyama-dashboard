@@ -89,12 +89,8 @@ class ApiClient {
         ] = `Bearer ${newToken}`;
         res = await fetch(url, init);
       } else {
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          document.cookie = "auth-token=; path=/; max-age=0";
-          window.location.href = "/login";
-        }
+        // Don't nuke the session — the admin token may still be valid
+        // Just throw so the caller can handle it gracefully
         throw new Error("Session expirée");
       }
     }
