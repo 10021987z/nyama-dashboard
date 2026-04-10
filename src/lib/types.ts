@@ -12,6 +12,8 @@ export interface AuthUser {
   sub: string;
   role: string;
   phone: string;
+  name?: string;
+  email?: string;
 }
 
 export interface AuthResponse {

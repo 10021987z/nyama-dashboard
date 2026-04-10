@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { logout } from "@/lib/auth";
+import { authService } from "@/lib/auth-service";
 import { useLanguage } from "@/hooks/use-language";
 import { apiClient } from "@/lib/api";
 import type { AuthUser, Order, Restaurant, User, OrdersResponse, RestaurantsResponse, UsersResponse } from "@/lib/types";
@@ -40,6 +41,20 @@ interface HeaderProps {
 export function Header({ user, onMenuClick, onOpenPalette }: HeaderProps) {
   const { locale, setLocale, t } = useLanguage();
   const router = useRouter();
+
+  // Resolve stored user (rich profile) on client only
+  const storedUser = typeof window !== "undefined" ? authService.getUser() : null;
+  const displayName = storedUser?.name ?? user?.name ?? "Admin";
+  const displayInitials = (() => {
+    const name = storedUser?.name ?? user?.name;
+    if (name) {
+      const parts = name.split(" ");
+      return parts.length > 1
+        ? `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+        : parts[0][0].toUpperCase();
+    }
+    return "A";
+  })();
 
   // ── Search state ─────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
@@ -379,21 +394,26 @@ export function Header({ user, onMenuClick, onOpenPalette }: HeaderProps) {
               className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white"
               style={{ backgroundColor: "#F57C20" }}
             >
-              A
+              {displayInitials}
             </div>
             <div className="hidden lg:block text-left">
               <p className="text-xs font-semibold leading-none" style={{ color: "#3D3D3D" }}>
-                Admin
+                {displayName}
               </p>
               <p className="text-[10px] leading-none mt-0.5" style={{ color: "#6B7280" }}>
-                {user?.phone ?? "Super Admin"}
+                {user?.email ?? user?.phone ?? "Super Admin"}
               </p>
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">
             <DropdownMenuItem className="text-xs">
-              {user?.phone ?? "Administrateur"}
+              {displayName !== "Admin" ? displayName : user?.phone ?? "Administrateur"}
             </DropdownMenuItem>
+            {user?.email && (
+              <DropdownMenuItem className="text-xs text-gray-500">
+                {user.email}
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-red-600 focus:text-red-600 text-xs"
