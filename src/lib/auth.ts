@@ -1,27 +1,5 @@
-import { apiClient } from "./api";
 import { authService } from "./auth-service";
-import type { AuthResponse, AuthUser, JwtPayload } from "./types";
-
-export async function requestOtp(phone: string): Promise<void> {
-  await apiClient.post("/auth/otp/request", { phone });
-}
-
-export async function verifyOtp(
-  phone: string,
-  code: string
-): Promise<AuthResponse> {
-  const data = await apiClient.post<AuthResponse>("/auth/otp/verify", {
-    phone,
-    code,
-  });
-  localStorage.setItem("accessToken", data.accessToken);
-  localStorage.setItem("refreshToken", data.refreshToken);
-  if (data.user) {
-    localStorage.setItem("nyama_user", JSON.stringify(data.user));
-  }
-  document.cookie = `auth-token=${data.accessToken}; path=/; max-age=${7 * 24 * 3600}; SameSite=Lax`;
-  return data;
-}
+import type { AuthUser, JwtPayload } from "./types";
 
 export function logout(): void {
   authService.logout();
@@ -42,16 +20,16 @@ export function decodeToken(token: string): JwtPayload | null {
 export function getUser(): AuthUser | null {
   if (typeof window === "undefined") return null;
 
-  // Try nyama_user first (richer data from auth-service)
+  // Try nyama_user first (richer data from admin login)
   const stored = localStorage.getItem("nyama_user");
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
       return {
         sub: parsed.id || parsed.sub || "",
-        role: parsed.role || "",
+        role: parsed.role || parsed.adminRole || "",
         phone: parsed.phone || "",
-        name: parsed.name,
+        name: parsed.displayName || parsed.name,
         email: parsed.email,
       };
     } catch {

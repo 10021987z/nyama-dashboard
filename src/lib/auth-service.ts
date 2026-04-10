@@ -1,15 +1,22 @@
-import { auth } from "./firebase";
-import {
-  signInWithPopup,
-  GoogleAuthProvider,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-  sendEmailVerification,
-  type ConfirmationResult,
-} from "firebase/auth";
 import { API_BASE_URL } from "./constants";
+
+interface AdminUser {
+  id: string;
+  username: string;
+  displayName: string;
+  role: string;
+}
+
+interface AdminLoginResponse {
+  accessToken: string;
+  user: AdminUser;
+}
+
+interface AuthData {
+  accessToken: string;
+  refreshToken: string;
+  user?: { id: string; name?: string; email?: string; phone?: string; role: string };
+}
 
 function storeAuth(accessToken: string, refreshToken: string, user: AuthData["user"]) {
   localStorage.setItem("accessToken", accessToken);
@@ -20,60 +27,25 @@ function storeAuth(accessToken: string, refreshToken: string, user: AuthData["us
   document.cookie = `auth-token=${accessToken}; path=/; max-age=${7 * 24 * 3600}; SameSite=Lax`;
 }
 
-interface AuthData {
-  accessToken: string;
-  refreshToken: string;
-  user?: { id: string; name?: string; email?: string; phone?: string; role: string };
-}
-
 export const authService = {
-  // Google Sign-In
-  async signInWithGoogle(): Promise<AuthData> {
-    const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    const idToken = await result.user.getIdToken();
-    return this.exchangeToken(idToken, result.user.phoneNumber);
-  },
-
-  // Email Sign-In
-  async signInWithEmail(email: string, password: string): Promise<AuthData> {
-    const result = await signInWithEmailAndPassword(auth, email, password);
-    const idToken = await result.user.getIdToken();
-    return this.exchangeToken(idToken);
-  },
-
-  // Email Sign-Up
-  async createAccountWithEmail(email: string, password: string): Promise<AuthData> {
-    const result = await createUserWithEmailAndPassword(auth, email, password);
-    await sendEmailVerification(result.user);
-    const idToken = await result.user.getIdToken();
-    return this.exchangeToken(idToken);
-  },
-
-  // Phone OTP via Firebase
-  async requestPhoneOTP(phone: string, recaptchaContainer: string): Promise<ConfirmationResult> {
-    const recaptcha = new RecaptchaVerifier(auth, recaptchaContainer, { size: "invisible" });
-    const confirmation = await signInWithPhoneNumber(auth, phone, recaptcha);
-    return confirmation;
-  },
-
-  // Exchange Firebase token for NYAMA JWT
-  async exchangeToken(firebaseToken: string, phone?: string | null): Promise<AuthData> {
-    const res = await fetch(`${API_BASE_URL}/auth/firebase`, {
+  // Admin login via dashboard API route
+  async adminLogin(username: string, password: string): Promise<AdminLoginResponse> {
+    const res = await fetch("/api/v1/auth/admin/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ firebaseToken, phone }),
+      body: JSON.stringify({ username, password }),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error((err as { message?: string }).message || "Erreur serveur");
-    }
-    const data = (await res.json()) as AuthData;
-    storeAuth(data.accessToken, data.refreshToken, data.user);
-    return data;
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Erreur de connexion");
+    const response = data as AdminLoginResponse;
+    // Store in localStorage + cookie for proxy auth
+    localStorage.setItem("accessToken", response.accessToken);
+    localStorage.setItem("nyama_user", JSON.stringify(response.user));
+    document.cookie = `auth-token=${response.accessToken}; path=/; max-age=7200; SameSite=Strict`;
+    return response;
   },
 
-  // Fallback OTP via backend
+  // Fallback OTP via backend API (kept for backward compat)
   async requestOTPFallback(phone: string): Promise<void> {
     const res = await fetch(`${API_BASE_URL}/auth/otp/request`, {
       method: "POST",
@@ -94,7 +66,7 @@ export const authService = {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error((err as { message?: string }).message || "Code incorrect ou expiré");
+      throw new Error((err as { message?: string }).message || "Code incorrect ou expire");
     }
     const data = (await res.json()) as AuthData;
     storeAuth(data.accessToken, data.refreshToken, data.user);
@@ -102,7 +74,6 @@ export const authService = {
   },
 
   logout() {
-    auth.signOut();
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("nyama_user");
@@ -113,7 +84,7 @@ export const authService = {
     return localStorage.getItem("accessToken");
   },
 
-  getUser(): AuthData["user"] | null {
+  getUser(): AdminUser | null {
     const u = localStorage.getItem("nyama_user");
     return u ? JSON.parse(u) : null;
   },

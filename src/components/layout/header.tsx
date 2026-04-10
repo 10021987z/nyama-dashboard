@@ -44,9 +44,9 @@ export function Header({ user, onMenuClick, onOpenPalette }: HeaderProps) {
 
   // Resolve stored user (rich profile) on client only
   const storedUser = typeof window !== "undefined" ? authService.getUser() : null;
-  const displayName = storedUser?.name ?? user?.name ?? "Admin";
+  const displayName = storedUser?.displayName ?? user?.name ?? "Admin";
   const displayInitials = (() => {
-    const name = storedUser?.name ?? user?.name;
+    const name = storedUser?.displayName ?? user?.name;
     if (name) {
       const parts = name.split(" ");
       return parts.length > 1
