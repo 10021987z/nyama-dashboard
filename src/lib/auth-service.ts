@@ -19,12 +19,12 @@ interface AuthData {
 }
 
 function storeAuth(accessToken: string, refreshToken: string, user: AuthData["user"]) {
-  localStorage.setItem("accessToken", accessToken);
+  localStorage.setItem("nyama_admin_token", accessToken);
   localStorage.setItem("refreshToken", refreshToken);
   if (user) {
-    localStorage.setItem("nyama_user", JSON.stringify(user));
+    localStorage.setItem("nyama_admin_user", JSON.stringify(user));
   }
-  document.cookie = `auth-token=${accessToken}; path=/; max-age=${7 * 24 * 3600}; SameSite=Lax`;
+  document.cookie = `admin-token=${accessToken}; path=/; max-age=${7 * 24 * 3600}; SameSite=Lax`;
 }
 
 export const authService = {
@@ -39,9 +39,9 @@ export const authService = {
     if (!res.ok) throw new Error(data.message || "Erreur de connexion");
     const response = data as AdminLoginResponse;
     // Store in localStorage + cookie for proxy auth
-    localStorage.setItem("accessToken", response.accessToken);
-    localStorage.setItem("nyama_user", JSON.stringify(response.user));
-    document.cookie = `auth-token=${response.accessToken}; path=/; max-age=7200; SameSite=Lax`;
+    localStorage.setItem("nyama_admin_token", response.accessToken);
+    localStorage.setItem("nyama_admin_user", JSON.stringify(response.user));
+    document.cookie = `admin-token=${response.accessToken}; path=/; max-age=7200; SameSite=Lax`;
     return response;
   },
 
@@ -74,18 +74,18 @@ export const authService = {
   },
 
   logout() {
-    localStorage.removeItem("accessToken");
+    localStorage.removeItem("nyama_admin_token");
     localStorage.removeItem("refreshToken");
-    localStorage.removeItem("nyama_user");
-    document.cookie = "auth-token=; path=/; max-age=0";
+    localStorage.removeItem("nyama_admin_user");
+    document.cookie = "admin-token=; path=/; max-age=0";
   },
 
   getToken(): string | null {
-    return localStorage.getItem("accessToken");
+    return localStorage.getItem("nyama_admin_token");
   },
 
   getUser(): AdminUser | null {
-    const u = localStorage.getItem("nyama_user");
+    const u = localStorage.getItem("nyama_admin_user");
     return u ? JSON.parse(u) : null;
   },
 

@@ -23,7 +23,10 @@ export function decodeToken(token: string): TokenPayload | null {
   try {
     const parts = token.split(".");
     if (parts.length !== 3) return null;
-    const payload = JSON.parse(atob(parts[1])) as TokenPayload;
+    // JWT uses base64url — convert to standard base64 before atob()
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+    const payload = JSON.parse(atob(padded)) as TokenPayload;
     return payload;
   } catch {
     return null;
@@ -33,8 +36,8 @@ export function decodeToken(token: string): TokenPayload | null {
 export function getUser(): AuthUser | null {
   if (typeof window === "undefined") return null;
 
-  // Try nyama_user first (richer data from admin login)
-  const stored = localStorage.getItem("nyama_user");
+  // Try nyama_admin_user first (richer data from admin login)
+  const stored = localStorage.getItem("nyama_admin_user");
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
@@ -50,7 +53,7 @@ export function getUser(): AuthUser | null {
     }
   }
 
-  const token = localStorage.getItem("accessToken");
+  const token = localStorage.getItem("nyama_admin_token");
   if (!token) return null;
   const payload = decodeToken(token);
   if (!payload) return null;
@@ -64,7 +67,7 @@ export function getUser(): AuthUser | null {
 
 export function isAuthenticated(): boolean {
   if (typeof window === "undefined") return false;
-  const token = localStorage.getItem("accessToken");
+  const token = localStorage.getItem("nyama_admin_token");
   if (!token) return false;
   const payload = decodeToken(token);
   if (!payload || !payload.exp) return false;

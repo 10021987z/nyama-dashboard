@@ -5,7 +5,7 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith("/dashboard")) {
-    const token = request.cookies.get("auth-token")?.value;
+    const token = request.cookies.get("admin-token")?.value;
     if (!token) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("from", pathname);

@@ -14,7 +14,7 @@ class ApiClient {
 
   private getToken(): string | null {
     if (typeof window === "undefined") return null;
-    return localStorage.getItem("accessToken");
+    return localStorage.getItem("nyama_admin_token");
   }
 
   private async refreshToken(): Promise<string | null> {
@@ -32,11 +32,11 @@ class ApiClient {
         accessToken: string;
         refreshToken?: string;
       };
-      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("nyama_admin_token", data.accessToken);
       if (data.refreshToken) {
         localStorage.setItem("refreshToken", data.refreshToken);
       }
-      document.cookie = `auth-token=${data.accessToken}; path=/; max-age=${7 * 24 * 3600}; SameSite=Lax`;
+      document.cookie = `admin-token=${data.accessToken}; path=/; max-age=${7 * 24 * 3600}; SameSite=Lax`;
       return data.accessToken;
     } catch {
       return null;
