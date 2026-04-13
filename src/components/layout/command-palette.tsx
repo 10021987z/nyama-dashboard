@@ -8,9 +8,11 @@ import {
   Megaphone,
   MessageSquare,
   Package,
+  Scale,
   Search,
   Settings,
   Truck,
+  UserCheck,
   UtensilsCrossed,
   Users,
 } from "lucide-react";
@@ -37,6 +39,8 @@ const NAV_COMMANDS = [
   { href: "/dashboard/fleet", icon: Bike, label: "Flotte (Livreurs)" },
   { href: "/dashboard/customers", icon: Users, label: "Clients" },
   { href: "/dashboard/marketing", icon: Megaphone, label: "Marketing" },
+  { href: "/dashboard/disputes", icon: Scale, label: "Litiges" },
+  { href: "/dashboard/partners", icon: UserCheck, label: "Validation Partenaires" },
   { href: "/dashboard/support", icon: MessageSquare, label: "Support" },
   { href: "/dashboard/settings", icon: Settings, label: "Paramètres" },
 ];

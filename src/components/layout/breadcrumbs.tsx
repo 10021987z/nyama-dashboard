@@ -19,6 +19,8 @@ const LABEL_KEYS: Record<string, string> = {
   cooks: "nav.restaurants",
   riders: "nav.fleet",
   users: "nav.customers",
+  disputes: "nav.disputes",
+  partners: "nav.partners",
 };
 
 export function Breadcrumbs() {

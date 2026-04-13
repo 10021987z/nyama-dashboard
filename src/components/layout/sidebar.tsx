@@ -20,6 +20,8 @@ import {
   Download,
   ChevronsLeft,
   ChevronsRight,
+  Scale,
+  UserCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/use-language";
@@ -40,6 +42,8 @@ const NAV_ITEMS = [
   { href: "/dashboard/reviews", icon: Star, labelKey: "nav.reviews" },
   { href: "/dashboard/communications", icon: Bell, labelKey: "nav.communications" },
   { href: "/dashboard/reports", icon: FileText, labelKey: "nav.reports" },
+  { href: "/dashboard/disputes", icon: Scale, labelKey: "nav.disputes" },
+  { href: "/dashboard/partners", icon: UserCheck, labelKey: "nav.partners" },
   { href: "/dashboard/support", icon: MessageSquare, labelKey: "nav.support" },
   { href: "/dashboard/settings", icon: Settings, labelKey: "nav.settings" },
 ];

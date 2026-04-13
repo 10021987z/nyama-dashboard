@@ -459,6 +459,144 @@ export interface DashboardData {
   paymentMethodBreakdown: { method: string; count: number }[];
 }
 
+// ── Disputes ────────────────────────────────────────────────────────────────
+
+export type DisputeType =
+  | 'LATE_DELIVERY'
+  | 'WRONG_ORDER'
+  | 'MISSING_ITEM'
+  | 'FOOD_QUALITY'
+  | 'RIDER_BEHAVIOR'
+  | 'COOK_BEHAVIOR'
+  | 'PAYMENT_ISSUE'
+  | 'OTHER';
+
+export type DisputeSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export type DisputeStatusType =
+  | 'OPEN'
+  | 'UNDER_REVIEW'
+  | 'WAITING_RESPONSE'
+  | 'RESOLVED'
+  | 'CLOSED'
+  | 'ESCALATED';
+
+export interface DisputeMessage {
+  id: string;
+  disputeId: string;
+  authorId: string;
+  authorRole: string;
+  message: string;
+  createdAt: string;
+}
+
+export interface Dispute {
+  id: string;
+  orderId: string;
+  clientId: string;
+  cookId?: string;
+  riderId?: string;
+  type: DisputeType;
+  severity: DisputeSeverity;
+  status: DisputeStatusType;
+  description: string;
+  evidence?: string;
+  assignedTo?: string;
+  resolution?: string;
+  refundAmountXaf?: number;
+  resolvedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  client?: { id: string; name: string; phone: string; email?: string };
+  order?: {
+    id: string;
+    totalXaf: number;
+    status: string;
+    paymentMethod?: string;
+    cook?: { id: string; name: string };
+    items?: { menuItem: { name: string; priceXaf: number }; quantity: number }[];
+    payment?: { status: string; amountXaf: number };
+  };
+  messages?: DisputeMessage[];
+  _count?: { messages: number };
+}
+
+export interface DisputeStats {
+  open: number;
+  underReview: number;
+  resolved: number;
+  escalated: number;
+  critical: number;
+  refundsXaf: number;
+  avgResolutionHours: number;
+}
+
+export interface DisputeListResponse {
+  items: Dispute[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+// ── Partner Applications ────────────────────────────────────────────────────
+
+export type PartnerType = 'COOK' | 'RIDER';
+
+export type ApplicationStatus =
+  | 'PENDING'
+  | 'UNDER_REVIEW'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'SUSPENDED';
+
+export interface PartnerApplication {
+  id: string;
+  userId: string;
+  type: PartnerType;
+  status: ApplicationStatus;
+  fullName: string;
+  phone: string;
+  email?: string;
+  idNumber?: string;
+  idDocumentUrl?: string;
+  selfieUrl?: string;
+  specialties?: string;
+  cookingExp?: string;
+  kitchenPhotos?: string;
+  healthCertUrl?: string;
+  vehicleType?: string;
+  plateNumber?: string;
+  licenseUrl?: string;
+  insuranceUrl?: string;
+  vehiclePhotos?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  rejectionReason?: string;
+  score?: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  user?: { id: string; phone: string; email?: string; name?: string; role: string };
+}
+
+export interface PartnerStats {
+  pending: number;
+  underReview: number;
+  approved: number;
+  rejected: number;
+  pendingCooks: number;
+  pendingRiders: number;
+}
+
+export interface PartnerListResponse {
+  items: PartnerApplication[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 // ── Analytics (legacy) ───────────────────────────────────────────────────────
 
 export interface AnalyticsOverview {
