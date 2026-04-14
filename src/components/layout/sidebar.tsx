@@ -227,10 +227,15 @@ export function Sidebar({ onNavigate, forceExpanded = false }: SidebarProps) {
 
       {/* Bottom: Export + Avatar */}
       <div className="px-3 py-4 space-y-3">
-        <a
-          href="https://nyama-web.vercel.app/admin/dashboard"
-          target="_blank"
-          rel="noreferrer"
+        <button
+          onClick={() => {
+            if (typeof window === "undefined") return;
+            const token = localStorage.getItem("nyama_admin_token");
+            const url = token
+              ? `https://nyama-web.vercel.app/admin/handoff#token=${encodeURIComponent(token)}`
+              : "https://nyama-web.vercel.app/admin/dashboard";
+            window.open(url, "_blank", "noopener,noreferrer");
+          }}
           title={collapsed ? "Ouvrir le portail web" : undefined}
           className={cn(
             "flex w-full items-center justify-center gap-2 rounded-full text-xs font-semibold transition-colors",
@@ -243,7 +248,7 @@ export function Sidebar({ onNavigate, forceExpanded = false }: SidebarProps) {
         >
           <ExternalLink className="h-3.5 w-3.5" />
           {!collapsed && "Ouvrir le portail web"}
-        </a>
+        </button>
 
         <button
           onClick={async () => {
