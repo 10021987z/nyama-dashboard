@@ -51,8 +51,11 @@ export interface OrderStatusDistribution {
 
 export type OrderStatus =
   | 'pending'
+  | 'confirmed'
   | 'preparing'
   | 'ready'
+  | 'assigned'
+  | 'picked_up'
   | 'delivering'
   | 'delivered'
   | 'cancelled';
@@ -76,7 +79,12 @@ export interface Order {
   items: OrderItem[];
   city: 'Douala' | 'Yaoundé';
   createdAt: string;
+  acceptedAt?: string;
+  readyAt?: string;
+  assignedAt?: string;
+  pickedUpAt?: string;
   deliveredAt?: string;
+  cancelledAt?: string;
 }
 
 export interface OrdersResponse {

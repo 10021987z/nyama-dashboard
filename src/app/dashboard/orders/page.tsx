@@ -189,6 +189,46 @@ function OrderDetailDialog({
                   </div>
                 </div>
 
+                {order.acceptedAt && (
+                  <div className="relative flex items-start gap-3">
+                    <div className="absolute -left-5 mt-0.5 h-3 w-3 rounded-full bg-blue-500 ring-2 ring-white" />
+                    <div>
+                      <p className="text-sm font-medium">Acceptée par la cuisinière</p>
+                      <p className="text-xs text-muted-foreground">{formatDateTime(order.acceptedAt)}</p>
+                    </div>
+                  </div>
+                )}
+
+                {order.readyAt && (
+                  <div className="relative flex items-start gap-3">
+                    <div className="absolute -left-5 mt-0.5 h-3 w-3 rounded-full bg-purple-500 ring-2 ring-white" />
+                    <div>
+                      <p className="text-sm font-medium">Prête</p>
+                      <p className="text-xs text-muted-foreground">{formatDateTime(order.readyAt)}</p>
+                    </div>
+                  </div>
+                )}
+
+                {order.assignedAt && (
+                  <div className="relative flex items-start gap-3">
+                    <div className="absolute -left-5 mt-0.5 h-3 w-3 rounded-full bg-indigo-500 ring-2 ring-white" />
+                    <div>
+                      <p className="text-sm font-medium">Livreur assigné</p>
+                      <p className="text-xs text-muted-foreground">{formatDateTime(order.assignedAt)}</p>
+                    </div>
+                  </div>
+                )}
+
+                {order.pickedUpAt && (
+                  <div className="relative flex items-start gap-3">
+                    <div className="absolute -left-5 mt-0.5 h-3 w-3 rounded-full bg-orange-500 ring-2 ring-white" />
+                    <div>
+                      <p className="text-sm font-medium">Récupérée par le livreur</p>
+                      <p className="text-xs text-muted-foreground">{formatDateTime(order.pickedUpAt)}</p>
+                    </div>
+                  </div>
+                )}
+
                 {order.deliveredAt && (
                   <div className="relative flex items-start gap-3">
                     <div className="absolute -left-5 mt-0.5 h-3 w-3 rounded-full bg-green-700 ring-2 ring-white" />
@@ -267,6 +307,12 @@ export default function OrdersPage() {
 
   useEffect(() => {
     fetchOrders();
+  }, [fetchOrders]);
+
+  // Auto-refresh every 10s for real-time status updates
+  useEffect(() => {
+    const id = setInterval(fetchOrders, 10000);
+    return () => clearInterval(id);
   }, [fetchOrders]);
 
   const totalPages = data ? Math.ceil(data.total / LIMIT) : 1;
