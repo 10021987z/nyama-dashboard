@@ -25,7 +25,11 @@ import {
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
-function statusStyle(s: PartnershipStatus): { bg: string; color: string; label: string } {
+function statusStyle(s: PartnershipStatus | string | undefined): {
+  bg: string;
+  color: string;
+  label: string;
+} {
   switch (s) {
     case "PENDING":
       return { bg: "#ffedd5", color: "#9a3412", label: "En attente" };
@@ -33,6 +37,8 @@ function statusStyle(s: PartnershipStatus): { bg: string; color: string; label: 
       return { bg: "#dcfce7", color: "#166534", label: "Approuvée" };
     case "REJECTED":
       return { bg: "#fee2e2", color: "#991b1b", label: "Rejetée" };
+    default:
+      return { bg: "#f3f4f6", color: "#4b5563", label: String(s ?? "—") };
   }
 }
 
@@ -307,7 +313,12 @@ function Field({ label, value }: { label: string; value?: string | null }) {
 
 export default function PartnershipsPage() {
   const { t } = useLanguage();
-  const [stats, setStats] = useState<PartnershipStats | null>(null);
+  const [stats, setStats] = useState<PartnershipStats>({
+    total: 0,
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+  });
   const [items, setItems] = useState<Partnership[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -335,40 +346,55 @@ export default function PartnershipsPage() {
         apiClient
           .get<PartnershipStats>("/admin/partnerships/stats")
           .catch(() => null),
-        apiClient.get<PartnershipListResponse | Partnership[]>(
-          "/admin/partnerships",
-          params
-        ),
+        apiClient
+          .get<PartnershipListResponse | Partnership[]>(
+            "/admin/partnerships",
+            params
+          )
+          .catch(() => null),
       ]);
 
-      // Tolerate either { items, total } or a raw array
-      const list: Partnership[] = Array.isArray(listRes)
-        ? listRes
-        : listRes.items ?? [];
-      const totalCount = Array.isArray(listRes)
-        ? listRes.length
-        : listRes.total ?? list.length;
+      // Tolerate either { items, total }, a raw array, null, or undefined
+      let list: Partnership[] = [];
+      let totalCount = 0;
+      if (Array.isArray(listRes)) {
+        list = listRes;
+        totalCount = listRes.length;
+      } else if (listRes && typeof listRes === "object") {
+        list = Array.isArray(listRes.items) ? listRes.items : [];
+        totalCount =
+          typeof listRes.total === "number" ? listRes.total : list.length;
+      }
 
       setItems(list);
       setTotal(totalCount);
 
-      // Fallback stats from list if endpoint missing
-      if (statsRes) {
-        setStats(statsRes);
+      // Fallback stats from list if endpoint missing or failed
+      if (statsRes && typeof statsRes === "object") {
+        setStats({
+          total: statsRes.total ?? 0,
+          pending: statsRes.pending ?? 0,
+          approved: statsRes.approved ?? 0,
+          rejected: statsRes.rejected ?? 0,
+        });
       } else {
         setStats({
           total: list.length,
-          pending: list.filter((p) => p.status === "PENDING").length,
-          approved: list.filter((p) => p.status === "APPROVED").length,
-          rejected: list.filter((p) => p.status === "REJECTED").length,
+          pending: list.filter((p) => p?.status === "PENDING").length,
+          approved: list.filter((p) => p?.status === "APPROVED").length,
+          rejected: list.filter((p) => p?.status === "REJECTED").length,
         });
       }
     } catch (err) {
+      console.error("[partnerships] fetch failed", err);
       setError(
         err instanceof Error
           ? err.message
           : "Impossible de contacter le serveur NYAMA"
       );
+      setItems([]);
+      setTotal(0);
+      setStats({ total: 0, pending: 0, approved: 0, rejected: 0 });
     } finally {
       setLoading(false);
     }
@@ -441,13 +467,13 @@ export default function PartnershipsPage() {
         <StatCard
           icon={<Layers className="h-5 w-5" style={{ color: "#3D3D3D" }} />}
           label="Total"
-          value={stats?.total ?? "—"}
+          value={stats.total}
           loading={loading}
         />
         <StatCard
           icon={<Clock className="h-5 w-5" style={{ color: "#b45309" }} />}
           label="En attente"
-          value={stats?.pending ?? "—"}
+          value={stats.pending}
           loading={loading}
         />
         <StatCard
@@ -455,13 +481,13 @@ export default function PartnershipsPage() {
             <CheckCircle2 className="h-5 w-5" style={{ color: "#1B4332" }} />
           }
           label="Approuvées"
-          value={stats?.approved ?? "—"}
+          value={stats.approved}
           loading={loading}
         />
         <StatCard
           icon={<XCircle className="h-5 w-5" style={{ color: "#991b1b" }} />}
           label="Rejetées"
-          value={stats?.rejected ?? "—"}
+          value={stats.rejected}
           loading={loading}
         />
       </div>
