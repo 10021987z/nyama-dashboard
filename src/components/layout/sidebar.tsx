@@ -24,6 +24,7 @@ import {
   Scale,
   UserCheck,
   ClipboardList,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/use-language";
@@ -73,7 +74,7 @@ export function Sidebar({ onNavigate, forceExpanded = false }: SidebarProps) {
     const load = async () => {
       try {
         const s = await apiClient.get<PartnershipStats>(
-          "/partnerships/stats"
+          "/admin/partnerships/stats"
         );
         if (!cancelled) setPendingPartnerships(s?.pending ?? 0);
       } catch {
@@ -226,6 +227,24 @@ export function Sidebar({ onNavigate, forceExpanded = false }: SidebarProps) {
 
       {/* Bottom: Export + Avatar */}
       <div className="px-3 py-4 space-y-3">
+        <a
+          href="https://nyama-web.vercel.app/admin/dashboard"
+          target="_blank"
+          rel="noreferrer"
+          title={collapsed ? "Ouvrir le portail web" : undefined}
+          className={cn(
+            "flex w-full items-center justify-center gap-2 rounded-full text-xs font-semibold transition-colors",
+            collapsed ? "p-2" : "py-2"
+          )}
+          style={{
+            border: "1px solid rgba(255,255,255,0.2)",
+            color: "rgba(255,255,255,0.8)",
+          }}
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+          {!collapsed && "Ouvrir le portail web"}
+        </a>
+
         <button
           onClick={async () => {
             try {

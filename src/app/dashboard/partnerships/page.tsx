@@ -21,7 +21,50 @@ import {
   XCircle,
   X,
   Layers,
+  Copy,
+  Check,
+  KeyRound,
 } from "lucide-react";
+
+// ── API ⇄ UI normalization ───────────────────────────────────────────
+// Backend renvoie { status: "pending" | "approved" | "rejected", type: "cuisiniere" | "livreur" }
+// L'UI travaille en majuscule (historique). On harmonise ici.
+
+function normalizeStatus(raw: unknown): PartnershipStatus {
+  const s = String(raw ?? "").toLowerCase();
+  if (s === "approved") return "APPROVED";
+  if (s === "rejected") return "REJECTED";
+  return "PENDING";
+}
+
+function normalizeType(raw: unknown): "COOK" | "RIDER" {
+  const t = String(raw ?? "").toLowerCase();
+  if (t === "livreur" || t === "rider") return "RIDER";
+  return "COOK";
+}
+
+function normalizePartnership(raw: Record<string, unknown>): Partnership {
+  return {
+    ...(raw as unknown as Partnership),
+    id: String(raw.id ?? ""),
+    type: normalizeType(raw.type),
+    status: normalizeStatus(raw.status),
+    firstName: String(raw.firstName ?? ""),
+    lastName: String(raw.lastName ?? ""),
+    phone: String(raw.phone ?? ""),
+    email: (raw.email as string | undefined) ?? undefined,
+    ville: (raw.city ?? raw.ville) as string | undefined,
+    quartier: (raw.quarter ?? raw.quartier) as string | undefined,
+    vehicleType: raw.vehicleType as string | undefined,
+    cniNumber: (raw.idNumber ?? raw.cniNumber) as string | undefined,
+    businessName: (raw.companyName ?? raw.businessName) as string | undefined,
+    description: raw.description as string | undefined,
+    adminNotes: raw.adminNotes as string | undefined,
+    createdAt: String(raw.createdAt ?? ""),
+    updatedAt: String(raw.updatedAt ?? ""),
+    reviewedAt: raw.reviewedAt as string | undefined,
+  };
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -110,7 +153,7 @@ function DetailModal({
   app: Partnership | null;
   onClose: () => void;
   onApprove: (a: Partnership, notes: string) => void;
-  onReject: (a: Partnership, notes: string) => void;
+  onReject: (a: Partnership) => void;
 }) {
   const [notes, setNotes] = useState("");
 
@@ -282,7 +325,7 @@ function DetailModal({
               Approuver
             </button>
             <button
-              onClick={() => onReject(app, notes)}
+              onClick={() => onReject(app)}
               className="flex-1 rounded-full py-2.5 text-xs font-bold text-white"
               style={{ backgroundColor: "#ef4444" }}
             >
@@ -328,6 +371,12 @@ export default function PartnershipsPage() {
   const [filterType, setFilterType] = useState<"" | "COOK" | "RIDER">("");
   const [filterStatus, setFilterStatus] = useState<"" | PartnershipStatus>("");
   const [toast, setToast] = useState<string | null>(null);
+  const [approval, setApproval] = useState<{
+    accessCode: string;
+    email?: string;
+    name: string;
+  } | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<Partnership | null>(null);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -339,8 +388,8 @@ export default function PartnershipsPage() {
     setError(null);
     try {
       const params: Record<string, string | number> = { page, limit: 20 };
-      if (filterType) params.type = filterType;
-      if (filterStatus) params.status = filterStatus;
+      if (filterType) params.type = filterType === "COOK" ? "cuisiniere" : "livreur";
+      if (filterStatus) params.status = filterStatus.toLowerCase();
 
       const [statsRes, listRes] = await Promise.all([
         apiClient
@@ -357,13 +406,21 @@ export default function PartnershipsPage() {
       // Tolerate either { items, total }, a raw array, null, or undefined
       let list: Partnership[] = [];
       let totalCount = 0;
+      const rawList: Record<string, unknown>[] = Array.isArray(listRes)
+        ? (listRes as unknown as Record<string, unknown>[])
+        : listRes && typeof listRes === "object"
+          ? Array.isArray((listRes as PartnershipListResponse).items)
+            ? ((listRes as PartnershipListResponse).items as unknown as Record<string, unknown>[])
+            : []
+          : [];
+      list = rawList.map(normalizePartnership);
       if (Array.isArray(listRes)) {
-        list = listRes;
-        totalCount = listRes.length;
+        totalCount = list.length;
       } else if (listRes && typeof listRes === "object") {
-        list = Array.isArray(listRes.items) ? listRes.items : [];
         totalCount =
-          typeof listRes.total === "number" ? listRes.total : list.length;
+          typeof (listRes as PartnershipListResponse).total === "number"
+            ? (listRes as PartnershipListResponse).total
+            : list.length;
       }
 
       setItems(list);
@@ -406,12 +463,23 @@ export default function PartnershipsPage() {
 
   const handleApprove = async (app: Partnership, adminNotes: string) => {
     try {
-      await apiClient.patch(`/admin/partnerships/${app.id}`, {
-        status: "APPROVED",
+      const res = await apiClient.patch<{
+        accessCode?: string;
+        user?: { email?: string | null };
+      }>(`/admin/partnerships/${app.id}`, {
+        status: "approved",
         adminNotes,
       });
-      showToast(`${fullName(app)} approuvé(e)`);
       setSelected(null);
+      if (res?.accessCode) {
+        setApproval({
+          accessCode: res.accessCode,
+          email: res.user?.email ?? app.email ?? undefined,
+          name: fullName(app),
+        });
+      } else {
+        showToast(`${fullName(app)} approuvé(e)`);
+      }
       fetchData();
     } catch (err) {
       showToast(
@@ -420,19 +488,23 @@ export default function PartnershipsPage() {
     }
   };
 
-  const handleReject = async (app: Partnership, adminNotes: string) => {
-    if (!window.confirm(`Rejeter la candidature de ${fullName(app)} ?`)) return;
+  const handleRejectSubmit = async (app: Partnership, reason: string) => {
     try {
       await apiClient.patch(`/admin/partnerships/${app.id}`, {
-        status: "REJECTED",
-        adminNotes,
+        status: "rejected",
+        adminNotes: reason,
       });
       showToast(`Candidature de ${fullName(app)} rejetée`);
+      setRejectTarget(null);
       setSelected(null);
       fetchData();
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Erreur lors du rejet");
     }
+  };
+
+  const openReject = (app: Partnership) => {
+    setRejectTarget(app);
   };
 
   const STATUS_TABS: { value: "" | PartnershipStatus; label: string }[] = [
@@ -726,7 +798,20 @@ export default function PartnershipsPage() {
         app={selected}
         onClose={() => setSelected(null)}
         onApprove={handleApprove}
-        onReject={handleReject}
+        onReject={(a) => openReject(a)}
+      />
+
+      {/* Approval modal with access code */}
+      <ApprovalModal
+        data={approval}
+        onClose={() => setApproval(null)}
+      />
+
+      {/* Rejection modal */}
+      <RejectModal
+        app={rejectTarget}
+        onClose={() => setRejectTarget(null)}
+        onSubmit={handleRejectSubmit}
       />
 
       {/* Toast */}
@@ -741,6 +826,217 @@ export default function PartnershipsPage() {
           {toast}
         </div>
       )}
+    </div>
+  );
+}
+
+function ApprovalModal({
+  data,
+  onClose,
+}: {
+  data: { accessCode: string; email?: string; name: string } | null;
+  onClose: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setCopied(false);
+  }, [data]);
+
+  if (!data) return null;
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(data.accessCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[70] flex items-center justify-center p-4"
+      style={{ backgroundColor: "rgba(27,28,26,0.55)" }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl p-6 space-y-4"
+        style={{ backgroundColor: "#ffffff" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className="flex h-11 w-11 items-center justify-center rounded-full"
+            style={{ backgroundColor: "#dcfce7" }}
+          >
+            <CheckCircle2 className="h-5 w-5" style={{ color: "#166534" }} />
+          </div>
+          <div>
+            <p className="text-base font-bold" style={{ color: "#3D3D3D" }}>
+              Partenaire approuvé !
+            </p>
+            <p className="text-xs" style={{ color: "#6B7280" }}>
+              {data.name}
+            </p>
+          </div>
+        </div>
+
+        <div
+          className="rounded-xl p-4 text-center"
+          style={{ backgroundColor: "#fdf3ee" }}
+        >
+          <p
+            className="text-[10px] font-bold uppercase tracking-wider mb-1"
+            style={{ color: "#6B7280" }}
+          >
+            Code d&apos;accès
+          </p>
+          <p
+            className="text-3xl font-bold tracking-widest select-all"
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#F57C20" }}
+          >
+            {data.accessCode}
+          </p>
+        </div>
+
+        <p className="text-xs" style={{ color: "#6B7280" }}>
+          {data.email
+            ? `Ce code a été envoyé par email à ${data.email}.`
+            : "Aucun email enregistré — transmettez ce code manuellement au partenaire."}
+        </p>
+        <p className="text-xs" style={{ color: "#6B7280" }}>
+          Le partenaire peut maintenant se connecter à l&apos;application. Ce code ne
+          fonctionne qu&apos;une seule fois.
+        </p>
+
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={copy}
+            className="flex-1 rounded-full py-2.5 text-xs font-bold text-white inline-flex items-center justify-center gap-1.5"
+            style={{ backgroundColor: "#1B4332" }}
+          >
+            {copied ? (
+              <>
+                <Check className="h-3.5 w-3.5" /> Copié !
+              </>
+            ) : (
+              <>
+                <Copy className="h-3.5 w-3.5" /> Copier le code
+              </>
+            )}
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 rounded-full py-2.5 text-xs font-bold"
+            style={{ border: "1.5px solid #e8e4de", color: "#6B7280" }}
+          >
+            Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RejectModal({
+  app,
+  onClose,
+  onSubmit,
+}: {
+  app: Partnership | null;
+  onClose: () => void;
+  onSubmit: (app: Partnership, reason: string) => void;
+}) {
+  const [reason, setReason] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    setReason("");
+    setSubmitting(false);
+  }, [app]);
+
+  if (!app) return null;
+
+  const submit = async () => {
+    if (!reason.trim()) return;
+    setSubmitting(true);
+    try {
+      await onSubmit(app, reason.trim());
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[70] flex items-center justify-center p-4"
+      style={{ backgroundColor: "rgba(27,28,26,0.55)" }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl p-6 space-y-4"
+        style={{ backgroundColor: "#ffffff" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className="flex h-11 w-11 items-center justify-center rounded-full"
+            style={{ backgroundColor: "#fee2e2" }}
+          >
+            <XCircle className="h-5 w-5" style={{ color: "#991b1b" }} />
+          </div>
+          <div>
+            <p className="text-base font-bold" style={{ color: "#3D3D3D" }}>
+              Rejeter la candidature
+            </p>
+            <p className="text-xs" style={{ color: "#6B7280" }}>
+              {`${app.firstName ?? ""} ${app.lastName ?? ""}`.trim()}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <label
+            className="text-[10px] font-bold uppercase tracking-wider"
+            style={{ color: "#6B7280" }}
+          >
+            Raison du rejet (visible par le candidat)
+          </label>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            rows={4}
+            placeholder="Documents incomplets, zone non couverte, etc."
+            className="mt-1 w-full rounded-xl p-3 text-sm outline-none"
+            style={{
+              border: "1.5px solid #e8e4de",
+              color: "#3D3D3D",
+              backgroundColor: "#fbf9f5",
+            }}
+          />
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 rounded-full py-2.5 text-xs font-bold"
+            style={{ border: "1.5px solid #e8e4de", color: "#6B7280" }}
+            disabled={submitting}
+          >
+            Annuler
+          </button>
+          <button
+            onClick={submit}
+            disabled={!reason.trim() || submitting}
+            className="flex-1 rounded-full py-2.5 text-xs font-bold text-white disabled:opacity-50"
+            style={{ backgroundColor: "#ef4444" }}
+          >
+            {submitting ? "Envoi…" : "Confirmer le rejet"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
