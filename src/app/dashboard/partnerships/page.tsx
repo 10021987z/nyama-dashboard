@@ -333,10 +333,10 @@ export default function PartnershipsPage() {
 
       const [statsRes, listRes] = await Promise.all([
         apiClient
-          .get<PartnershipStats>("/partnerships/stats")
+          .get<PartnershipStats>("/admin/partnerships/stats")
           .catch(() => null),
         apiClient.get<PartnershipListResponse | Partnership[]>(
-          "/partnerships",
+          "/admin/partnerships",
           params
         ),
       ]);
@@ -380,7 +380,7 @@ export default function PartnershipsPage() {
 
   const handleApprove = async (app: Partnership, adminNotes: string) => {
     try {
-      await apiClient.patch(`/partnerships/${app.id}`, {
+      await apiClient.patch(`/admin/partnerships/${app.id}`, {
         status: "APPROVED",
         adminNotes,
       });
@@ -397,7 +397,7 @@ export default function PartnershipsPage() {
   const handleReject = async (app: Partnership, adminNotes: string) => {
     if (!window.confirm(`Rejeter la candidature de ${fullName(app)} ?`)) return;
     try {
-      await apiClient.patch(`/partnerships/${app.id}`, {
+      await apiClient.patch(`/admin/partnerships/${app.id}`, {
         status: "REJECTED",
         adminNotes,
       });
