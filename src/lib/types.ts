@@ -597,6 +597,49 @@ export interface PartnerListResponse {
   totalPages: number;
 }
 
+// ── Partnerships (public-submitted candidatures) ───────────────────────────
+
+export type PartnershipType = 'COOK' | 'RIDER';
+
+export type PartnershipStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface Partnership {
+  id: string;
+  type: PartnershipType;
+  status: PartnershipStatus;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email?: string;
+  ville?: string;
+  quartier?: string;
+  // Rider-specific
+  vehicleType?: string;
+  cniNumber?: string;
+  // Cook-specific
+  businessName?: string;
+  description?: string;
+  adminNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+  reviewedAt?: string;
+}
+
+export interface PartnershipStats {
+  total: number;
+  pending: number;
+  approved: number;
+  rejected: number;
+}
+
+export interface PartnershipListResponse {
+  items: Partnership[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 // ── Analytics (legacy) ───────────────────────────────────────────────────────
 
 export interface AnalyticsOverview {

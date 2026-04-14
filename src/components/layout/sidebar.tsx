@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   BarChart3,
   UtensilsCrossed,
@@ -22,11 +23,12 @@ import {
   ChevronsRight,
   Scale,
   UserCheck,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/use-language";
 import { apiClient } from "@/lib/api";
-import type { DashboardData } from "@/lib/types";
+import type { DashboardData, PartnershipStats } from "@/lib/types";
 import { useSidebar } from "./sidebar-context";
 
 const NAV_ITEMS = [
@@ -44,6 +46,12 @@ const NAV_ITEMS = [
   { href: "/dashboard/reports", icon: FileText, labelKey: "nav.reports" },
   { href: "/dashboard/disputes", icon: Scale, labelKey: "nav.disputes" },
   { href: "/dashboard/partners", icon: UserCheck, labelKey: "nav.partners" },
+  {
+    href: "/dashboard/partnerships",
+    icon: ClipboardList,
+    labelKey: "nav.partnerships",
+    badgeKey: "partnerships" as const,
+  },
   { href: "/dashboard/support", icon: MessageSquare, labelKey: "nav.support" },
   { href: "/dashboard/settings", icon: Settings, labelKey: "nav.settings" },
 ];
@@ -58,6 +66,30 @@ export function Sidebar({ onNavigate, forceExpanded = false }: SidebarProps) {
   const { t } = useLanguage();
   const { collapsed: ctxCollapsed, toggle } = useSidebar();
   const collapsed = forceExpanded ? false : ctxCollapsed;
+  const [pendingPartnerships, setPendingPartnerships] = useState<number>(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const s = await apiClient.get<PartnershipStats>(
+          "/partnerships/stats"
+        );
+        if (!cancelled) setPendingPartnerships(s?.pending ?? 0);
+      } catch {
+        // silent — badge stays at 0
+      }
+    };
+    load();
+    const id = setInterval(load, 60_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
+
+  const badgeCount = (key?: "partnerships") =>
+    key === "partnerships" ? pendingPartnerships : 0;
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
@@ -120,7 +152,11 @@ export function Sidebar({ onNavigate, forceExpanded = false }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {NAV_ITEMS.map(({ href, icon: Icon, labelKey }) => {
+        {NAV_ITEMS.map((item) => {
+          const { href, icon: Icon, labelKey } = item;
+          const badge = badgeCount(
+            "badgeKey" in item ? item.badgeKey : undefined
+          );
           const active = isActive(href);
           return (
             <Link
@@ -143,12 +179,34 @@ export function Sidebar({ onNavigate, forceExpanded = false }: SidebarProps) {
                   style={{ backgroundColor: "#F57C20" }}
                 />
               )}
-              <Icon
-                className="h-4 w-4 shrink-0"
-                strokeWidth={active ? 2.5 : 2}
-                style={{ color: active ? "#F57C20" : "rgba(255,255,255,0.5)" }}
-              />
-              {!collapsed && t(labelKey)}
+              <span className="relative shrink-0">
+                <Icon
+                  className="h-4 w-4"
+                  strokeWidth={active ? 2.5 : 2}
+                  style={{ color: active ? "#F57C20" : "rgba(255,255,255,0.5)" }}
+                />
+                {collapsed && badge > 0 && (
+                  <span
+                    className="absolute -top-1.5 -right-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full px-1 text-[8px] font-bold text-white"
+                    style={{ backgroundColor: "#ef4444" }}
+                  >
+                    {badge > 9 ? "9+" : badge}
+                  </span>
+                )}
+              </span>
+              {!collapsed && (
+                <>
+                  <span className="flex-1 truncate">{t(labelKey)}</span>
+                  {badge > 0 && (
+                    <span
+                      className="rounded-full px-1.5 py-0.5 text-[10px] font-bold text-white"
+                      style={{ backgroundColor: "#ef4444" }}
+                    >
+                      {badge > 99 ? "99+" : badge}
+                    </span>
+                  )}
+                </>
+              )}
 
               {/* Tooltip when collapsed */}
               {collapsed && (

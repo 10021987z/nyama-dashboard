@@ -21,6 +21,7 @@ const LABEL_KEYS: Record<string, string> = {
   users: "nav.customers",
   disputes: "nav.disputes",
   partners: "nav.partners",
+  partnerships: "nav.partnerships",
 };
 
 export function Breadcrumbs() {
