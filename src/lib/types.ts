@@ -611,6 +611,8 @@ export type PartnershipType = 'COOK' | 'RIDER';
 
 export type PartnershipStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
+export type KycDocStatus = 'pending' | 'verified' | 'rejected';
+
 export interface Partnership {
   id: string;
   type: PartnershipType;
@@ -628,6 +630,16 @@ export interface Partnership {
   businessName?: string;
   description?: string;
   adminNotes?: string;
+  // KYC documents
+  idDocumentUrl?: string | null;
+  selfieUrl?: string | null;
+  licenseUrl?: string | null;
+  insuranceUrl?: string | null;
+  idDocumentStatus?: KycDocStatus;
+  selfieStatus?: KycDocStatus;
+  licenseStatus?: KycDocStatus;
+  insuranceStatus?: KycDocStatus;
+  kycScore?: number;
   createdAt: string;
   updatedAt: string;
   reviewedAt?: string;

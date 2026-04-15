@@ -26,7 +26,45 @@ import {
   KeyRound,
   MessageCircle,
   ShieldCheck,
+  FileText,
+  ExternalLink,
 } from "lucide-react";
+import { API_BASE_URL } from "@/lib/constants";
+
+type DocKey = "idDocument" | "selfie" | "license" | "insurance";
+const DOC_LABELS: Record<DocKey, string> = {
+  idDocument: "Pièce d'identité",
+  selfie: "Selfie / Photo cuisine",
+  license: "Permis de conduire",
+  insurance: "Attestation d'assurance",
+};
+
+function docStatusStyle(s?: string): {
+  bg: string;
+  color: string;
+  label: string;
+} {
+  switch (s) {
+    case "verified":
+      return { bg: "#dcfce7", color: "#166534", label: "Vérifié" };
+    case "rejected":
+      return { bg: "#fee2e2", color: "#991b1b", label: "Rejeté" };
+    default:
+      return { bg: "#fef3c7", color: "#92400e", label: "En attente" };
+  }
+}
+
+function docUrl(url?: string | null): string | null {
+  if (!url) return null;
+  if (url.startsWith("http")) return url;
+  const origin = API_BASE_URL.replace(/\/api\/v1\/?$/, "");
+  return `${origin}${url}`;
+}
+
+function isPdf(url?: string | null): boolean {
+  if (!url) return false;
+  return url.toLowerCase().includes(".pdf") || url.includes("pdf");
+}
 
 // ── WhatsApp helpers ─────────────────────────────────────────────────
 
@@ -166,11 +204,13 @@ function DetailModal({
   onClose,
   onApprove,
   onReject,
+  onDocChange,
 }: {
   app: Partnership | null;
   onClose: () => void;
   onApprove: (a: Partnership, notes: string) => void;
   onReject: (a: Partnership) => void;
+  onDocChange: (updated: Partnership) => void;
 }) {
   const [notes, setNotes] = useState("");
   const [checks, setChecks] = useState<Record<string, boolean>>({});
@@ -327,6 +367,13 @@ function DetailModal({
             </section>
           )}
 
+          {/* KYC Documents */}
+          <KycDocumentsSection
+            app={app}
+            canDecide={canDecide}
+            onDocChange={onDocChange}
+          />
+
           {/* Verification checklist */}
           {canDecide && (
             <section
@@ -447,6 +494,223 @@ function DetailModal({
         )}
       </div>
     </div>
+  );
+}
+
+function KycDocumentsSection({
+  app,
+  canDecide,
+  onDocChange,
+}: {
+  app: Partnership;
+  canDecide: boolean;
+  onDocChange: (updated: Partnership) => void;
+}) {
+  const [pending, setPending] = useState<DocKey | null>(null);
+  const [preview, setPreview] = useState<{ url: string; isPdf: boolean } | null>(
+    null,
+  );
+
+  const items: Array<{ key: DocKey; url?: string | null; status?: string }> = [
+    {
+      key: "idDocument",
+      url: app.idDocumentUrl,
+      status: app.idDocumentStatus,
+    },
+    { key: "selfie", url: app.selfieUrl, status: app.selfieStatus },
+    ...(app.type === "RIDER"
+      ? [
+          { key: "license" as DocKey, url: app.licenseUrl, status: app.licenseStatus },
+          {
+            key: "insurance" as DocKey,
+            url: app.insuranceUrl,
+            status: app.insuranceStatus,
+          },
+        ]
+      : []),
+  ];
+
+  const hasAny = items.some((i) => !!i.url);
+
+  async function verify(doc: DocKey, status: "verified" | "rejected") {
+    setPending(doc);
+    try {
+      const res = await apiClient.patch<Record<string, unknown>>(
+        `/admin/partnerships/${app.id}/verify-document`,
+        { document: doc, status },
+      );
+      onDocChange(normalizePartnership(res));
+    } catch (err) {
+      console.error("[kyc] verify failed", err);
+      alert(
+        err instanceof Error ? err.message : "Erreur de vérification du document",
+      );
+    } finally {
+      setPending(null);
+    }
+  }
+
+  return (
+    <section>
+      <p
+        className="text-[10px] font-bold uppercase tracking-wider mb-2 inline-flex items-center gap-1.5"
+        style={{ color: "#6B7280" }}
+      >
+        <FileText className="h-3.5 w-3.5" />
+        Documents KYC
+        {typeof app.kycScore === "number" && (
+          <span
+            className="ml-1 rounded-full px-2 py-0.5 text-[10px]"
+            style={{ backgroundColor: "#fdf3ee", color: "#9a3412" }}
+          >
+            Score {app.kycScore}/100
+          </span>
+        )}
+      </p>
+
+      {!hasAny ? (
+        <p className="text-xs" style={{ color: "#6B7280" }}>
+          Aucun document téléversé par le candidat.
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {items.map((item) => {
+            const full = docUrl(item.url);
+            const pdf = isPdf(item.url);
+            const st = docStatusStyle(item.status);
+            const disabled = pending === item.key || !canDecide;
+
+            return (
+              <div
+                key={item.key}
+                className="rounded-xl p-3 flex gap-3"
+                style={{
+                  backgroundColor: "#fbf9f5",
+                  border: "1px solid #f5f3ef",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() =>
+                    full && setPreview({ url: full, isPdf: pdf })
+                  }
+                  disabled={!full}
+                  className="flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden flex items-center justify-center"
+                  style={{ backgroundColor: "#ffffff", border: "1px solid #e8e4de" }}
+                  title={full ? "Ouvrir en grand" : "Document manquant"}
+                >
+                  {full ? (
+                    pdf ? (
+                      <FileText className="h-6 w-6" style={{ color: "#F57C20" }} />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={full}
+                        alt={DOC_LABELS[item.key]}
+                        className="w-full h-full object-cover"
+                      />
+                    )
+                  ) : (
+                    <FileText className="h-5 w-5" style={{ color: "#b8b3ad" }} />
+                  )}
+                </button>
+                <div className="flex-1 min-w-0">
+                  <p
+                    className="text-xs font-bold truncate"
+                    style={{ color: "#3D3D3D" }}
+                  >
+                    {DOC_LABELS[item.key]}
+                  </p>
+                  <span
+                    className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold mt-0.5"
+                    style={{ backgroundColor: st.bg, color: st.color }}
+                  >
+                    {st.label}
+                  </span>
+                  {item.url && (
+                    <div className="flex gap-1 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => verify(item.key, "verified")}
+                        disabled={disabled}
+                        className="flex-1 rounded-full px-2 py-1 text-[10px] font-bold text-white disabled:opacity-40"
+                        style={{ backgroundColor: "#1B4332" }}
+                      >
+                        Vérifier
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => verify(item.key, "rejected")}
+                        disabled={disabled}
+                        className="flex-1 rounded-full px-2 py-1 text-[10px] font-bold text-white disabled:opacity-40"
+                        style={{ backgroundColor: "#ef4444" }}
+                      >
+                        Rejeter
+                      </button>
+                    </div>
+                  )}
+                  {!item.url && (
+                    <p
+                      className="text-[10px] mt-1"
+                      style={{ color: "#b8b3ad" }}
+                    >
+                      Non fourni
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {preview && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-6"
+          style={{ backgroundColor: "rgba(0,0,0,0.85)" }}
+          onClick={() => setPreview(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setPreview(null)}
+            className="absolute top-4 right-4 rounded-full p-2 text-white"
+            style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <a
+            href={preview.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="absolute top-4 left-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold text-white"
+            style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Ouvrir dans un onglet
+          </a>
+          <div
+            className="max-w-4xl max-h-[85vh] w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {preview.isPdf ? (
+              <iframe
+                src={preview.url}
+                className="w-full h-[85vh] rounded-lg bg-white"
+                title="Document"
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={preview.url}
+                alt="Document"
+                className="w-full h-full object-contain max-h-[85vh]"
+              />
+            )}
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -933,6 +1197,12 @@ export default function PartnershipsPage() {
         onClose={() => setSelected(null)}
         onApprove={handleApprove}
         onReject={(a) => openReject(a)}
+        onDocChange={(updated) => {
+          setSelected(updated);
+          setItems((list) =>
+            list.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)),
+          );
+        }}
       />
 
       {/* Approval modal with access code */}
