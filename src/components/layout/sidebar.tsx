@@ -230,11 +230,11 @@ export function Sidebar({ onNavigate, forceExpanded = false }: SidebarProps) {
         <button
           onClick={() => {
             if (typeof window === "undefined") return;
-            const token = localStorage.getItem("nyama_admin_token");
-            const url = token
-              ? `https://nyama-web.vercel.app/admin/handoff#token=${encodeURIComponent(token)}`
-              : "https://nyama-web.vercel.app/admin/dashboard";
-            window.open(url, "_blank", "noopener,noreferrer");
+            window.open(
+              "https://nyama-web.vercel.app/admin/login",
+              "_blank",
+              "noopener,noreferrer",
+            );
           }}
           title={collapsed ? "Ouvrir le portail web" : undefined}
           className={cn(
