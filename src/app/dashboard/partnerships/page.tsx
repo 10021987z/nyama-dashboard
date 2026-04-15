@@ -489,6 +489,13 @@ export default function PartnershipsPage() {
     phone?: string;
     firstName?: string;
     type?: "COOK" | "RIDER";
+    whatsappUrl?: string;
+  } | null>(null);
+  const [rejection, setRejection] = useState<{
+    name: string;
+    email?: string;
+    phone?: string;
+    whatsappUrl?: string;
   } | null>(null);
   const [rejectTarget, setRejectTarget] = useState<Partnership | null>(null);
 
@@ -579,6 +586,7 @@ export default function PartnershipsPage() {
     try {
       const res = await apiClient.patch<{
         accessCode?: string;
+        whatsappUrl?: string;
         user?: { email?: string | null };
       }>(`/admin/partnerships/${app.id}`, {
         status: "approved",
@@ -593,6 +601,7 @@ export default function PartnershipsPage() {
           phone: app.phone,
           firstName: app.firstName,
           type: app.type,
+          whatsappUrl: res.whatsappUrl,
         });
       } else {
         showToast(`${fullName(app)} approuvé(e)`);
@@ -607,13 +616,21 @@ export default function PartnershipsPage() {
 
   const handleRejectSubmit = async (app: Partnership, reason: string) => {
     try {
-      await apiClient.patch(`/admin/partnerships/${app.id}`, {
-        status: "rejected",
-        adminNotes: reason,
-      });
-      showToast(`Candidature de ${fullName(app)} rejetée`);
+      const res = await apiClient.patch<{ whatsappUrl?: string }>(
+        `/admin/partnerships/${app.id}`,
+        {
+          status: "rejected",
+          adminNotes: reason,
+        }
+      );
       setRejectTarget(null);
       setSelected(null);
+      setRejection({
+        name: fullName(app),
+        email: app.email ?? undefined,
+        phone: app.phone,
+        whatsappUrl: res?.whatsappUrl,
+      });
       fetchData();
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Erreur lors du rejet");
@@ -931,6 +948,12 @@ export default function PartnershipsPage() {
         onSubmit={handleRejectSubmit}
       />
 
+      {/* Rejection success modal — offers WhatsApp notification */}
+      <RejectionSuccessModal
+        data={rejection}
+        onClose={() => setRejection(null)}
+      />
+
       {/* Toast */}
       {toast && (
         <div
@@ -958,6 +981,7 @@ function ApprovalModal({
     phone?: string;
     firstName?: string;
     type?: "COOK" | "RIDER";
+    whatsappUrl?: string;
   } | null;
   onClose: () => void;
 }) {
@@ -980,6 +1004,10 @@ function ApprovalModal({
   };
 
   const sendWhatsapp = () => {
+    if (data.whatsappUrl) {
+      window.open(data.whatsappUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
     if (!data.phone) return;
     const app = data.type === "RIDER" ? "Benskin Express" : "Cuisine de Nyama";
     const first = data.firstName ?? data.name.split(" ")[0] ?? "";
@@ -1035,7 +1063,7 @@ function ApprovalModal({
 
         <p className="text-xs" style={{ color: "#6B7280" }}>
           {data.email
-            ? `Ce code a été envoyé par email à ${data.email}.`
+            ? `📧 Email de confirmation envoyé à ${data.email}.`
             : "Aucun email enregistré — transmettez ce code manuellement au partenaire."}
         </p>
         <p className="text-xs" style={{ color: "#6B7280" }}>
@@ -1070,6 +1098,83 @@ function ApprovalModal({
               </button>
             )}
           </div>
+          <button
+            onClick={onClose}
+            className="w-full rounded-full py-2.5 text-xs font-bold"
+            style={{ border: "1.5px solid #e8e4de", color: "#6B7280" }}
+          >
+            Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RejectionSuccessModal({
+  data,
+  onClose,
+}: {
+  data: {
+    name: string;
+    email?: string;
+    phone?: string;
+    whatsappUrl?: string;
+  } | null;
+  onClose: () => void;
+}) {
+  if (!data) return null;
+
+  const notifyWhatsapp = () => {
+    if (data.whatsappUrl) {
+      window.open(data.whatsappUrl, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[70] flex items-center justify-center p-4"
+      style={{ backgroundColor: "rgba(27,28,26,0.55)" }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl p-6 space-y-4"
+        style={{ backgroundColor: "#ffffff" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className="flex h-11 w-11 items-center justify-center rounded-full"
+            style={{ backgroundColor: "#fee2e2" }}
+          >
+            <XCircle className="h-5 w-5" style={{ color: "#991b1b" }} />
+          </div>
+          <div>
+            <p className="text-base font-bold" style={{ color: "#3D3D3D" }}>
+              Candidature rejetée
+            </p>
+            <p className="text-xs" style={{ color: "#6B7280" }}>
+              {data.name}
+            </p>
+          </div>
+        </div>
+
+        {data.email && (
+          <p className="text-xs" style={{ color: "#6B7280" }}>
+            📧 Email de notification envoyé à {data.email}.
+          </p>
+        )}
+
+        <div className="flex flex-col gap-2 pt-1">
+          {data.whatsappUrl && (
+            <button
+              onClick={notifyWhatsapp}
+              className="w-full rounded-full py-2.5 text-xs font-bold text-white inline-flex items-center justify-center gap-1.5"
+              style={{ backgroundColor: "#25D366" }}
+            >
+              <MessageCircle className="h-3.5 w-3.5" /> Notifier par WhatsApp
+            </button>
+          )}
           <button
             onClick={onClose}
             className="w-full rounded-full py-2.5 text-xs font-bold"
