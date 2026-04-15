@@ -225,8 +225,35 @@ export function Sidebar({ onNavigate, forceExpanded = false }: SidebarProps) {
 
       <div className="mx-4 h-px" style={{ backgroundColor: "rgba(255,255,255,0.1)" }} />
 
-      {/* Bottom: Export + Avatar */}
+      {/* Bottom: Quick links + Export + Avatar */}
       <div className="px-3 py-4 space-y-3">
+        {!collapsed && (
+          <p className="px-1 text-[9px] font-semibold uppercase tracking-widest text-white/40">
+            Liens rapides
+          </p>
+        )}
+        <button
+          onClick={() => {
+            if (typeof window === "undefined") return;
+            window.open(
+              "https://nyama-web.vercel.app/admin/dashboard",
+              "_blank",
+              "noopener,noreferrer",
+            );
+          }}
+          title={collapsed ? "Administration web" : undefined}
+          className={cn(
+            "flex w-full items-center justify-center gap-2 rounded-full text-xs font-semibold transition-colors",
+            collapsed ? "p-2" : "py-2"
+          )}
+          style={{
+            border: "1px solid rgba(245, 124, 32, 0.4)",
+            color: "#F57C20",
+          }}
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+          {!collapsed && "Administration web"}
+        </button>
         <button
           onClick={() => {
             if (typeof window === "undefined") return;

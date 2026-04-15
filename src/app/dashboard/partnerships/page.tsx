@@ -24,7 +24,24 @@ import {
   Copy,
   Check,
   KeyRound,
+  MessageCircle,
+  ShieldCheck,
 } from "lucide-react";
+
+// ── WhatsApp helpers ─────────────────────────────────────────────────
+
+function normalizePhone(phone: string): string {
+  return (phone ?? "").replace(/[^0-9]/g, "");
+}
+
+function whatsappLink(phone: string, message: string): string {
+  return `https://api.whatsapp.com/send?phone=${normalizePhone(phone)}&text=${encodeURIComponent(message)}`;
+}
+
+function openWhatsapp(phone: string, message: string) {
+  if (typeof window === "undefined") return;
+  window.open(whatsappLink(phone, message), "_blank", "noopener,noreferrer");
+}
 
 // ── API ⇄ UI normalization ───────────────────────────────────────────
 // Backend renvoie { status: "pending" | "approved" | "rejected", type: "cuisiniere" | "livreur" }
@@ -156,9 +173,11 @@ function DetailModal({
   onReject: (a: Partnership) => void;
 }) {
   const [notes, setNotes] = useState("");
+  const [checks, setChecks] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     setNotes(app?.adminNotes ?? "");
+    setChecks({});
   }, [app]);
 
   if (!app) return null;
@@ -166,6 +185,22 @@ function DetailModal({
   const stat = statusStyle(app.status);
   const isCook = app.type === "COOK";
   const canDecide = app.status === "PENDING";
+
+  const checklistItems: { key: string; label: string }[] = [
+    { key: "identity", label: "Identité vérifiée" },
+    { key: "phone", label: "Numéro de téléphone confirmé" },
+    ...(isCook
+      ? [{ key: "address", label: "Adresse vérifiée" }]
+      : [
+          { key: "vehicle", label: "Véhicule vérifié" },
+          { key: "cni", label: "CNI vérifié" },
+        ]),
+  ];
+  const checkedCount = checklistItems.filter((c) => checks[c.key]).length;
+  const score = Math.round((checkedCount / checklistItems.length) * 100);
+  const canApprove = canDecide && score >= 60;
+
+  const contactMessage = `Bonjour ${app.firstName ?? ""}, nous examinons votre candidature NYAMA...`;
 
   return (
     <div
@@ -277,13 +312,87 @@ function DetailModal({
             </section>
           )}
 
+          {/* WhatsApp contact */}
+          {app.phone && (
+            <section>
+              <button
+                type="button"
+                onClick={() => openWhatsapp(app.phone, contactMessage)}
+                className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold text-white"
+                style={{ backgroundColor: "#25D366" }}
+              >
+                <MessageCircle className="h-3.5 w-3.5" />
+                Contacter par WhatsApp
+              </button>
+            </section>
+          )}
+
+          {/* Verification checklist */}
+          {canDecide && (
+            <section
+              className="rounded-xl p-4"
+              style={{ backgroundColor: "#fbf9f5", border: "1px solid #f5f3ef" }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <p
+                  className="text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1.5"
+                  style={{ color: "#6B7280" }}
+                >
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  Vérification
+                </p>
+                <span
+                  className="text-xs font-bold"
+                  style={{
+                    color:
+                      score >= 60
+                        ? "#1B4332"
+                        : score >= 40
+                          ? "#b45309"
+                          : "#991b1b",
+                  }}
+                >
+                  Score : {score}%
+                </span>
+              </div>
+              <div className="space-y-1.5">
+                {checklistItems.map((item) => (
+                  <label
+                    key={item.key}
+                    className="flex items-center gap-2 text-sm cursor-pointer"
+                    style={{ color: "#3D3D3D" }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!!checks[item.key]}
+                      onChange={(e) =>
+                        setChecks((prev) => ({
+                          ...prev,
+                          [item.key]: e.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4 rounded"
+                      style={{ accentColor: "#F57C20" }}
+                    />
+                    {item.label}
+                  </label>
+                ))}
+              </div>
+              {score < 60 && (
+                <p className="text-[10px] mt-2" style={{ color: "#991b1b" }}>
+                  Un score minimum de 60% est requis pour approuver.
+                </p>
+              )}
+            </section>
+          )}
+
           {/* Notes admin */}
           <section>
             <label
               className="text-[10px] font-bold uppercase tracking-wider"
               style={{ color: "#6B7280" }}
             >
-              Notes admin
+              Notes internes (admin uniquement)
             </label>
             <textarea
               value={notes}
@@ -318,8 +427,10 @@ function DetailModal({
           >
             <button
               onClick={() => onApprove(app, notes)}
-              className="flex-1 rounded-full py-2.5 text-xs font-bold text-white"
+              disabled={!canApprove}
+              className="flex-1 rounded-full py-2.5 text-xs font-bold text-white disabled:opacity-40 disabled:cursor-not-allowed"
               style={{ backgroundColor: "#1B4332" }}
+              title={!canApprove ? "Complétez la vérification (score ≥ 60%)" : undefined}
             >
               <CheckCircle2 className="h-3.5 w-3.5 inline mr-1" />
               Approuver
@@ -375,6 +486,9 @@ export default function PartnershipsPage() {
     accessCode: string;
     email?: string;
     name: string;
+    phone?: string;
+    firstName?: string;
+    type?: "COOK" | "RIDER";
   } | null>(null);
   const [rejectTarget, setRejectTarget] = useState<Partnership | null>(null);
 
@@ -476,6 +590,9 @@ export default function PartnershipsPage() {
           accessCode: res.accessCode,
           email: res.user?.email ?? app.email ?? undefined,
           name: fullName(app),
+          phone: app.phone,
+          firstName: app.firstName,
+          type: app.type,
         });
       } else {
         showToast(`${fullName(app)} approuvé(e)`);
@@ -834,7 +951,14 @@ function ApprovalModal({
   data,
   onClose,
 }: {
-  data: { accessCode: string; email?: string; name: string } | null;
+  data: {
+    accessCode: string;
+    email?: string;
+    name: string;
+    phone?: string;
+    firstName?: string;
+    type?: "COOK" | "RIDER";
+  } | null;
   onClose: () => void;
 }) {
   const [copied, setCopied] = useState(false);
@@ -853,6 +977,14 @@ function ApprovalModal({
     } catch {
       // ignore
     }
+  };
+
+  const sendWhatsapp = () => {
+    if (!data.phone) return;
+    const app = data.type === "RIDER" ? "Benskin Express" : "Cuisine de Nyama";
+    const first = data.firstName ?? data.name.split(" ")[0] ?? "";
+    const msg = `Félicitations ${first} ! Votre candidature NYAMA est approuvée ! Votre code d'accès : ${data.accessCode}. Téléchargez l'app ${app} et connectez-vous avec votre numéro + ce code. Bienvenue dans la famille NYAMA !`;
+    openWhatsapp(data.phone, msg);
   };
 
   return (
@@ -911,25 +1043,36 @@ function ApprovalModal({
           fonctionne qu&apos;une seule fois.
         </p>
 
-        <div className="flex gap-2 pt-1">
-          <button
-            onClick={copy}
-            className="flex-1 rounded-full py-2.5 text-xs font-bold text-white inline-flex items-center justify-center gap-1.5"
-            style={{ backgroundColor: "#1B4332" }}
-          >
-            {copied ? (
-              <>
-                <Check className="h-3.5 w-3.5" /> Copié !
-              </>
-            ) : (
-              <>
-                <Copy className="h-3.5 w-3.5" /> Copier le code
-              </>
+        <div className="flex flex-col gap-2 pt-1">
+          <div className="flex gap-2">
+            <button
+              onClick={copy}
+              className="flex-1 rounded-full py-2.5 text-xs font-bold text-white inline-flex items-center justify-center gap-1.5"
+              style={{ backgroundColor: "#1B4332" }}
+            >
+              {copied ? (
+                <>
+                  <Check className="h-3.5 w-3.5" /> Copié !
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3.5 w-3.5" /> Copier le code
+                </>
+              )}
+            </button>
+            {data.phone && (
+              <button
+                onClick={sendWhatsapp}
+                className="flex-1 rounded-full py-2.5 text-xs font-bold text-white inline-flex items-center justify-center gap-1.5"
+                style={{ backgroundColor: "#25D366" }}
+              >
+                <MessageCircle className="h-3.5 w-3.5" /> Envoyer par WhatsApp
+              </button>
             )}
-          </button>
+          </div>
           <button
             onClick={onClose}
-            className="flex-1 rounded-full py-2.5 text-xs font-bold"
+            className="w-full rounded-full py-2.5 text-xs font-bold"
             style={{ border: "1.5px solid #e8e4de", color: "#6B7280" }}
           >
             Fermer
