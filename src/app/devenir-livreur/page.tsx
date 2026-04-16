@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import {
   Camera,
   CheckCircle2,
@@ -155,19 +156,28 @@ export default function DevenirLivreurPage() {
         style={{ backgroundColor: "#fff", borderColor: "#e5e5e0" }}
       >
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
-          <div>
-            <p
-              className="text-lg font-bold leading-tight"
-              style={{
-                fontFamily: "var(--font-montserrat), system-ui, sans-serif",
-                color: COLORS.orange,
-              }}
-            >
-              NYAMA
-            </p>
-            <p className="text-[10px] uppercase tracking-[0.15em]" style={{ color: COLORS.charcoal }}>
-              Devenir livreur
-            </p>
+          <div className="flex items-center gap-2.5">
+            <Image
+              src="/nyama-logo.svg"
+              alt="NYAMA"
+              width={36}
+              height={36}
+              priority
+            />
+            <div>
+              <p
+                className="text-lg font-bold leading-tight"
+                style={{
+                  fontFamily: "var(--font-montserrat), system-ui, sans-serif",
+                  color: COLORS.orange,
+                }}
+              >
+                NYAMA
+              </p>
+              <p className="text-[10px] uppercase tracking-[0.15em]" style={{ color: COLORS.charcoal }}>
+                Devenir livreur
+              </p>
+            </div>
           </div>
           <Stepper step={step} total={4} />
         </div>

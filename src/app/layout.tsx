@@ -26,6 +26,13 @@ const spaceMono = Space_Mono({
 export const metadata: Metadata = {
   title: "NYAMA Dashboard — Administration",
   description: "Tableau de bord de la marketplace NYAMA · Cuisine camerounaise",
+  icons: {
+    icon: [
+      { url: "/nyama-logo.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/nyama-logo.svg",
+    apple: "/nyama-logo.svg",
+  },
 };
 
 export default function RootLayout({

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -107,30 +108,41 @@ export function Sidebar({ onNavigate, forceExpanded = false }: SidebarProps) {
       {/* Logo + collapse */}
       <div className="flex h-16 items-center justify-between px-4">
         {!collapsed ? (
-          <div>
-            <p
-              className="text-xl font-bold leading-tight"
-              style={{
-                fontFamily: "var(--font-montserrat), system-ui, sans-serif",
-                color: "#F57C20",
-              }}
-            >
-              Nyama Admin
-            </p>
-            <p
-              className="text-[9px] tracking-[0.15em] uppercase leading-none mt-0.5"
-              style={{ color: "rgba(255,255,255,0.5)" }}
-            >
-              Cuisine camerounaise
-            </p>
+          <div className="flex items-center gap-2.5">
+            <Image
+              src="/nyama-logo.svg"
+              alt="NYAMA"
+              width={36}
+              height={36}
+              priority
+            />
+            <div>
+              <p
+                className="text-base font-bold leading-tight"
+                style={{
+                  fontFamily: "var(--font-montserrat), system-ui, sans-serif",
+                  color: "#F57C20",
+                }}
+              >
+                Nyama Admin
+              </p>
+              <p
+                className="text-[9px] tracking-[0.15em] uppercase leading-none mt-0.5"
+                style={{ color: "rgba(255,255,255,0.5)" }}
+              >
+                Cuisine camerounaise
+              </p>
+            </div>
           </div>
         ) : (
-          <div
-            className="mx-auto flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold text-white"
-            style={{ backgroundColor: "#F57C20" }}
-          >
-            N
-          </div>
+          <Image
+            src="/nyama-logo.svg"
+            alt="NYAMA"
+            width={36}
+            height={36}
+            className="mx-auto"
+            priority
+          />
         )}
         {!forceExpanded && (
           <button

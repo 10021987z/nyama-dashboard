@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, type ChangeEvent } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { authService } from "@/lib/auth-service";
 import { isAuthenticated } from "@/lib/auth";
@@ -53,13 +54,15 @@ export default function LoginPage() {
       >
         {/* Logo */}
         <div className="text-center mb-6">
-          <h1
-            className="font-black tracking-tight"
-            style={{ fontSize: 36, color: "#F57C20" }}
-          >
-            NYAMA
-          </h1>
-          <p className="text-sm text-gray-400 mt-1">Administration</p>
+          <Image
+            src="/nyama-logo.svg"
+            alt="NYAMA"
+            width={72}
+            height={72}
+            className="mx-auto"
+            priority
+          />
+          <p className="text-sm text-gray-400 mt-2">Administration</p>
           <div className="mt-5 h-px bg-gray-100" />
         </div>
 

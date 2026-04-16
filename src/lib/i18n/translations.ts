@@ -479,6 +479,15 @@ export const translations = {
       english: "English",
       pidgin: "Pidgin",
     },
+    downloadApp: {
+      title: "Gardez Nyama dans votre poche",
+      subtitle:
+        "Commandez votre repas camerounais préféré en quelques clics. Suivez votre livraison en temps réel.",
+      appStoreSmall: "Télécharger dans",
+      appStoreLarge: "App Store",
+      playStoreSmall: "Disponible sur",
+      playStoreLarge: "Google Play",
+    },
     footer: "NYAMA TECH SYSTEMS \u00A9 2026 \u2022 PROPULSION DE L'EXCELLENCE CULINAIRE CAMEROUNAISE",
   },
   en: {
@@ -961,6 +970,15 @@ export const translations = {
       english: "English",
       pidgin: "Pidgin",
     },
+    downloadApp: {
+      title: "Keep Nyama in your pocket",
+      subtitle:
+        "Order your favourite Cameroonian meal in just a few taps. Track your delivery in real time.",
+      appStoreSmall: "Download on the",
+      appStoreLarge: "App Store",
+      playStoreSmall: "Get it on",
+      playStoreLarge: "Google Play",
+    },
     footer: "NYAMA TECH SYSTEMS \u00A9 2026 \u2022 PROPELLING CAMEROONIAN CULINARY EXCELLENCE",
   },
   pidgin: {
@@ -1442,6 +1460,15 @@ export const translations = {
       french: "Français",
       english: "English",
       pidgin: "Pidgin",
+    },
+    downloadApp: {
+      title: "Carry Nyama for your pocket",
+      subtitle:
+        "Order your sweet Cameroon chop with just small clicks. See where your delivery dey for real time.",
+      appStoreSmall: "Download for",
+      appStoreLarge: "App Store",
+      playStoreSmall: "Find am for",
+      playStoreLarge: "Google Play",
     },
     footer: "NYAMA TECH SYSTEMS \u00A9 2026 \u2022 WE DI PUSH CAMEROON CHOP FOR UP",
   },
