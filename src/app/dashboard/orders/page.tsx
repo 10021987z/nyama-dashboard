@@ -31,7 +31,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
 import { ChevronLeft, ChevronRight, Filter, RotateCcw, LayoutGrid, List as ListIcon } from "lucide-react";
-import { OrdersKanban } from "@/components/dashboard/orders-kanban";
+import { OrdersKanban, OrdersKanbanSkeleton } from "@/components/dashboard/orders-kanban";
 import type { OrderStatus } from "@/lib/types";
 
 const LIMIT = 20;
@@ -279,6 +279,7 @@ export default function OrdersPage() {
     () => [
       { value: "", label: t("orders.allStatuses") },
       { value: "pending", label: t("orders.pending") },
+      { value: "confirmed", label: t("orders.preparing") },
       { value: "preparing", label: t("orders.preparing") },
       { value: "ready", label: t("orders.ready") },
       { value: "delivering", label: t("orders.pickedUp") },
@@ -293,11 +294,18 @@ export default function OrdersPage() {
     setError(null);
     try {
       const params: Record<string, string | number> = { page, limit: LIMIT };
-      if (status) params.status = status;
+      if (status) params.status = status.toUpperCase();
       if (fromDate) params.from = fromDate;
       if (toDate) params.to = toDate;
       const result = await apiClient.get<OrdersResponse>("/admin/orders", params);
-      setData(result);
+      const normalized: OrdersResponse = {
+        ...result,
+        data: (result.data ?? []).map((o) => ({
+          ...o,
+          status: ((o.status ?? "") as string).toLowerCase() as OrderStatus,
+        })),
+      };
+      setData(normalized);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Une erreur est survenue");
     } finally {
@@ -361,14 +369,20 @@ export default function OrdersPage() {
         </button>
       </div>
 
-      {view === "kanban" && !loading && data && (
-        <OrdersKanban
-          orders={liveOrders}
-          onSelect={(o) => setSelectedOrder(o)}
-          onMoveStatus={(id, s) =>
-            setStatusOverrides((prev) => ({ ...prev, [id]: s }))
-          }
-        />
+      {view === "kanban" && (
+        error ? (
+          <ErrorState message={error} onRetry={fetchOrders} />
+        ) : loading && !data ? (
+          <OrdersKanbanSkeleton />
+        ) : (
+          <OrdersKanban
+            orders={liveOrders}
+            onSelect={(o) => setSelectedOrder(o)}
+            onMoveStatus={(id, s) =>
+              setStatusOverrides((prev) => ({ ...prev, [id]: s }))
+            }
+          />
+        )
       )}
 
       {view === "list" && (
@@ -512,7 +526,10 @@ export default function OrdersPage() {
                           {statusLabel(order.status)}
                         </span>
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell text-muted-foreground text-xs whitespace-nowrap">
+                      <TableCell
+                        suppressHydrationWarning
+                        className="hidden sm:table-cell text-muted-foreground text-xs whitespace-nowrap"
+                      >
                         {formatRelative(order.createdAt)}
                       </TableCell>
                     </TableRow>

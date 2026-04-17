@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Order, OrderStatus } from "@/lib/types";
 import { formatFcfa } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, Bike, Clock, Phone, User } from "lucide-react";
 
 interface OrdersKanbanProps {
@@ -12,33 +13,59 @@ interface OrdersKanbanProps {
   onMoveStatus?: (orderId: string, status: OrderStatus) => void;
 }
 
-const COLUMNS: { key: OrderStatus; title: string; accent: string; bg: string }[] = [
+type ColumnKey = "pending" | "preparing" | "ready" | "delivering";
+
+const COLUMNS: { key: ColumnKey; title: string; accent: string; bg: string }[] = [
   { key: "pending", title: "Nouvelle", accent: "#F57C20", bg: "#fff7ed" },
   { key: "preparing", title: "Acceptée / En préparation", accent: "#D4A017", bg: "#fefce8" },
   { key: "ready", title: "Prête", accent: "#0891b2", bg: "#ecfeff" },
   { key: "delivering", title: "En livraison", accent: "#1B4332", bg: "#f0fdf4" },
 ];
 
-function minutesSince(iso?: string): number {
-  if (!iso) return 0;
-  const t = new Date(iso).getTime();
-  if (Number.isNaN(t)) return 0;
-  return Math.floor((Date.now() - t) / 60000);
+// Normalize any API casing (e.g. "CONFIRMED", "picked_up") to a Kanban column.
+function columnFor(status: string | undefined): ColumnKey | null {
+  switch ((status ?? "").toLowerCase()) {
+    case "pending":
+      return "pending";
+    case "confirmed":
+    case "preparing":
+      return "preparing";
+    case "ready":
+      return "ready";
+    case "assigned":
+    case "picked_up":
+    case "delivering":
+      return "delivering";
+    default:
+      return null;
+  }
 }
 
 export function OrdersKanban({ orders, onSelect, onMoveStatus }: OrdersKanbanProps) {
   const [dragId, setDragId] = useState<string | null>(null);
+  const [now, setNow] = useState<number | null>(null);
+
+  useEffect(() => {
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const grouped = useMemo(() => {
-    const map: Record<string, Order[]> = {};
-    COLUMNS.forEach((c) => (map[c.key] = []));
+    const map: Record<ColumnKey, Order[]> = {
+      pending: [],
+      preparing: [],
+      ready: [],
+      delivering: [],
+    };
     orders.forEach((o) => {
-      if (map[o.status]) map[o.status].push(o);
+      const col = columnFor(o.status);
+      if (col) map[col].push(o);
     });
     return map;
   }, [orders]);
 
-  const handleDrop = (status: OrderStatus) => {
+  const handleDrop = (status: ColumnKey) => {
     if (dragId && onMoveStatus) onMoveStatus(dragId, status);
     setDragId(null);
   };
@@ -82,8 +109,11 @@ export function OrdersKanban({ orders, onSelect, onMoveStatus }: OrdersKanbanPro
             </p>
           )}
           {grouped[col.key].map((o) => {
-            const mins = minutesSince(o.createdAt);
-            const overdue = mins > 20;
+            const mins =
+              now !== null && o.createdAt
+                ? Math.max(0, Math.floor((now - new Date(o.createdAt).getTime()) / 60_000))
+                : null;
+            const overdue = mins !== null && mins > 20;
             return (
               <div
                 key={o.id}
@@ -107,12 +137,13 @@ export function OrdersKanban({ orders, onSelect, onMoveStatus }: OrdersKanbanPro
                     #{(o.id ?? "").slice(-6).toUpperCase()}
                   </span>
                   <span
+                    suppressHydrationWarning
                     className="flex items-center gap-1 text-[10px] font-bold"
                     style={{ color: overdue ? "#ef4444" : "#9ca3af" }}
                   >
                     {overdue && <AlertTriangle className="h-3 w-3" />}
                     <Clock className="h-3 w-3" />
-                    {mins} min
+                    {mins !== null ? `${mins} min` : "—"}
                   </span>
                 </div>
                 <p
@@ -158,6 +189,54 @@ export function OrdersKanban({ orders, onSelect, onMoveStatus }: OrdersKanbanPro
               </div>
             );
           })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function OrdersKanbanSkeleton() {
+  return (
+    <div className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
+      {COLUMNS.map((col) => (
+        <div
+          key={col.key}
+          className="rounded-2xl p-3 flex flex-col gap-2 min-h-[280px]"
+          style={{ backgroundColor: "#ffffff", boxShadow: "0 2px 24px rgba(160,60,0,0.05)" }}
+        >
+          <div className="flex items-center justify-between px-1 mb-1">
+            <div className="flex items-center gap-2">
+              <span
+                className="inline-block h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: col.accent }}
+              />
+              <h3
+                className="text-xs font-bold uppercase tracking-wider"
+                style={{ color: "#3D3D3D" }}
+              >
+                {col.title}
+              </h3>
+            </div>
+            <Skeleton className="h-4 w-6 rounded-full" />
+          </div>
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-xl border p-3 space-y-2"
+              style={{ borderColor: "#f5f3ef" }}
+            >
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-3 w-14" />
+                <Skeleton className="h-3 w-10" />
+              </div>
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-3 w-1/2" />
+              <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: "#f5f3ef" }}>
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            </div>
+          ))}
         </div>
       ))}
     </div>
