@@ -262,8 +262,18 @@ function OrderDetailDialog({
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
+function OrdersPageSkeleton() {
+  return (
+    <div className="space-y-6">
+      <Skeleton className="h-9 w-56 rounded-full" />
+      <OrdersKanbanSkeleton />
+    </div>
+  );
+}
+
 export default function OrdersPage() {
   const { t } = useLanguage();
+  const [mounted, setMounted] = useState(false);
   const [status, setStatus] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -274,6 +284,10 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [statusOverrides, setStatusOverrides] = useState<Record<string, OrderStatus>>({});
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const statusOptions = useMemo(
     () =>
@@ -356,6 +370,8 @@ export default function OrdersPage() {
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }, [data?.data]);
+
+  if (!mounted) return <OrdersPageSkeleton />;
 
   return (
     <div className="space-y-6">
