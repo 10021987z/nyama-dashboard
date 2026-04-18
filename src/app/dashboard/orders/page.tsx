@@ -276,17 +276,24 @@ export default function OrdersPage() {
   const [statusOverrides, setStatusOverrides] = useState<Record<string, OrderStatus>>({});
 
   const statusOptions = useMemo(
-    () => [
-      { value: "", label: t("orders.allStatuses") },
-      { value: "pending", label: t("orders.pending") },
-      { value: "confirmed", label: t("orders.preparing") },
-      { value: "preparing", label: t("orders.preparing") },
-      { value: "ready", label: t("orders.ready") },
-      { value: "delivering", label: t("orders.pickedUp") },
-      { value: "delivered", label: t("orders.delivered") },
-      { value: "cancelled", label: t("orders.cancelled") },
-    ],
-    [t]
+    () =>
+      view === "list"
+        ? [
+            { value: "", label: t("orders.allStatuses") },
+            { value: "delivered", label: t("orders.delivered") },
+            { value: "cancelled", label: t("orders.cancelled") },
+          ]
+        : [
+            { value: "", label: t("orders.allStatuses") },
+            { value: "pending", label: t("orders.pending") },
+            { value: "confirmed", label: t("orders.preparing") },
+            { value: "preparing", label: t("orders.preparing") },
+            { value: "ready", label: t("orders.ready") },
+            { value: "delivering", label: t("orders.pickedUp") },
+            { value: "delivered", label: t("orders.delivered") },
+            { value: "cancelled", label: t("orders.cancelled") },
+          ],
+    [t, view]
   );
 
   const fetchOrders = useCallback(async () => {
@@ -294,7 +301,11 @@ export default function OrdersPage() {
     setError(null);
     try {
       const params: Record<string, string | number> = { page, limit: LIMIT };
-      if (status) params.status = status.toUpperCase();
+      if (view === "list") {
+        params.status = status ? status.toUpperCase() : "DELIVERED,CANCELLED";
+      } else if (status) {
+        params.status = status.toUpperCase();
+      }
       if (fromDate) params.from = fromDate;
       if (toDate) params.to = toDate;
       const result = await apiClient.get<OrdersResponse>("/admin/orders", params);
@@ -311,7 +322,7 @@ export default function OrdersPage() {
     } finally {
       setLoading(false);
     }
-  }, [status, fromDate, toDate, page]);
+  }, [status, fromDate, toDate, page, view]);
 
   useEffect(() => {
     fetchOrders();
@@ -335,6 +346,16 @@ export default function OrdersPage() {
   const liveOrders = (data?.data ?? []).map((o) =>
     statusOverrides[o.id] ? { ...o, status: statusOverrides[o.id] } : o
   );
+
+  const historyOrders = useMemo(() => {
+    const rows = (data?.data ?? []).filter(
+      (o) => o.status === "delivered" || o.status === "cancelled"
+    );
+    return [...rows].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }, [data?.data]);
 
   return (
     <div className="space-y-6">
@@ -449,7 +470,7 @@ export default function OrdersPage() {
             {t("orders.title")}
             {data && (
               <span className="ml-auto text-sm font-normal text-muted-foreground">
-                {data.total.toLocaleString("fr-FR")} {t("orders.results")}
+                {historyOrders.length.toLocaleString("fr-FR")} {t("orders.results")}
               </span>
             )}
           </CardTitle>
@@ -474,6 +495,7 @@ export default function OrdersPage() {
                     <TableHead className="hidden md:table-cell">{t("orders.cook")}</TableHead>
                     <TableHead className="hidden lg:table-cell">{t("orders.rider")}</TableHead>
                     <TableHead>{t("orders.total")}</TableHead>
+                    <TableHead className="hidden md:table-cell">{t("orders.payment")}</TableHead>
                     <TableHead className="hidden lg:table-cell">{t("orders.deliveryFee")}</TableHead>
                     <TableHead className="hidden md:table-cell">{t("orders.city")}</TableHead>
                     <TableHead>{t("orders.status")}</TableHead>
@@ -481,17 +503,17 @@ export default function OrdersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data?.data.length === 0 && (
+                  {historyOrders.length === 0 && (
                     <TableRow>
                       <TableCell
-                        colSpan={10}
+                        colSpan={11}
                         className="text-center text-muted-foreground py-12"
                       >
                         {t("orders.noOrder")}
                       </TableCell>
                     </TableRow>
                   )}
-                  {data?.data.map((order) => (
+                  {historyOrders.map((order) => (
                     <TableRow
                       key={order.id}
                       className="cursor-pointer hover:bg-muted/40 transition-colors"
@@ -514,6 +536,13 @@ export default function OrdersPage() {
                       </TableCell>
                       <TableCell className="whitespace-nowrap font-medium">
                         {formatFcfa(order.totalXaf)}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground text-xs whitespace-nowrap">
+                        {order.paymentMethod ? (
+                          order.paymentMethod.replace(/_/g, " ")
+                        ) : (
+                          <span className="italic">—</span>
+                        )}
                       </TableCell>
                       <TableCell className="hidden lg:table-cell text-muted-foreground whitespace-nowrap">
                         {formatFcfa(order.deliveryFeeXaf)}

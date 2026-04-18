@@ -78,6 +78,7 @@ export interface Order {
   deliveryFeeXaf: number;
   items: OrderItem[];
   city: 'Douala' | 'Yaoundé';
+  paymentMethod?: string;
   createdAt: string;
   acceptedAt?: string;
   readyAt?: string;
