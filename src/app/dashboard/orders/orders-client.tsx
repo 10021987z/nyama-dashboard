@@ -260,6 +260,118 @@ function OrderDetailDialog({
   );
 }
 
+// ── History Table (simple, standalone) ─────────────────────────────────────────
+
+function HistoryTable() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const [delivered, cancelledRes] = await Promise.all([
+          apiClient.get<OrdersResponse>("/admin/orders", {
+            status: "DELIVERED",
+            limit: 50,
+          }),
+          apiClient.get<OrdersResponse>("/admin/orders", {
+            status: "CANCELLED",
+            limit: 50,
+          }),
+        ]);
+        if (cancelled) return;
+        const all = [
+          ...(delivered.data ?? []),
+          ...(cancelledRes.data ?? []),
+        ];
+        all.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setOrders(all);
+      } catch (e) {
+        if (cancelled) return;
+        setError(e instanceof Error ? e.message : "Erreur inconnue");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (loading) return <div className="p-8 text-sm text-muted-foreground">Chargement…</div>;
+  if (error) return <div className="p-8 text-sm text-red-600">Erreur : {error}</div>;
+  if (orders.length === 0)
+    return <div className="p-8 text-sm text-muted-foreground">Aucune commande dans l&apos;historique</div>;
+
+  return (
+    <div className="p-6 bg-white rounded-xl shadow-sm">
+      <h2 className="text-xl font-bold mb-4">
+        Historique des commandes ({orders.length})
+      </h2>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b-2 border-gray-200 text-left">
+              <th className="py-2 font-semibold">#</th>
+              <th className="py-2 font-semibold">Client</th>
+              <th className="py-2 font-semibold">Cuisinière</th>
+              <th className="py-2 font-semibold text-right">Montant</th>
+              <th className="py-2 font-semibold">Paiement</th>
+              <th className="py-2 font-semibold">Date</th>
+              <th className="py-2 font-semibold text-center">Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map((o) => {
+              const status = (o.status ?? "").toString().toUpperCase();
+              const badgeClass =
+                status === "DELIVERED"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800";
+              return (
+                <tr key={o.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <td className="py-2 font-mono text-xs">
+                    {(o.id ?? "").slice(0, 8)}
+                  </td>
+                  <td className="py-2">{o.clientName ?? "—"}</td>
+                  <td className="py-2">{o.cookName ?? "—"}</td>
+                  <td className="py-2 text-right font-mono">
+                    {(o.totalXaf ?? 0).toLocaleString("fr-FR")} FCFA
+                  </td>
+                  <td className="py-2">
+                    {o.paymentMethod ? o.paymentMethod.replace(/_/g, " ") : "—"}
+                  </td>
+                  <td className="py-2 text-xs text-gray-500" suppressHydrationWarning>
+                    {o.createdAt
+                      ? new Date(o.createdAt).toLocaleDateString("fr-FR")
+                      : "—"}
+                  </td>
+                  <td className="py-2 text-center">
+                    <span
+                      className={
+                        "px-2 py-1 rounded-full text-xs font-semibold " +
+                        badgeClass
+                      }
+                    >
+                      {status}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 function OrdersPageSkeleton() {
@@ -473,203 +585,7 @@ export default function OrdersPage() {
         )
       )}
 
-      {view === "list" && (
-      <>
-      {/* Filters */}
-      <Card className="shadow-sm">
-        <CardContent className="p-4">
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="flex flex-col gap-1.5 min-w-[160px]">
-              <label className="text-xs font-medium text-muted-foreground">
-                {t("orders.status")}
-              </label>
-              <Select value={status} onValueChange={(val: string | null) => { setStatus(val ?? ""); setPage(1); }}>
-                <SelectTrigger className="h-9 w-full">
-                  <SelectValue placeholder={t("orders.allStatuses")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {statusOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">
-                {t("orders.from")}
-              </label>
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => { setFromDate(e.target.value); setPage(1); }}
-                className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus:border-ring"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">
-                {t("orders.to")}
-              </label>
-              <input
-                type="date"
-                value={toDate}
-                onChange={(e) => { setToDate(e.target.value); setPage(1); }}
-                className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus:border-ring"
-              />
-            </div>
-
-            <Button variant="outline" size="sm" onClick={handleReset} className="h-9 gap-1.5">
-              <RotateCcw className="h-3.5 w-3.5" />
-              {t("common.reset")}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Table */}
-      <Card className="shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base font-bold flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            {t("orders.title")}
-            {data && (
-              <span className="ml-auto text-sm font-normal text-muted-foreground">
-                {historyOrders.length.toLocaleString("fr-FR")} {t("orders.results")}
-              </span>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {loading ? (
-            <div className="p-6 space-y-3">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-full" />
-              ))}
-            </div>
-          ) : error ? (
-            <ErrorState message={error} onRetry={fetchOrders} />
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="hidden sm:table-cell">{t("orders.id")}</TableHead>
-                    <TableHead>{t("orders.client")}</TableHead>
-                    <TableHead className="hidden lg:table-cell">{t("orders.phone")}</TableHead>
-                    <TableHead className="hidden md:table-cell">{t("orders.cook")}</TableHead>
-                    <TableHead className="hidden lg:table-cell">{t("orders.rider")}</TableHead>
-                    <TableHead>{t("orders.total")}</TableHead>
-                    <TableHead className="hidden md:table-cell">{t("orders.payment")}</TableHead>
-                    <TableHead className="hidden lg:table-cell">{t("orders.deliveryFee")}</TableHead>
-                    <TableHead className="hidden md:table-cell">{t("orders.city")}</TableHead>
-                    <TableHead>{t("orders.status")}</TableHead>
-                    <TableHead className="hidden sm:table-cell">{t("orders.date")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {historyOrders.length === 0 && (
-                    <TableRow>
-                      <TableCell
-                        colSpan={11}
-                        className="text-center text-muted-foreground py-12"
-                      >
-                        {t("orders.noOrder")}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {historyOrders.map((order) => (
-                    <TableRow
-                      key={order.id}
-                      className="cursor-pointer hover:bg-muted/40 transition-colors"
-                      onClick={() => setSelectedOrder(order)}
-                    >
-                      <TableCell className="hidden sm:table-cell font-mono text-xs text-muted-foreground">
-                        #{(order.id ?? "").slice(-6).toUpperCase()}
-                      </TableCell>
-                      <TableCell className="font-medium whitespace-nowrap">
-                        {order.clientName}
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-muted-foreground text-sm">
-                        {order.clientPhone}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell whitespace-nowrap">
-                        {order.cookName}
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-muted-foreground whitespace-nowrap">
-                        {order.riderName ?? <span className="italic">—</span>}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap font-medium">
-                        {formatFcfa(order.totalXaf)}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-muted-foreground text-xs whitespace-nowrap">
-                        {order.paymentMethod ? (
-                          order.paymentMethod.replace(/_/g, " ")
-                        ) : (
-                          <span className="italic">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-muted-foreground whitespace-nowrap">
-                        {formatFcfa(order.deliveryFeeXaf)}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">{order.city}</TableCell>
-                      <TableCell>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${statusColor(order.status)}`}
-                        >
-                          {statusLabel(order.status)}
-                        </span>
-                      </TableCell>
-                      <TableCell
-                        suppressHydrationWarning
-                        className="hidden sm:table-cell text-muted-foreground text-xs whitespace-nowrap"
-                      >
-                        {formatRelative(order.createdAt)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-
-          {/* Pagination */}
-          {!loading && data && totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t">
-              <p className="text-sm text-muted-foreground">
-                {t("common.page")} {page} {t("common.of")} {totalPages}
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page <= 1}
-                  className="gap-1"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  {t("common.previous")}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page >= totalPages}
-                  className="gap-1"
-                >
-                  {t("common.next")}
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      </>
-      )}
+      {view === "list" && <HistoryTable />}
 
       <OrderDetailDialog
         order={selectedOrder}
