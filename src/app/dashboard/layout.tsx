@@ -65,6 +65,18 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) {
+    return (
+      <div
+        className="min-h-screen"
+        style={{ backgroundColor: "#fbf9f5" }}
+      />
+    );
+  }
+
   return (
     <LanguageProvider>
       <SidebarProvider>
