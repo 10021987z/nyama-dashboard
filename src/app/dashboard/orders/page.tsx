@@ -266,7 +266,33 @@ function OrdersPageSkeleton() {
   return (
     <div className="space-y-6">
       <Skeleton className="h-9 w-56 rounded-full" />
-      <OrdersKanbanSkeleton />
+      <div className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, col) => (
+          <div
+            key={col}
+            className="rounded-2xl p-3 flex flex-col gap-2 min-h-[280px] bg-white border"
+          >
+            <div className="flex items-center justify-between px-1 mb-1">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-4 w-6 rounded-full" />
+            </div>
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="rounded-xl border p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-3 w-14" />
+                  <Skeleton className="h-3 w-10" />
+                </div>
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -314,23 +340,48 @@ export default function OrdersPage() {
     setLoading(true);
     setError(null);
     try {
-      const params: Record<string, string | number> = { page, limit: LIMIT };
-      if (view === "list") {
-        params.status = status ? status.toUpperCase() : "DELIVERED,CANCELLED";
-      } else if (status) {
-        params.status = status.toUpperCase();
+      const normalizeOrder = (o: Order): Order => ({
+        ...o,
+        status: ((o.status ?? "") as string).toLowerCase() as OrderStatus,
+      });
+
+      // Historique sans filtre statut : 2 appels parallèles (l'API n'accepte qu'un statut à la fois)
+      if (view === "list" && !status) {
+        const baseParams: Record<string, string | number> = { page: 1, limit: 50 };
+        if (fromDate) baseParams.from = fromDate;
+        if (toDate) baseParams.to = toDate;
+        const [delivered, cancelled] = await Promise.all([
+          apiClient.get<OrdersResponse>("/admin/orders", {
+            ...baseParams,
+            status: "DELIVERED",
+          }),
+          apiClient.get<OrdersResponse>("/admin/orders", {
+            ...baseParams,
+            status: "CANCELLED",
+          }),
+        ]);
+        const merged = [
+          ...(delivered.data ?? []),
+          ...(cancelled.data ?? []),
+        ].map(normalizeOrder);
+        setData({
+          data: merged,
+          total: (delivered.total ?? 0) + (cancelled.total ?? 0),
+          page: 1,
+          limit: merged.length,
+        });
+        return;
       }
+
+      const params: Record<string, string | number> = { page, limit: LIMIT };
+      if (status) params.status = status.toUpperCase();
       if (fromDate) params.from = fromDate;
       if (toDate) params.to = toDate;
       const result = await apiClient.get<OrdersResponse>("/admin/orders", params);
-      const normalized: OrdersResponse = {
+      setData({
         ...result,
-        data: (result.data ?? []).map((o) => ({
-          ...o,
-          status: ((o.status ?? "") as string).toLowerCase() as OrderStatus,
-        })),
-      };
-      setData(normalized);
+        data: (result.data ?? []).map(normalizeOrder),
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Une erreur est survenue");
     } finally {
