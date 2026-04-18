@@ -262,8 +262,51 @@ function OrderDetailDialog({
 
 // ── History Table (simple, standalone) ─────────────────────────────────────────
 
+type PersonLike =
+  | string
+  | {
+      name?: string;
+      displayName?: string;
+      fullName?: string;
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+    }
+  | null
+  | undefined;
+
+type RawOrder = Order & {
+  client?: PersonLike;
+  cook?: PersonLike;
+  clientId?: string;
+  cookId?: string;
+  clientPhone?: string;
+  deliveryAddress?: string;
+};
+
+function getName(obj: PersonLike, fallbackId?: string | null): string {
+  if (!obj) return fallbackId ? `#${fallbackId.slice(0, 8)}` : "—";
+  if (typeof obj === "string") return obj.trim() || "—";
+  const composed =
+    obj.name ||
+    obj.displayName ||
+    obj.fullName ||
+    [obj.firstName, obj.lastName].filter(Boolean).join(" ").trim() ||
+    obj.phone;
+  if (composed) return composed;
+  return fallbackId ? `#${fallbackId.slice(0, 8)}` : "—";
+}
+
+function getPhone(order: RawOrder): string {
+  if (order.clientPhone) return order.clientPhone;
+  if (order.client && typeof order.client === "object" && order.client.phone) {
+    return order.client.phone;
+  }
+  return "—";
+}
+
 function HistoryTable() {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<RawOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -272,11 +315,11 @@ function HistoryTable() {
     async function load() {
       try {
         const [delivered, cancelledRes] = await Promise.all([
-          apiClient.get<OrdersResponse>("/admin/orders", {
+          apiClient.get<{ data: RawOrder[] }>("/admin/orders", {
             status: "DELIVERED",
             limit: 50,
           }),
-          apiClient.get<OrdersResponse>("/admin/orders", {
+          apiClient.get<{ data: RawOrder[] }>("/admin/orders", {
             status: "CANCELLED",
             limit: 50,
           }),
@@ -320,9 +363,11 @@ function HistoryTable() {
             <tr className="border-b-2 border-gray-200 text-left">
               <th className="py-2 font-semibold">#</th>
               <th className="py-2 font-semibold">Client</th>
+              <th className="py-2 font-semibold">Téléphone</th>
               <th className="py-2 font-semibold">Cuisinière</th>
               <th className="py-2 font-semibold text-right">Montant</th>
               <th className="py-2 font-semibold">Paiement</th>
+              <th className="py-2 font-semibold">Adresse</th>
               <th className="py-2 font-semibold">Date</th>
               <th className="py-2 font-semibold text-center">Statut</th>
             </tr>
@@ -334,18 +379,30 @@ function HistoryTable() {
                 status === "DELIVERED"
                   ? "bg-green-100 text-green-800"
                   : "bg-red-100 text-red-800";
+              const clientName =
+                getName(o.client, o.clientId ?? null) !== "—"
+                  ? getName(o.client, o.clientId ?? null)
+                  : o.clientName ?? "—";
+              const cookName =
+                getName(o.cook, o.cookId ?? null) !== "—"
+                  ? getName(o.cook, o.cookId ?? null)
+                  : o.cookName ?? "—";
               return (
                 <tr key={o.id} className="border-b border-gray-100 hover:bg-gray-50">
                   <td className="py-2 font-mono text-xs">
                     {(o.id ?? "").slice(0, 8)}
                   </td>
-                  <td className="py-2">{o.clientName ?? "—"}</td>
-                  <td className="py-2">{o.cookName ?? "—"}</td>
+                  <td className="py-2">{clientName}</td>
+                  <td className="py-2 text-xs text-gray-500">{getPhone(o)}</td>
+                  <td className="py-2">{cookName}</td>
                   <td className="py-2 text-right font-mono">
                     {(o.totalXaf ?? 0).toLocaleString("fr-FR")} FCFA
                   </td>
                   <td className="py-2">
                     {o.paymentMethod ? o.paymentMethod.replace(/_/g, " ") : "—"}
+                  </td>
+                  <td className="py-2 text-xs text-gray-500 max-w-[200px] truncate">
+                    {o.deliveryAddress ?? "—"}
                   </td>
                   <td className="py-2 text-xs text-gray-500" suppressHydrationWarning>
                     {o.createdAt
