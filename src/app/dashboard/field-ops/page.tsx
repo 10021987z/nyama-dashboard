@@ -61,14 +61,18 @@ export default function FieldOpsPage() {
     let socket: ReturnType<typeof getAdminSocket> | null = null;
     try {
       socket = getAdminSocket();
-      const onConnect = () => setOnline(true);
-      const onDisconnect = () => setOnline(false);
-      const onAlert = (payload: Alert) => {
-        setAlerts((prev) => [payload, ...prev].slice(0, 50));
-      };
-      socket.on("connect", onConnect);
-      socket.on("disconnect", onDisconnect);
-      socket.on("alert:new", onAlert);
+      if (!socket) {
+        setOnline(false);
+      } else {
+        const onConnect = () => setOnline(true);
+        const onDisconnect = () => setOnline(false);
+        const onAlert = (payload: Alert) => {
+          setAlerts((prev) => [payload, ...prev].slice(0, 50));
+        };
+        socket.on("connect", onConnect);
+        socket.on("disconnect", onDisconnect);
+        socket.on("alert:new", onAlert);
+      }
     } catch {
       setOnline(false);
     }

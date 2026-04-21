@@ -112,6 +112,7 @@ export function LiveDataProvider({ children }: { children: React.ReactNode }) {
     } catch {
       return;
     }
+    if (!socket) return;
 
     const onConnect = () => setConnection("connected");
     const onDisconnect = () =>
