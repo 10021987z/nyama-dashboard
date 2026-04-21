@@ -11,7 +11,10 @@ import { Search, Star, Package, TrendingUp, ChefHat, RotateCcw, ChevronLeft, Che
 import { RestaurantsTable } from "@/components/dashboard/restaurants-table";
 import { CreateUserDialog } from "@/components/dashboard/create-user-dialog";
 import { AddRestaurantWizard } from "@/components/dashboard/add-restaurant-wizard";
-import { patchRestaurant } from "@/lib/admin-mutations";
+import { patchRestaurant, setRestaurantOpen, sendMessage } from "@/lib/admin-mutations";
+import { useAdminSocketEvent } from "@/lib/admin-socket";
+import { toast as sonnerToast } from "sonner";
+import { MessageSquare, Power } from "lucide-react";
 
 const LIMIT = 20;
 
@@ -284,7 +287,17 @@ function Toast({ message, onDone }: { message: string; onDone: () => void }) {
 
 // ── View Dialog ───────────────────────────────────────────────────────────────
 
-function ViewDialog({ r, onClose }: { r: Restaurant; onClose: () => void }) {
+function ViewDialog({
+  r,
+  onClose,
+  onToggleOpen,
+  onSendMessage,
+}: {
+  r: Restaurant;
+  onClose: () => void;
+  onToggleOpen: (r: Restaurant) => void;
+  onSendMessage: (r: Restaurant) => void;
+}) {
   const specs = parseSpecialties(r.specialty);
   const name = displayName(r);
 
@@ -363,6 +376,28 @@ function ViewDialog({ r, onClose }: { r: Restaurant; onClose: () => void }) {
               {r.isActive ? "Actif" : "Inactif"}
             </span>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2 pt-2 border-t" style={{ borderColor: "#f5f3ef" }}>
+          <button
+            onClick={() => onToggleOpen(r)}
+            className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold transition-colors"
+            style={{
+              backgroundColor: r.isActive ? "#fef2f2" : "#f0fdf4",
+              color: r.isActive ? "#dc2626" : "#16a34a",
+            }}
+          >
+            <Power className="h-3.5 w-3.5" />
+            {r.isActive ? "Fermer" : "Ouvrir"}
+          </button>
+          <button
+            onClick={() => onSendMessage(r)}
+            className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold transition-colors"
+            style={{ backgroundColor: "#fdf3ee", color: "#F57C20" }}
+          >
+            <MessageSquare className="h-3.5 w-3.5" />
+            Message
+          </button>
         </div>
       </div>
     </div>
@@ -589,6 +624,37 @@ export default function RestaurantsPage() {
     void patchRestaurant(r.id, { isActive: false });
     setToast("Restaurant suspendu");
   }, []);
+
+  const handleToggleOpen = useCallback((r: Restaurant) => {
+    const newOpen = !r.isActive;
+    setLocalOverrides((prev) => {
+      const next = new Map(prev);
+      next.set(r.id, { ...(prev.get(r.id) ?? {}), isActive: newOpen });
+      return next;
+    });
+    void setRestaurantOpen(r.id, newOpen);
+    sonnerToast.success(newOpen ? "Restaurant ouvert" : "Restaurant fermé");
+  }, []);
+
+  const handleSendMessage = useCallback((r: Restaurant) => {
+    const body = typeof window !== "undefined" ? window.prompt(`Message à ${r.name || "ce restaurant"}`) : null;
+    if (!body) return;
+    void sendMessage({ to: r.id, toType: "restaurant", channel: "push", body });
+    sonnerToast.success("Message envoyé");
+  }, []);
+
+  // Live restaurant stats via socket (best effort)
+  useAdminSocketEvent<{ restaurantId: string; patch: Partial<Restaurant> }>(
+    "restaurant:update",
+    (evt) => {
+      if (!evt?.restaurantId) return;
+      setLocalOverrides((prev) => {
+        const next = new Map(prev);
+        next.set(evt.restaurantId, { ...(prev.get(evt.restaurantId) ?? {}), ...(evt.patch ?? {}) });
+        return next;
+      });
+    },
+  );
 
   const handleToggleVerified = useCallback((r: Restaurant) => {
     setVerifiedSet((prev) => {
@@ -878,7 +944,12 @@ export default function RestaurantsPage() {
 
       {/* View Dialog */}
       {viewRestaurant && (
-        <ViewDialog r={viewRestaurant} onClose={() => setViewRestaurant(null)} />
+        <ViewDialog
+          r={mergeOverrides(viewRestaurant)}
+          onClose={() => setViewRestaurant(null)}
+          onToggleOpen={handleToggleOpen}
+          onSendMessage={handleSendMessage}
+        />
       )}
 
       {/* Edit Dialog */}

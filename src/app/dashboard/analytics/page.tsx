@@ -15,6 +15,8 @@ import {
   ArrowUpRight, ArrowDownRight, ShoppingBag, ChevronRight,
 } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
+import { toast } from "sonner";
+import * as XLSX from "xlsx";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -155,6 +157,55 @@ export default function AnalyticsPage() {
     fill: getPaymentColor(p.method, p.color),
   })) ?? [];
 
+  const exportCsv = () => {
+    if (!data) return;
+    const lines: string[] = [];
+    lines.push("Section,Label,Value1,Value2");
+    lines.push(`KPI,Revenus bruts,${stats?.totalRevenueXaf ?? 0},`);
+    lines.push(`KPI,Net plateforme,${stats?.netPlatformXaf ?? 0},`);
+    lines.push(`KPI,Transactions,${stats?.totalTransactions ?? 0},`);
+    lines.push(`KPI,Taux conversion (%),${stats?.conversionRate ?? 0},`);
+    lines.push(`KPI,Panier moyen,${stats?.avgBasketXaf ?? 0},`);
+    (data.weeklyRevenue ?? []).forEach((w) => {
+      lines.push(`Hebdo,${w.week},${w.grossXaf},${w.commissionXaf}`);
+    });
+    (data.paymentBreakdown ?? []).forEach((p) => {
+      lines.push(`Paiement,${p.method},${p.percentage},`);
+    });
+    (data.topRestaurants ?? []).forEach((r) => {
+      lines.push(`Restaurant,"${r.displayName}",${r.revenueXaf},${r.orders}`);
+    });
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `nyama-analytics-${period}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Export CSV téléchargé");
+  };
+
+  const exportXlsx = () => {
+    if (!data) return;
+    const wb = XLSX.utils.book_new();
+    const kpis = [
+      { label: "Revenus bruts (FCFA)", value: stats?.totalRevenueXaf ?? 0 },
+      { label: "Net plateforme (FCFA)", value: stats?.netPlatformXaf ?? 0 },
+      { label: "Transactions", value: stats?.totalTransactions ?? 0 },
+      { label: "Taux de conversion (%)", value: stats?.conversionRate ?? 0 },
+      { label: "Panier moyen (FCFA)", value: stats?.avgBasketXaf ?? 0 },
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(kpis), "KPI");
+    if (data.weeklyRevenue?.length)
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data.weeklyRevenue), "Revenus hebdo");
+    if (data.paymentBreakdown?.length)
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data.paymentBreakdown), "Mix paiements");
+    if (data.topRestaurants?.length)
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data.topRestaurants), "Top restaurants");
+    XLSX.writeFile(wb, `nyama-analytics-${period}-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast.success("Export Excel téléchargé");
+  };
+
   return (
     <div className="space-y-6 pb-8">
       {/* Header */}
@@ -189,18 +240,22 @@ export default function AnalyticsPage() {
             ))}
           </div>
           <button
-            className="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition-colors"
+            onClick={exportCsv}
+            disabled={!data}
+            className="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition-colors disabled:opacity-50"
             style={{ border: "1.5px solid #e8e4de", color: "#6B7280" }}
           >
             <Download className="h-3.5 w-3.5" />
             {t("analytics.exportCsv")}
           </button>
           <button
-            className="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-white"
+            onClick={exportXlsx}
+            disabled={!data}
+            className="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
             style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
           >
             <Download className="h-3.5 w-3.5" />
-            {t("analytics.exportPdf")}
+            Excel
           </button>
         </div>
       </div>

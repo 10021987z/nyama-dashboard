@@ -1,7 +1,7 @@
 "use client";
 
 import type { Customer } from "@/lib/types";
-import { Crown, AlertTriangle, UserPlus, UserX } from "lucide-react";
+import { Crown, AlertTriangle, UserPlus, UserX, Send } from "lucide-react";
 
 export interface SegmentCounts {
   vip: number;
@@ -9,6 +9,8 @@ export interface SegmentCounts {
   newcomers: number;
   lost: number;
 }
+
+export type SegmentKey = keyof SegmentCounts;
 
 export function computeSegments(customers: Customer[]): SegmentCounts {
   const now = Date.now();
@@ -64,7 +66,15 @@ const SEGMENTS = [
   },
 ];
 
-export function CustomerSegments({ counts, total }: { counts: SegmentCounts; total: number }) {
+export function CustomerSegments({
+  counts,
+  total,
+  onCampaign,
+}: {
+  counts: SegmentCounts;
+  total: number;
+  onCampaign?: (segment: SegmentKey) => void;
+}) {
   return (
     <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
       {SEGMENTS.map((s) => {
@@ -104,6 +114,16 @@ export function CustomerSegments({ counts, total }: { counts: SegmentCounts; tot
               {s.label}
             </p>
             <p className="text-[10px]" style={{ color: "#6B7280" }}>{s.hint}</p>
+            {onCampaign && value > 0 && (
+              <button
+                onClick={() => onCampaign(s.key)}
+                className="mt-1 flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-[11px] font-semibold transition-colors"
+                style={{ backgroundColor: s.bg, color: s.color }}
+              >
+                <Send className="h-3 w-3" />
+                Campagne
+              </button>
+            )}
           </div>
         );
       })}

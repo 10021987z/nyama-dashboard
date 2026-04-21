@@ -33,6 +33,9 @@ import { ErrorState } from "@/components/ui/error-state";
 import { ChevronLeft, ChevronRight, Filter, RotateCcw, LayoutGrid, List as ListIcon } from "lucide-react";
 import { OrdersKanban, OrdersKanbanSkeleton } from "@/components/dashboard/orders-kanban";
 import type { OrderStatus } from "@/lib/types";
+import { useAdminSocketEvent } from "@/lib/admin-socket";
+import { transitionOrderStatus, interveneOrder, cancelOrder } from "@/lib/admin-mutations";
+import { toast } from "sonner";
 
 const LIMIT = 20;
 
@@ -46,6 +49,30 @@ function OrderDetailDialog({
   onClose: () => void;
 }) {
   const { t } = useLanguage();
+
+  const handleIntervene = async () => {
+    if (!order) return;
+    await interveneOrder(order.id, { action: "freeze" });
+    toast.success(`Intervention admin sur #${order.id.slice(-6).toUpperCase()}`);
+  };
+
+  const handleCancel = async () => {
+    if (!order) return;
+    const reason = window.prompt("Motif d'annulation ?");
+    if (!reason) return;
+    await cancelOrder(order.id, reason);
+    toast.success("Commande annulée");
+    onClose();
+  };
+
+  const handleReassignRider = async () => {
+    if (!order) return;
+    const riderId = window.prompt("ID du nouveau livreur");
+    if (!riderId) return;
+    const { reassignOrderRider } = await import("@/lib/admin-mutations");
+    await reassignOrderRider(order.id, riderId);
+    toast.success("Livreur réassigné");
+  };
 
   return (
     <Dialog
@@ -252,6 +279,31 @@ function OrderDetailDialog({
                   </div>
                 )}
               </div>
+            </section>
+
+            {/* Admin actions */}
+            <section className="flex flex-wrap gap-2 pt-2 border-t">
+              <button
+                onClick={handleIntervene}
+                className="rounded-full px-4 py-2 text-xs font-semibold text-white"
+                style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
+              >
+                Intervenir
+              </button>
+              <button
+                onClick={handleReassignRider}
+                className="rounded-full px-4 py-2 text-xs font-semibold"
+                style={{ border: "1.5px solid #e8e4de", color: "#3D3D3D" }}
+              >
+                Réassigner livreur
+              </button>
+              <button
+                onClick={handleCancel}
+                className="rounded-full px-4 py-2 text-xs font-semibold"
+                style={{ backgroundColor: "#fee2e2", color: "#991b1b" }}
+              >
+                Annuler avec motif
+              </button>
             </section>
           </>
         )}
@@ -568,6 +620,25 @@ export default function OrdersPage() {
     return () => clearInterval(id);
   }, [fetchOrders]);
 
+  // ─── Socket.io live updates ─────────────────────────────────────────────
+  useAdminSocketEvent<Order>("order:new", (order) => {
+    setData((prev) => {
+      if (!prev) return prev;
+      if ((prev.data ?? []).some((o) => o.id === order.id)) return prev;
+      const normalized: Order = {
+        ...order,
+        status: ((order.status ?? "") as string).toLowerCase() as OrderStatus,
+      };
+      return { ...prev, data: [normalized, ...(prev.data ?? [])], total: prev.total + 1 };
+    });
+    toast.success(`Nouvelle commande #${(order.id ?? "").slice(-6).toUpperCase()}`);
+  });
+
+  useAdminSocketEvent<{ orderId: string; status: string }>("order:status", (evt) => {
+    const newStatus = (evt.status ?? "").toLowerCase() as OrderStatus;
+    setStatusOverrides((prev) => ({ ...prev, [evt.orderId]: newStatus }));
+  });
+
   const totalPages = data ? Math.ceil(data.total / LIMIT) : 1;
 
   function handleReset() {
@@ -635,9 +706,12 @@ export default function OrdersPage() {
           <OrdersKanban
             orders={liveOrders}
             onSelect={(o) => setSelectedOrder(o)}
-            onMoveStatus={(id, s) =>
-              setStatusOverrides((prev) => ({ ...prev, [id]: s }))
-            }
+            onMoveStatus={(id, s) => {
+              setStatusOverrides((prev) => ({ ...prev, [id]: s }));
+              void transitionOrderStatus(id, s).then(() =>
+                toast.success(`Commande transférée vers ${s}`),
+              );
+            }}
           />
         )
       )}

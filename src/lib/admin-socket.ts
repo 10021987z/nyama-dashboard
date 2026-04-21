@@ -7,18 +7,18 @@
  *   const socket = getAdminSocket();
  *   socket.on("order:new", handler);
  *
- * Auth: the admin JWT is read from localStorage (key `nyama_admin_token`).
- * The backend auto-joins admin tokens to the `admin` room.
+ * React hook:
+ *   useAdminSocketEvent("order:new", (payload) => { ... });
  *
- * Agent A is wiring the emitter side on the API. If the socket can't connect
- * (404, auth failure, etc.) the consumer should fall back to HTTP polling —
- * see `useConnectionStatus` in the dashboard page.
+ * Auth: admin JWT read from localStorage (key `nyama_admin_token`). The
+ * backend auto-joins admin tokens to the `admin` room. If the socket cannot
+ * connect, consumers should fall back to HTTP polling.
  */
 
+import { useEffect, useRef } from "react";
 import { io, type Socket } from "socket.io-client";
 import { API_BASE_URL } from "./constants";
 
-// Strip `/api/v1` suffix to get the socket.io server origin.
 function getSocketUrl(): string {
   try {
     const u = new URL(API_BASE_URL);
@@ -30,23 +30,25 @@ function getSocketUrl(): string {
 
 let socketInstance: Socket | null = null;
 
-export function getAdminSocket(): Socket {
-  if (typeof window === "undefined") {
-    throw new Error("admin-socket must only be initialised on the client");
-  }
+export function getAdminSocket(): Socket | null {
+  if (typeof window === "undefined") return null;
   if (socketInstance) return socketInstance;
 
   const token = localStorage.getItem("nyama_admin_token") ?? "";
   socketInstance = io(getSocketUrl(), {
     path: "/socket.io",
     transports: ["websocket", "polling"],
-    auth: { token },
+    auth: token ? { token } : undefined,
     reconnection: true,
     reconnectionAttempts: Infinity,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
     timeout: 8000,
     autoConnect: true,
+  });
+
+  socketInstance.on("connect_error", (err) => {
+    console.warn("[admin-socket] connect_error:", err.message);
   });
 
   return socketInstance;
@@ -59,7 +61,29 @@ export function disconnectAdminSocket(): void {
   }
 }
 
-// ── Event payload types (match contract from Agent A) ────────────────────────
+/**
+ * Subscribe to an admin socket event for the lifetime of a component.
+ * Automatically unsubscribes on unmount. Safe on SSR.
+ */
+export function useAdminSocketEvent<T = unknown>(
+  event: string,
+  handler: (payload: T) => void,
+): void {
+  const handlerRef = useRef(handler);
+  handlerRef.current = handler;
+
+  useEffect(() => {
+    const s = getAdminSocket();
+    if (!s) return;
+    const fn = (payload: T) => handlerRef.current(payload);
+    s.on(event, fn);
+    return () => {
+      s.off(event, fn);
+    };
+  }, [event]);
+}
+
+// ── Event payload types ─────────────────────────────────────────────────────
 
 export type ConnectionState = "connected" | "polling" | "offline";
 
@@ -118,11 +142,15 @@ export interface LiveMap {
   activeOrders: LiveActiveOrder[];
 }
 
-// Event names emitted by the backend (per brief)
 export const ADMIN_EVENTS = {
   ORDER_NEW: "order:new",
   ORDER_STATUS: "order:status",
   DELIVERY_STATUS: "delivery:status",
   RIDER_LOCATION: "rider:location",
+  RIDER_STATUS: "rider:status",
   MENU_UPDATED: "menu:updated",
+  PAYMENT_NEW: "payment:new",
+  CHAT_MESSAGE: "chat:message",
+  RESTAURANT_UPDATE: "restaurant:update",
+  ALERT_NEW: "alert:new",
 } as const;
