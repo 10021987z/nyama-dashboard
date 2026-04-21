@@ -27,6 +27,15 @@ import {
   UserCheck,
   ClipboardList,
   ExternalLink,
+  Sparkles,
+  Map,
+  AlertOctagon,
+  Trophy,
+  MessagesSquare,
+  Calculator,
+  Bot,
+  FlaskConical,
+  Smartphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/use-language";
@@ -57,6 +66,16 @@ const NAV_ITEMS = [
     badgeKey: "partnerships" as const,
   },
   { href: "/dashboard/support", icon: MessageSquare, labelKey: "nav.support" },
+  // ── Wow features (Sub-Agent D) ───────────────────────────────────────────
+  { href: "/dashboard/ai-insights", icon: Sparkles, labelKey: "nav.aiInsights" },
+  { href: "/dashboard/heatmap", icon: Map, labelKey: "nav.heatmap" },
+  { href: "/dashboard/crisis", icon: AlertOctagon, labelKey: "nav.crisis" },
+  { href: "/dashboard/gamification", icon: Trophy, labelKey: "nav.gamification" },
+  { href: "/dashboard/chat", icon: MessagesSquare, labelKey: "nav.chat" },
+  { href: "/dashboard/finances-advanced", icon: Calculator, labelKey: "nav.financesAdvanced" },
+  { href: "/dashboard/support-ai", icon: Bot, labelKey: "nav.supportAi" },
+  { href: "/dashboard/ab-testing", icon: FlaskConical, labelKey: "nav.abTesting" },
+  { href: "/dashboard/field-ops", icon: Smartphone, labelKey: "nav.fieldOps" },
   { href: "/dashboard/settings", icon: Settings, labelKey: "nav.settings" },
 ];
 
