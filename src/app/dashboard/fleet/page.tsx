@@ -10,9 +10,14 @@ import { useLanguage } from "@/hooks/use-language";
 import { FleetTable } from "@/components/dashboard/fleet-table";
 import { AddRiderDialog } from "@/components/dashboard/add-rider-dialog";
 import { VerifyRiderDialog } from "@/components/dashboard/verify-rider-dialog";
+import { LeafletMap, type MapMarker } from "@/components/maps";
+import { cityCenter } from "@/lib/geo";
+import { useAdminSocketEvent } from "@/lib/admin-socket";
+import { patchUser, sendMessage } from "@/lib/admin-mutations";
+import { toast as sonnerToast } from "sonner";
 import {
   Bike, Star, TrendingUp, Search, ChevronLeft, ChevronRight, MapPin,
-  LayoutGrid, List, UserPlus,
+  LayoutGrid, List, UserPlus, Phone, MessageSquare, Ban, RotateCcw as RotateCcwIcon,
 } from "lucide-react";
 
 const LIMIT = 20;
@@ -54,7 +59,19 @@ function avatarBg(id?: string | null): string {
 
 // ── RiderCard ──────────────────────────────────────────────────────────────────
 
-function RiderCard({ rider }: { rider: FleetRider }) {
+function RiderCard({
+  rider,
+  onCall,
+  onSuspend,
+  onMessage,
+  onReturnToDispatch,
+}: {
+  rider: FleetRider;
+  onCall?: (rider: FleetRider) => void;
+  onSuspend?: (rider: FleetRider) => void;
+  onMessage?: (rider: FleetRider) => void;
+  onReturnToDispatch?: (rider: FleetRider) => void;
+}) {
   const { t } = useLanguage();
   const cfg = riderStatusConfig(rider, t);
   const bg = avatarBg(rider.id);
@@ -161,6 +178,42 @@ function RiderCard({ rider }: { rider: FleetRider }) {
       <p className="text-[10px]" style={{ color: "#b8b3ad" }}>
         {t("fleet.registeredAt")} {formatDate(rider.createdAt)}
       </p>
+
+      {/* Admin actions */}
+      <div className="flex gap-1 pt-1">
+        <button
+          onClick={() => onCall?.(rider)}
+          title="Appeler"
+          className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors"
+          style={{ backgroundColor: "#f0fdf4", color: "#166534" }}
+        >
+          <Phone className="h-3.5 w-3.5" />
+        </button>
+        <button
+          onClick={() => onMessage?.(rider)}
+          title="Message"
+          className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors"
+          style={{ backgroundColor: "#fdf3ee", color: "#F57C20" }}
+        >
+          <MessageSquare className="h-3.5 w-3.5" />
+        </button>
+        <button
+          onClick={() => onReturnToDispatch?.(rider)}
+          title="Retour dispatch"
+          className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors"
+          style={{ backgroundColor: "#f5f3ef", color: "#6B7280" }}
+        >
+          <RotateCcwIcon className="h-3.5 w-3.5" />
+        </button>
+        <button
+          onClick={() => onSuspend?.(rider)}
+          title="Suspendre"
+          className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors ml-auto"
+          style={{ backgroundColor: "#fee2e2", color: "#991b1b" }}
+        >
+          <Ban className="h-3.5 w-3.5" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -313,7 +366,92 @@ export default function FleetPage() {
     fetchFleet();
   }, [fetchFleet]);
 
+  // Live rider location / status updates
+  const [liveLocations, setLiveLocations] = useState<
+    Record<string, { lat: number; lng: number }>
+  >({});
+
+  useAdminSocketEvent<{ riderId: string; lat: number; lng: number }>(
+    "rider:location",
+    (evt) => {
+      setLiveLocations((prev) => ({
+        ...prev,
+        [evt.riderId]: { lat: evt.lat, lng: evt.lng },
+      }));
+    },
+  );
+
+  useAdminSocketEvent<{ riderId: string; status: string }>(
+    "rider:status",
+    (evt) => {
+      setData((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          data: prev.data.map((r) =>
+            r.id === evt.riderId
+              ? {
+                  ...r,
+                  status: evt.status as FleetRider["status"],
+                  isOnline: evt.status !== "offline",
+                }
+              : r,
+          ),
+        };
+      });
+    },
+  );
+
   const totalPages = data ? Math.ceil(data.total / LIMIT) : 1;
+
+  // Mini-map markers for online riders
+  const mapMarkers: MapMarker[] = (data?.data ?? [])
+    .filter((r) => r.isOnline || r.status === "delivering")
+    .map((r, i) => {
+      const center = cityCenter((r.city as "Douala" | "Yaoundé") ?? "Douala");
+      const live = liveLocations[r.id];
+      // Spread riders without live location around city center
+      const fallbackLat = center[0] + ((i % 7) - 3) * 0.006;
+      const fallbackLng = center[1] + ((i % 5) - 2) * 0.006;
+      return {
+        id: r.id,
+        type: "rider",
+        lat: live?.lat ?? fallbackLat,
+        lng: live?.lng ?? fallbackLng,
+        title: r.name,
+        subtitle: r.status === "delivering" ? "En livraison" : "Disponible",
+      };
+    });
+
+  const mapCenter = cityCenter("Douala");
+
+  const handleCall = (rider: FleetRider) => {
+    if (rider.phone) window.location.href = `tel:${rider.phone}`;
+  };
+
+  const handleSuspend = async (rider: FleetRider) => {
+    if (!window.confirm(`Suspendre ${rider.name} ?`)) return;
+    setSuspendedSet((prev) => new Set(prev).add(rider.id));
+    await patchUser(rider.id, { status: "SUSPENDED" });
+    sonnerToast.success(`${rider.name} suspendu`);
+  };
+
+  const handleMessage = async (rider: FleetRider) => {
+    const body = window.prompt(`Message pour ${rider.name}`);
+    if (!body) return;
+    await sendMessage({ to: rider.id, toType: "rider", channel: "sms", body });
+    sonnerToast.success("Message envoyé");
+  };
+
+  const handleReturnToDispatch = async (rider: FleetRider) => {
+    await sendMessage({
+      to: rider.id,
+      toType: "rider",
+      channel: "push",
+      body: "Retour au dispatch demandé",
+    });
+    sonnerToast.success(`${rider.name} rappelé au dispatch`);
+  };
 
   return (
     <div className="space-y-5 pb-8">
@@ -342,6 +480,31 @@ export default function FleetPage() {
 
       {/* Summary stats */}
       <SummaryBanner data={data} loading={loading} />
+
+      {/* Mini live map */}
+      {!loading && mapMarkers.length > 0 && (
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{ backgroundColor: "#ffffff", boxShadow: "0 2px 24px rgba(160,60,0,0.05)" }}
+        >
+          <div className="flex items-center justify-between p-4">
+            <div>
+              <h3 className="text-sm font-bold" style={{ color: "#3D3D3D" }}>
+                Carte en direct
+              </h3>
+              <p className="text-xs" style={{ color: "#6B7280" }}>
+                {mapMarkers.length} livreur{mapMarkers.length > 1 ? "s" : ""} en ligne
+              </p>
+            </div>
+            <span className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold"
+              style={{ backgroundColor: "#dcfce7", color: "#166534" }}>
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "#16a34a" }} />
+              LIVE
+            </span>
+          </div>
+          <LeafletMap center={mapCenter} zoom={12} height={320} markers={mapMarkers} />
+        </div>
+      )}
 
       {/* View switcher */}
       <div className="flex justify-end">
@@ -437,7 +600,14 @@ export default function FleetPage() {
             return view === "cards" ? (
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {visible.map((rider) => (
-                  <RiderCard key={rider.id} rider={rider} />
+                  <RiderCard
+                    key={rider.id}
+                    rider={rider}
+                    onCall={handleCall}
+                    onSuspend={handleSuspend}
+                    onMessage={handleMessage}
+                    onReturnToDispatch={handleReturnToDispatch}
+                  />
                 ))}
               </div>
             ) : (

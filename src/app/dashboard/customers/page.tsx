@@ -7,10 +7,12 @@ import { formatFcfa, formatDate, formatRelative } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { useLanguage } from "@/hooks/use-language";
-import { CustomerSegments, computeSegments } from "@/components/dashboard/customer-segments";
+import { CustomerSegments, computeSegments, type SegmentKey } from "@/components/dashboard/customer-segments";
+import { sendCampaign, patchUser } from "@/lib/admin-mutations";
+import { toast as sonnerToast } from "sonner";
 import {
   Users, Zap, UserPlus, ShieldCheck, Search, RotateCcw,
-  ChevronLeft, ChevronRight, Eye, Pencil, Download, X,
+  ChevronLeft, ChevronRight, Eye, Pencil, Download, X, Send,
 } from "lucide-react";
 
 const LIMIT = 20;
@@ -336,6 +338,157 @@ function EditClientDialog({
   );
 }
 
+// ── Campaign Modal ───────────────────────────────────────────────────────────
+
+const SEGMENT_LABEL: Record<SegmentKey, string> = {
+  vip: "Clients VIP",
+  atRisk: "Clients à risque",
+  newcomers: "Nouveaux clients",
+  lost: "Clients perdus",
+};
+
+const SEGMENT_API: Record<SegmentKey, "vip" | "atRisk" | "lost" | "all"> = {
+  vip: "vip",
+  atRisk: "atRisk",
+  newcomers: "all",
+  lost: "lost",
+};
+
+function CampaignModal({
+  segment,
+  onClose,
+  onSent,
+}: {
+  segment: SegmentKey;
+  onClose: () => void;
+  onSent: () => void;
+}) {
+  const [channel, setChannel] = useState<"email" | "sms">("email");
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const handleSend = async () => {
+    if (!body.trim()) return;
+    setSending(true);
+    try {
+      await sendCampaign({
+        segment: SEGMENT_API[segment],
+        channel,
+        subject: subject || undefined,
+        body,
+      });
+      onSent();
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[9000] flex items-center justify-center p-4"
+      style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-md rounded-2xl p-6 space-y-4"
+        style={{ backgroundColor: "#ffffff", boxShadow: "0 8px 40px rgba(0,0,0,0.15)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[#f5f3ef] transition-colors"
+        >
+          <X className="h-4 w-4" style={{ color: "#6B7280" }} />
+        </button>
+
+        <div>
+          <h2
+            className="text-xl font-semibold italic"
+            style={{ fontFamily: "var(--font-montserrat), system-ui, sans-serif", color: "#3D3D3D" }}
+          >
+            Campagne — {SEGMENT_LABEL[segment]}
+          </h2>
+          <p className="text-xs mt-1" style={{ color: "#6B7280" }}>
+            Envoi ciblé aux clients de ce segment
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "#6B7280" }}>
+            Canal
+          </label>
+          <div className="flex gap-2">
+            {(["email", "sms"] as const).map((c) => (
+              <button
+                key={c}
+                onClick={() => setChannel(c)}
+                className="flex-1 rounded-xl py-2 text-xs font-semibold transition-colors"
+                style={
+                  channel === c
+                    ? { background: "linear-gradient(135deg, #F57C20, #E06A10)", color: "#fff" }
+                    : { backgroundColor: "#f5f3ef", color: "#6B7280" }
+                }
+              >
+                {c.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {channel === "email" && (
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "#6B7280" }}>
+              Objet
+            </label>
+            <input
+              type="text"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="Ex: Offre spéciale NYAMA"
+              className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
+              style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
+            />
+          </div>
+        )}
+
+        <div>
+          <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "#6B7280" }}>
+            Message
+          </label>
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Votre message..."
+            rows={5}
+            className="w-full rounded-xl px-4 py-2.5 text-sm outline-none resize-none"
+            style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
+          />
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 rounded-full py-2.5 text-sm font-semibold transition-colors"
+            style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
+          >
+            Annuler
+          </button>
+          <button
+            onClick={handleSend}
+            disabled={!body.trim() || sending}
+            className="flex-1 flex items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold text-white transition-all disabled:opacity-50"
+            style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
+          >
+            <Send className="h-3.5 w-3.5" />
+            {sending ? "Envoi..." : "Envoyer"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export default function CustomersPage() {
@@ -354,6 +507,7 @@ export default function CustomersPage() {
   const [editClient, setEditClient] = useState<Customer | null>(null);
   const [localOverrides, setLocalOverrides] = useState<Record<string, Partial<Customer>>>({});
   const [toast, setToast] = useState<string | null>(null);
+  const [campaignSegment, setCampaignSegment] = useState<SegmentKey | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
@@ -408,8 +562,13 @@ export default function CustomersPage() {
       ...prev,
       [id]: { ...prev[id], status: newStatus },
     }));
+    void patchUser(id, { status: newStatus === "ACTIF" ? "ACTIVE" : "SUSPENDED" });
     setToast(newStatus === "ACTIF" ? "Client r\u00e9activ\u00e9 \u2705" : "Client suspendu \u2705");
   };
+
+  const handleOpenCampaign = useCallback((segment: SegmentKey) => {
+    setCampaignSegment(segment);
+  }, []);
 
   return (
     <div className="space-y-5 pb-8">
@@ -493,6 +652,7 @@ export default function CustomersPage() {
         <CustomerSegments
           counts={computeSegments(data.data.map(getCustomer))}
           total={data.data.length}
+          onCampaign={handleOpenCampaign}
         />
       )}
 
@@ -743,6 +903,18 @@ export default function CustomersPage() {
           onClose={() => setEditClient(null)}
           onSave={handleSave}
           onToggleStatus={handleToggleStatus}
+        />
+      )}
+
+      {/* Campaign Modal */}
+      {campaignSegment && (
+        <CampaignModal
+          segment={campaignSegment}
+          onClose={() => setCampaignSegment(null)}
+          onSent={() => {
+            setCampaignSegment(null);
+            sonnerToast.success("Campagne envoyée");
+          }}
         />
       )}
 

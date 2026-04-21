@@ -7,10 +7,32 @@ import { formatFcfa, formatRelative } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { useLanguage } from "@/hooks/use-language";
+import { useAdminSocketEvent } from "@/lib/admin-socket";
+import { assignTicket, replyTicket } from "@/lib/admin-mutations";
+import { toast } from "sonner";
 import {
   AlertTriangle, Clock, ThumbsUp, Banknote, Plus, Star,
   MessageCircle, ChevronRight, Send,
 } from "lucide-react";
+
+const QUICK_REPLIES = [
+  "Bonjour, nous traitons votre demande dans les plus brefs délais.",
+  "Nous vous remboursons le montant intégral sous 48h.",
+  "Notre équipe a contacté le restaurateur pour clarifier la situation.",
+  "Pouvez-vous nous transmettre une photo du problème ?",
+  "Merci pour votre patience, un livreur va vous recontacter.",
+];
+
+const AGENTS = [
+  { id: "agent-1", name: "Alice M." },
+  { id: "agent-2", name: "Bernard K." },
+  { id: "agent-3", name: "Clarisse D." },
+];
+
+function isSlaBreached(createdAt: string): boolean {
+  const hoursOpen = (Date.now() - new Date(createdAt).getTime()) / 36e5;
+  return hoursOpen > 24;
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -114,13 +136,21 @@ function TicketRow({
 }) {
   const { t } = useLanguage();
   const sev = severityConfig(ticket.severity, t);
+  const slaBreach = isSlaBreached(ticket.createdAt);
   return (
     <tr
       className="cursor-pointer transition-colors"
-      style={{ backgroundColor: selected ? "#fdf3ee" : undefined }}
+      style={{
+        backgroundColor: selected
+          ? "#fdf3ee"
+          : slaBreach
+            ? "#fef2f2"
+            : undefined,
+        borderLeft: slaBreach ? "3px solid #ef4444" : undefined,
+      }}
       onClick={onClick}
-      onMouseEnter={(e) => { if (!selected) e.currentTarget.style.backgroundColor = "#fbf9f5"; }}
-      onMouseLeave={(e) => { if (!selected) e.currentTarget.style.backgroundColor = ""; }}
+      onMouseEnter={(e) => { if (!selected) e.currentTarget.style.backgroundColor = slaBreach ? "#fee2e2" : "#fbf9f5"; }}
+      onMouseLeave={(e) => { if (!selected) e.currentTarget.style.backgroundColor = slaBreach ? "#fef2f2" : ""; }}
     >
       <td className="px-4 py-3">
         <span className="font-mono text-xs font-bold" style={{ color: "#F57C20" }}>
@@ -161,11 +191,21 @@ function TicketDetail({
   onRefund,
   onContactRestaurant,
   onClose,
+  liveMessages,
+  replyDraft,
+  setReplyDraft,
+  onSendReply,
+  onAssign,
 }: {
   ticket: SupportTicket | null;
   onRefund: (ticket: SupportTicket) => void;
   onContactRestaurant: (ticket: SupportTicket) => void;
   onClose: (ticket: SupportTicket) => void;
+  liveMessages?: { sender: "client" | "support"; text: string; timestamp: string }[];
+  replyDraft?: string;
+  setReplyDraft?: (v: string) => void;
+  onSendReply?: () => void;
+  onAssign?: (ticketId: string, agentId: string) => void;
 }) {
   const { t } = useLanguage();
 
@@ -231,10 +271,17 @@ function TicketDetail({
         </div>
       )}
 
+      {/* TODO banner when backend chat:message unavailable */}
+      {(!ticket.messages || ticket.messages.length === 0) && (!liveMessages || liveMessages.length === 0) && (
+        <div className="mx-4 mt-3 rounded-lg px-3 py-2 text-[10px] font-semibold" style={{ backgroundColor: "#fef3c7", color: "#92400e" }}>
+          TODO: backend chat:message events — messagerie en attente de déploiement
+        </div>
+      )}
+
       {/* Chat messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[350px]">
-        {ticket.messages && ticket.messages.length > 0 ? (
-          (ticket.messages ?? []).map((msg, i) => {
+        {((ticket.messages ?? []).concat(liveMessages ?? [])).length > 0 ? (
+          (ticket.messages ?? []).concat(liveMessages ?? []).map((msg, i) => {
             const isClient = msg.sender === "client";
             return (
               <div key={i} className={`flex ${isClient ? "justify-start" : "justify-end"}`}>
@@ -266,6 +313,65 @@ function TicketDetail({
           </div>
         )}
       </div>
+
+      {/* Quick replies */}
+      {setReplyDraft && (
+        <div className="px-4 pb-2 flex flex-wrap gap-1" style={{ borderTop: "1px solid #f5f3ef", paddingTop: 12 }}>
+          {QUICK_REPLIES.map((qr, i) => (
+            <button
+              key={i}
+              onClick={() => setReplyDraft(qr)}
+              className="rounded-full px-2.5 py-1 text-[10px] font-semibold transition-colors"
+              style={{ backgroundColor: "#f5f3ef", color: "#6B7280" }}
+              title={qr}
+            >
+              {qr.slice(0, 24)}…
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Reply composer + assign */}
+      {setReplyDraft && onSendReply && (
+        <div className="px-4 pb-3 flex gap-2 items-center">
+          <input
+            type="text"
+            value={replyDraft ?? ""}
+            onChange={(e) => setReplyDraft(e.target.value)}
+            placeholder="Répondre au client…"
+            className="flex-1 rounded-full px-4 py-2 text-xs outline-none"
+            style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
+            onKeyDown={(e) => { if (e.key === "Enter") onSendReply(); }}
+          />
+          <button
+            onClick={onSendReply}
+            className="rounded-full p-2 text-white"
+            style={{ background: "linear-gradient(135deg, #F57C20, #E06A10)" }}
+            title="Envoyer"
+          >
+            <Send className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+
+      {onAssign && (
+        <div className="px-4 pb-2">
+          <label className="block text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "#6B7280" }}>
+            Assigner à un agent
+          </label>
+          <select
+            onChange={(e) => e.target.value && onAssign(ticket.id, e.target.value)}
+            className="w-full rounded-full px-3 py-1.5 text-xs outline-none cursor-pointer"
+            style={{ backgroundColor: "#f5f3ef", color: "#3D3D3D" }}
+            defaultValue=""
+          >
+            <option value="">— Choisir un agent —</option>
+            {AGENTS.map((a) => (
+              <option key={a.id} value={a.id}>{a.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Action buttons */}
       <div className="p-4 flex flex-wrap gap-2" style={{ borderTop: "1px solid #f5f3ef" }}>
@@ -400,6 +506,45 @@ export default function SupportPage() {
   useEffect(() => {
     fetchSupport();
   }, [fetchSupport]);
+
+  const [liveMessages, setLiveMessages] = useState<
+    Record<string, { sender: "client" | "support"; text: string; timestamp: string }[]>
+  >({});
+  const [replyDraft, setReplyDraft] = useState("");
+
+  // Socket: live chat messages
+  useAdminSocketEvent<{ ticketId: string; sender: "client" | "support"; text: string; timestamp?: string }>(
+    "chat:message",
+    (evt) => {
+      setLiveMessages((prev) => ({
+        ...prev,
+        [evt.ticketId]: [
+          ...(prev[evt.ticketId] ?? []),
+          { sender: evt.sender, text: evt.text, timestamp: evt.timestamp ?? new Date().toISOString() },
+        ],
+      }));
+    },
+  );
+
+  const handleAssign = async (ticketId: string, agentId: string) => {
+    await assignTicket(ticketId, agentId);
+    const agent = AGENTS.find((a) => a.id === agentId);
+    toast.success(`Ticket assigné à ${agent?.name ?? agentId}`);
+  };
+
+  const handleSendReply = async () => {
+    if (!selectedTicket || !replyDraft.trim()) return;
+    await replyTicket(selectedTicket.id, replyDraft);
+    setLiveMessages((prev) => ({
+      ...prev,
+      [selectedTicket.id]: [
+        ...(prev[selectedTicket.id] ?? []),
+        { sender: "support", text: replyDraft, timestamp: new Date().toISOString() },
+      ],
+    }));
+    setReplyDraft("");
+    toast.success("Réponse envoyée");
+  };
 
   const stats = data?.stats;
 
@@ -605,6 +750,11 @@ export default function SupportPage() {
             onRefund={handleRefund}
             onContactRestaurant={handleContactRestaurant}
             onClose={handleCloseTicket}
+            liveMessages={selectedTicket ? liveMessages[selectedTicket.id] : undefined}
+            replyDraft={replyDraft}
+            setReplyDraft={setReplyDraft}
+            onSendReply={handleSendReply}
+            onAssign={handleAssign}
           />
         </div>
       </div>
