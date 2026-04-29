@@ -57,6 +57,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/reviews", icon: Star, labelKey: "nav.reviews" },
   { href: "/dashboard/communications", icon: Bell, labelKey: "nav.communications" },
   { href: "/dashboard/reports", icon: FileText, labelKey: "nav.reports" },
+  // Centre Litiges & Crise (mode crise intégré comme onglet)
   { href: "/dashboard/disputes", icon: Scale, labelKey: "nav.disputes" },
   { href: "/dashboard/partners", icon: UserCheck, labelKey: "nav.partners" },
   {
@@ -69,7 +70,6 @@ const NAV_ITEMS = [
   // ── Wow features (Sub-Agent D) ───────────────────────────────────────────
   { href: "/dashboard/ai-insights", icon: Sparkles, labelKey: "nav.aiInsights" },
   { href: "/dashboard/heatmap", icon: Map, labelKey: "nav.heatmap" },
-  { href: "/dashboard/crisis", icon: AlertOctagon, labelKey: "nav.crisis" },
   { href: "/dashboard/gamification", icon: Trophy, labelKey: "nav.gamification" },
   { href: "/dashboard/chat", icon: MessagesSquare, labelKey: "nav.chat" },
   { href: "/dashboard/finances-advanced", icon: Calculator, labelKey: "nav.financesAdvanced" },

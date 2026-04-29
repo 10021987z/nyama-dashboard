@@ -24,7 +24,11 @@ import {
   Send,
   MessageCircle,
   X,
+  Scale,
+  AlertOctagon,
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CrisisPanel } from "@/components/disputes/crisis-panel";
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -439,7 +443,7 @@ function DisputeDetail({
 
 // ── Main Page ────────────────────────────────────────────────────────
 
-export default function DisputesPage() {
+function DisputesContent() {
   const { t } = useLanguage();
   const [stats, setStats] = useState<DisputeStats | null>(null);
   const [disputes, setDisputes] = useState<Dispute[]>([]);
@@ -806,5 +810,42 @@ export default function DisputesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// ── Page wrapper avec Tabs (fusion Litiges + Mode crise) ──────────────
+
+export default function DisputesPage() {
+  return (
+    <Tabs defaultValue="disputes" className="space-y-4 pb-8">
+      <div>
+        <h1
+          className="text-[2rem] font-semibold italic leading-tight"
+          style={{
+            fontFamily: "var(--font-montserrat), system-ui, sans-serif",
+            color: "#3D3D3D",
+          }}
+        >
+          Centre Litiges &amp; Crise
+        </h1>
+        <p className="mt-1 text-sm" style={{ color: "#6B7280" }}>
+          Gestion des litiges clients · Activation du mode crise
+        </p>
+      </div>
+      <TabsList>
+        <TabsTrigger value="disputes" className="gap-2">
+          <Scale className="h-4 w-4" /> Litiges
+        </TabsTrigger>
+        <TabsTrigger value="crisis" className="gap-2">
+          <AlertOctagon className="h-4 w-4" /> Mode crise
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="disputes">
+        <DisputesContent />
+      </TabsContent>
+      <TabsContent value="crisis">
+        <CrisisPanel />
+      </TabsContent>
+    </Tabs>
   );
 }

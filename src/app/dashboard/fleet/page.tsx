@@ -18,6 +18,7 @@ import { toast as sonnerToast } from "sonner";
 import {
   Bike, Star, TrendingUp, Search, ChevronLeft, ChevronRight, MapPin,
   LayoutGrid, List, UserPlus, Phone, MessageSquare, Ban, RotateCcw as RotateCcwIcon,
+  PackagePlus,
 } from "lucide-react";
 
 const LIMIT = 20;
@@ -65,12 +66,14 @@ function RiderCard({
   onSuspend,
   onMessage,
   onReturnToDispatch,
+  onAssign,
 }: {
   rider: FleetRider;
   onCall?: (rider: FleetRider) => void;
   onSuspend?: (rider: FleetRider) => void;
   onMessage?: (rider: FleetRider) => void;
   onReturnToDispatch?: (rider: FleetRider) => void;
+  onAssign?: (rider: FleetRider) => void;
 }) {
   const { t } = useLanguage();
   const cfg = riderStatusConfig(rider, t);
@@ -204,6 +207,14 @@ function RiderCard({
           style={{ backgroundColor: "#f5f3ef", color: "#6B7280" }}
         >
           <RotateCcwIcon className="h-3.5 w-3.5" />
+        </button>
+        <button
+          onClick={() => onAssign?.(rider)}
+          title="Assigner à une commande"
+          className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors"
+          style={{ backgroundColor: "#dbeafe", color: "#1e40af" }}
+        >
+          <PackagePlus className="h-3.5 w-3.5" />
         </button>
         <button
           onClick={() => onSuspend?.(rider)}
@@ -453,6 +464,23 @@ export default function FleetPage() {
     sonnerToast.success(`${rider.name} rappelé au dispatch`);
   };
 
+  const handleAssign = async (rider: FleetRider) => {
+    const orderId = window.prompt(
+      `Assigner ${rider.name} à une commande.\nID de la commande (UUID, visible dans /dashboard/orders) :`,
+    );
+    if (!orderId) return;
+    try {
+      await apiClient.post(`/admin/orders/${orderId.trim()}/reassign`, {
+        riderId: rider.id,
+      });
+      sonnerToast.success(`${rider.name} assigné à la commande ${orderId.slice(0, 8)}`);
+    } catch (e) {
+      sonnerToast.error(
+        e instanceof Error ? e.message : "Échec de l'assignation",
+      );
+    }
+  };
+
   return (
     <div className="space-y-5 pb-8">
       {/* Title */}
@@ -607,6 +635,7 @@ export default function FleetPage() {
                     onSuspend={handleSuspend}
                     onMessage={handleMessage}
                     onReturnToDispatch={handleReturnToDispatch}
+                    onAssign={handleAssign}
                   />
                 ))}
               </div>
