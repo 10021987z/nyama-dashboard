@@ -10,11 +10,10 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/use-auth";
 import { getAdminSocket } from "@/lib/admin-socket";
 
-// MOCK: The socket connection uses the real admin-socket (stubbed locally
-// until Agent B lands it). If no alerts come through within 4s, we seed the
-// UI with example payloads so the page is usable for demo.
-// PWA manifest: not included yet — add /public/manifest.json + link in
-// app/layout.tsx metadata in a follow-up to make this installable on mobile.
+// Le socket admin est branché (cf. lib/admin-socket). Les alertes arrivent
+// par l'event `admin:alert` ; si aucune n'apparaît dans les 4 premières
+// secondes, on seed des exemples (SEED_ALERTS) pour que la page reste
+// utilisable en démo. PWA manifest à ajouter dans un follow-up.
 
 type Alert = {
   id: string;

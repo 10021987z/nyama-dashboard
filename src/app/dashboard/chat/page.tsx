@@ -11,18 +11,40 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api";
 
-// MOCK: User list + messages are fully local. Replace with:
-//   GET  /admin/users?role=...  (partial backend coverage today)
-//   GET  /admin/messages/:userId
-//   POST /admin/messages { userId, body }
-// NOTE: Push notifications via FCM require backend v2 work.
+// Câblé sur:
+//   GET  /admin/users         → liste utilisateurs (cook/rider/client)
+//   GET  /admin/messages/:id  → historique chronologique
+//   POST /admin/messages      → envoi (persisté + dispatch socket admin:message)
+// Le canal "inapp" est dispatch via WebSocket sur la room du rôle. Push FCM
+// reste V2 (NotificationsService est aujourd'hui un stub).
 
+type ApiRole = "CLIENT" | "COOK" | "RIDER" | "ADMIN";
 type Role = "client" | "cook" | "rider" | "admin";
+
+type ApiUser = {
+  id: string;
+  name: string | null;
+  phone: string;
+  role: ApiRole;
+  avatarUrl?: string | null;
+};
+
 type ChatUser = {
   id: string;
   name: string;
   role: Role;
-  avatar?: string;
+};
+
+type ApiMessage = {
+  id: string;
+  fromAdminId: string;
+  recipientId: string;
+  recipientRole: ApiRole;
+  channel: string;
+  subject: string | null;
+  body: string;
+  sentAt: string;
+  readAt: string | null;
 };
 
 type Message = {
@@ -31,16 +53,6 @@ type Message = {
   body: string;
   at: string;
 };
-
-const USERS: ChatUser[] = [
-  { id: "u1", name: "Rose Mbala", role: "cook" },
-  { id: "u2", name: "Ibrahim Ngono", role: "rider" },
-  { id: "u3", name: "Marie Fotso", role: "client" },
-  { id: "u4", name: "Catherine Nkomo", role: "cook" },
-  { id: "u5", name: "Paul Tchoupo", role: "rider" },
-  { id: "u6", name: "Jean Kamga", role: "client" },
-  { id: "u7", name: "Aminata Sow", role: "cook" },
-];
 
 const ROLE_LABEL: Record<Role, string> = {
   client: "Client",
@@ -56,23 +68,91 @@ const ROLE_COLOR: Record<Role, string> = {
   admin: "#3D3D3D",
 };
 
+function normalizeRole(r: ApiRole): Role {
+  return r.toLowerCase() as Role;
+}
+
 export default function ChatPage() {
   const [roleFilter, setRoleFilter] = useState<Role | "all">("all");
-  const [selectedId, setSelectedId] = useState<string>(USERS[0].id);
-  const [threads, setThreads] = useState<Record<string, Message[]>>({});
+  const [users, setUsers] = useState<ChatUser[]>([]);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [thread, setThread] = useState<Message[]>([]);
+  const [threadLoading, setThreadLoading] = useState(false);
   const [body, setBody] = useState("");
+  const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // 1) Liste utilisateurs
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const resp = await apiClient.get<{ data?: ApiUser[] }>("/admin/users");
+        if (cancelled) return;
+        const list = (resp?.data ?? [])
+          .filter((u) => u.role !== "ADMIN")
+          .map<ChatUser>((u) => ({
+            id: u.id,
+            name: u.name?.trim() || u.phone,
+            role: normalizeRole(u.role),
+          }));
+        setUsers(list);
+        if (list.length && !selectedId) setSelectedId(list[0].id);
+      } catch {
+        if (!cancelled) setUsers([]);
+      } finally {
+        if (!cancelled) setUsersLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // selectedId intentionally excluded — only set on first load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 2) Historique du destinataire sélectionné
+  useEffect(() => {
+    if (!selectedId) return;
+    let cancelled = false;
+    setThreadLoading(true);
+    (async () => {
+      try {
+        const resp = await apiClient.get<{ messages?: ApiMessage[] }>(
+          `/admin/messages/${selectedId}`,
+        );
+        if (cancelled) return;
+        const mapped = (resp?.messages ?? []).map<Message>((m) => ({
+          id: m.id,
+          senderId: "admin",
+          body: m.body,
+          at: m.sentAt,
+        }));
+        setThread(mapped);
+      } catch {
+        if (!cancelled) setThread([]);
+      } finally {
+        if (!cancelled) setThreadLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedId]);
 
   const visibleUsers = useMemo(
     () =>
       roleFilter === "all"
-        ? USERS
-        : USERS.filter((u) => u.role === roleFilter),
-    [roleFilter]
+        ? users
+        : users.filter((u) => u.role === roleFilter),
+    [users, roleFilter],
   );
 
-  const selectedUser = USERS.find((u) => u.id === selectedId) ?? USERS[0];
-  const thread = threads[selectedId] ?? [];
+  const selectedUser = useMemo(
+    () => users.find((u) => u.id === selectedId) ?? null,
+    [users, selectedId],
+  );
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -81,54 +161,49 @@ export default function ChatPage() {
     });
   }, [thread.length, selectedId]);
 
-  // Seed with one example opening message per user on first interaction
-  useEffect(() => {
-    setThreads((prev) => {
-      const next = { ...prev };
-      USERS.forEach((u) => {
-        if (!next[u.id]) {
-          next[u.id] = [
-            {
-              id: `seed_${u.id}`,
-              senderId: u.id,
-              body:
-                u.role === "cook"
-                  ? "Bonjour, j'ai un souci avec une commande."
-                  : u.role === "rider"
-                    ? "Salut, j'attends un livraison."
-                    : "Bonjour, j'ai une question sur mon reçu.",
-              at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-            },
-          ];
-        }
-      });
-      return next;
-    });
-  }, []);
-
   const send = async () => {
     const text = body.trim();
-    if (!text) return;
-    const msg: Message = {
-      id: `m_${Date.now()}`,
+    if (!text || !selectedId || sending) return;
+
+    // Optimistic append
+    const tempId = `pending_${Date.now()}`;
+    const optimistic: Message = {
+      id: tempId,
       senderId: "admin",
       body: text,
       at: new Date().toISOString(),
     };
-    setThreads((prev) => ({
-      ...prev,
-      [selectedId]: [...(prev[selectedId] ?? []), msg],
-    }));
+    setThread((prev) => [...prev, optimistic]);
     setBody("");
+    setSending(true);
+
     try {
-      await apiClient.post("/admin/messages", {
+      const resp = await apiClient.post<{
+        ok: boolean;
+        id: string;
+        sentAt: string;
+      }>("/admin/messages", {
         userId: selectedId,
         body: text,
       });
-    } catch {
-      // ignore — mock mode
+      // Replace optimistic with confirmed id
+      setThread((prev) =>
+        prev.map((m) =>
+          m.id === tempId
+            ? { ...m, id: resp?.id ?? m.id, at: resp?.sentAt ?? m.at }
+            : m,
+        ),
+      );
+      toast.success("Message envoyé");
+    } catch (e) {
+      setThread((prev) => prev.filter((m) => m.id !== tempId));
+      setBody(text);
+      toast.error("Échec d'envoi", {
+        description: e instanceof Error ? e.message : "Erreur réseau",
+      });
+    } finally {
+      setSending(false);
     }
-    toast.success("Message envoyé");
   };
 
   return (
@@ -150,12 +225,12 @@ export default function ChatPage() {
 
       <Alert variant="info">
         <Bell className="h-4 w-4" />
-        <AlertTitle>Notifications push = V2 backend</AlertTitle>
+        <AlertTitle>Canal in-app actif · Push FCM en V2</AlertTitle>
         <AlertDescription>
-          La messagerie est persistée localement pour le moment. L&apos;envoi
-          réel de notifications push FCM nécessite un relais côté backend
-          (endpoint <code>POST /admin/messages</code> + worker FCM), non
-          disponible aujourd&apos;hui.
+          Les messages sont persistés et diffusés en temps réel via WebSocket
+          sur la room du destinataire (canal <code>inapp</code>). L&apos;envoi
+          push FCM / SMS / email passera par <code>NotificationsService</code>{" "}
+          quand l&apos;adapter sera branché côté backend.
         </AlertDescription>
       </Alert>
 
@@ -177,7 +252,7 @@ export default function ChatPage() {
                     "rounded-full px-3 py-1 text-xs font-medium transition-colors",
                     roleFilter === r
                       ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80",
                   )}
                 >
                   {r === "all" ? "Tous" : ROLE_LABEL[r as Role]}
@@ -185,20 +260,30 @@ export default function ChatPage() {
               ))}
             </div>
             <div className="space-y-1">
+              {usersLoading && (
+                <p className="text-xs text-muted-foreground p-2">
+                  Chargement…
+                </p>
+              )}
+              {!usersLoading && visibleUsers.length === 0 && (
+                <p className="text-xs text-muted-foreground p-2">
+                  Aucun utilisateur.
+                </p>
+              )}
               {visibleUsers.map((u) => (
                 <button
                   key={u.id}
                   onClick={() => setSelectedId(u.id)}
                   className={cn(
                     "flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-muted",
-                    selectedId === u.id && "bg-muted"
+                    selectedId === u.id && "bg-muted",
                   )}
                 >
                   <div
                     className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
                     style={{ backgroundColor: ROLE_COLOR[u.role] }}
                   >
-                    {u.name[0]}
+                    {u.name[0]?.toUpperCase() ?? "?"}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{u.name}</p>
@@ -215,27 +300,41 @@ export default function ChatPage() {
         <Card className="flex flex-col overflow-hidden">
           <CardHeader className="border-b">
             <CardTitle className="flex items-center gap-2">
-              <span>{selectedUser.name}</span>
-              <Badge
-                variant="outline"
-                style={{
-                  color: ROLE_COLOR[selectedUser.role],
-                  borderColor: ROLE_COLOR[selectedUser.role],
-                }}
-              >
-                {ROLE_LABEL[selectedUser.role]}
-              </Badge>
+              {selectedUser ? (
+                <>
+                  <span>{selectedUser.name}</span>
+                  <Badge
+                    variant="outline"
+                    style={{
+                      color: ROLE_COLOR[selectedUser.role],
+                      borderColor: ROLE_COLOR[selectedUser.role],
+                    }}
+                  >
+                    {ROLE_LABEL[selectedUser.role]}
+                  </Badge>
+                </>
+              ) : (
+                <span className="text-sm text-muted-foreground">
+                  Sélectionnez un utilisateur
+                </span>
+              )}
             </CardTitle>
           </CardHeader>
           <div
             ref={scrollRef}
             className="flex-1 overflow-auto p-4 space-y-2"
           >
-            {thread.length === 0 ? (
+            {threadLoading && (
+              <p className="text-sm text-muted-foreground">
+                Chargement de l&apos;historique…
+              </p>
+            )}
+            {!threadLoading && thread.length === 0 && (
               <p className="text-sm text-muted-foreground">
                 Pas de messages encore.
               </p>
-            ) : (
+            )}
+            {!threadLoading &&
               thread.map((m) => {
                 const mine = m.senderId === "admin";
                 return (
@@ -243,7 +342,7 @@ export default function ChatPage() {
                     key={m.id}
                     className={cn(
                       "flex",
-                      mine ? "justify-end" : "justify-start"
+                      mine ? "justify-end" : "justify-start",
                     )}
                   >
                     <div
@@ -251,7 +350,7 @@ export default function ChatPage() {
                         "max-w-[70%] rounded-2xl px-3 py-2 text-sm",
                         mine
                           ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-foreground"
+                          : "bg-muted text-foreground",
                       )}
                     >
                       <p>{m.body}</p>
@@ -264,8 +363,7 @@ export default function ChatPage() {
                     </div>
                   </div>
                 );
-              })
-            )}
+              })}
           </div>
           <div className="border-t p-3 flex items-center gap-2">
             <Input
@@ -277,10 +375,18 @@ export default function ChatPage() {
                   send();
                 }
               }}
-              placeholder="Écrire un message…"
+              placeholder={
+                selectedUser
+                  ? "Écrire un message…"
+                  : "Sélectionnez un utilisateur"
+              }
+              disabled={!selectedUser || sending}
               className="flex-1"
             />
-            <Button onClick={send} disabled={!body.trim()}>
+            <Button
+              onClick={send}
+              disabled={!body.trim() || !selectedUser || sending}
+            >
               <Send className="h-3 w-3" /> Envoyer
             </Button>
           </div>

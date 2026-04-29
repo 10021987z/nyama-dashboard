@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Bot, Sparkles, Send, Tag } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -9,11 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import { apiClient } from "@/lib/api";
 
-// MOCK: Ticket history is static. Wire to:
-//   GET /admin/support/tickets?userId=...
-//   POST /admin/support/tickets/:id/replies
-// Similarity matching is deterministic (token-overlap) — not a call to any LLM.
+// Câblé sur GET /admin/support/tickets (paginé). La similarity matching reste
+// locale, déterministe (token-overlap) — aucun appel LLM. INITIAL_TICKETS
+// sert de fallback démo si l'API tombe / renvoie 0 tickets résolus.
 type Ticket = {
   id: string;
   user: string;
@@ -177,10 +177,59 @@ function suggestReply(ticket: Ticket, history: Ticket[]): string | null {
   return top.t.resolution ?? null;
 }
 
+type ApiTicket = {
+  id: string;
+  userId: string;
+  status: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+  subject: string;
+  message: string;
+  resolution: string | null;
+  category: string | null;
+  createdAt: string;
+};
+
+function mapApiTicket(t: ApiTicket): Ticket {
+  return {
+    id: t.id,
+    user: t.userId,
+    status:
+      t.status === "RESOLVED" || t.status === "CLOSED" ? "resolved" : "open",
+    createdAt: t.createdAt,
+    body: t.message || t.subject,
+    resolution: t.resolution ?? undefined,
+    category: undefined, // classification locale via classify()
+  };
+}
+
 export default function SupportAiPage() {
   const [tickets, setTickets] = useState<Ticket[]>(INITIAL_TICKETS);
-  const [selectedId, setSelectedId] = useState(INITIAL_TICKETS[0].id);
+  const [selectedId, setSelectedId] = useState<string>(INITIAL_TICKETS[0].id);
   const [reply, setReply] = useState("");
+  const [isMock, setIsMock] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const resp = await apiClient.get<{ items?: ApiTicket[] }>(
+          "/admin/support/tickets",
+          { limit: 100 },
+        );
+        if (cancelled) return;
+        const live = (resp?.items ?? []).map(mapApiTicket);
+        if (live.length) {
+          setTickets(live);
+          setSelectedId(live[0].id);
+          setIsMock(false);
+        }
+      } catch {
+        // garde INITIAL_TICKETS (fallback démo)
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const selected = tickets.find((t) => t.id === selectedId) ?? tickets[0];
   const category = useMemo(
@@ -235,8 +284,10 @@ export default function SupportAiPage() {
         <AlertTitle>Pas de modèle LLM appelé</AlertTitle>
         <AlertDescription>
           La similarité utilise un chevauchement de tokens déterministe.
-          Classification par règles (mots-clés). Pour brancher un vrai LLM,
-          ajouter <code>@ai-sdk/react</code> + clé API.
+          Classification par règles (mots-clés). Tickets fournis par{" "}
+          <code>/admin/support/tickets</code>
+          {isMock ? " (fallback démo — API vide ou indispo)" : ""}. Pour
+          brancher un vrai LLM, ajouter <code>@ai-sdk/react</code> + clé API.
         </AlertDescription>
       </Alert>
 

@@ -271,10 +271,10 @@ function TicketDetail({
         </div>
       )}
 
-      {/* TODO banner when backend chat:message unavailable */}
+      {/* Empty-state — avant que le ticket reçoive son premier message */}
       {(!ticket.messages || ticket.messages.length === 0) && (!liveMessages || liveMessages.length === 0) && (
-        <div className="mx-4 mt-3 rounded-lg px-3 py-2 text-[10px] font-semibold" style={{ backgroundColor: "#fef3c7", color: "#92400e" }}>
-          TODO: backend chat:message events — messagerie en attente de déploiement
+        <div className="mx-4 mt-3 rounded-lg px-3 py-2 text-[10px] font-semibold" style={{ backgroundColor: "#f5f3ef", color: "#6B7280" }}>
+          Aucun message dans ce ticket. Les messages temps réel arrivent via l&apos;événement <code>chat:message</code>.
         </div>
       )}
 
