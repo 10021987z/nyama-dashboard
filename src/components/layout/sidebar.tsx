@@ -76,6 +76,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/support-ai", icon: Bot, labelKey: "nav.supportAi" },
   { href: "/dashboard/ab-testing", icon: FlaskConical, labelKey: "nav.abTesting" },
   { href: "/dashboard/field-ops", icon: Smartphone, labelKey: "nav.fieldOps" },
+  { href: "/dashboard/apps", icon: Smartphone, labelKey: "nav.apps" },
   { href: "/dashboard/settings", icon: Settings, labelKey: "nav.settings" },
 ];
 

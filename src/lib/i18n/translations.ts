@@ -54,6 +54,7 @@ export const translations = {
       supportAi: "Support IA",
       abTesting: "A/B Testing",
       fieldOps: "Field Ops",
+      apps: "Distribution Apps",
     },
     disputes: {
       title: "Centre de Litiges",
@@ -554,6 +555,7 @@ export const translations = {
       supportAi: "AI Support",
       abTesting: "A/B Testing",
       fieldOps: "Field Ops",
+      apps: "Distribution Apps",
     },
     disputes: {
       title: "Dispute Center",
@@ -1054,6 +1056,7 @@ export const translations = {
       supportAi: "Wahala AI",
       abTesting: "A/B Test",
       fieldOps: "Field Ops",
+      apps: "Distribution Apps",
     },
     disputes: {
       title: "Wahala Center",
