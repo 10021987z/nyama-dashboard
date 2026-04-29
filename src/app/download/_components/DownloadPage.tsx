@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { QRCodeCanvas } from "qrcode.react";
 import {
@@ -11,8 +11,24 @@ import {
   Copy,
   Check,
   AlertTriangle,
+  Star,
 } from "lucide-react";
 import type { AppInfo } from "@/lib/apps";
+
+interface PublicReview {
+  id: string;
+  cookRating?: number;
+  riderRating?: number;
+  cookComment?: string | null;
+  riderComment?: string | null;
+  comment?: string | null;
+  createdAt: string;
+  author?: { name?: string | null };
+}
+
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://nyama-api-production.up.railway.app/api/v1";
 
 interface DownloadPageProps {
   app: AppInfo;
@@ -20,12 +36,47 @@ interface DownloadPageProps {
 
 export function DownloadPage({ app }: DownloadPageProps) {
   const [copied, setCopied] = useState(false);
+  const [reviews, setReviews] = useState<PublicReview[]>([]);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(app.apkUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${API_URL}/reviews?limit=12`);
+        if (!res.ok) return;
+        const json = (await res.json()) as
+          | { data?: PublicReview[] }
+          | PublicReview[];
+        const list = Array.isArray(json) ? json : json.data ?? [];
+        // Garde uniquement les avis avec un commentaire et au moins 4★.
+        const good = list.filter((r) => {
+          const stars = Math.max(r.cookRating ?? 0, r.riderRating ?? 0);
+          const txt = r.cookComment || r.riderComment || r.comment || "";
+          return stars >= 4 && txt.trim().length > 0;
+        });
+        if (!cancelled) setReviews(good.slice(0, 6));
+      } catch {
+        // Silencieux : la section avis ne s'affiche simplement pas.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const avgRating =
+    reviews.length > 0
+      ? reviews.reduce((s, r) => {
+          const stars = Math.max(r.cookRating ?? 0, r.riderRating ?? 0);
+          return s + stars;
+        }, 0) / reviews.length
+      : 0;
 
   return (
     <div
@@ -229,6 +280,70 @@ export function DownloadPage({ app }: DownloadPageProps) {
             </p>
           </div>
         </section>
+
+        {reviews.length > 0 && (
+          <section className="mt-10">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2
+                className="text-base font-bold"
+                style={{
+                  fontFamily: "var(--font-montserrat), system-ui, sans-serif",
+                  color: "#1B4332",
+                }}
+              >
+                Ce que disent nos clients
+              </h2>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Star
+                    key={i}
+                    className="h-3.5 w-3.5"
+                    style={{
+                      color: i <= Math.round(avgRating) ? "#F57C20" : "#e5e7eb",
+                      fill: i <= Math.round(avgRating) ? "#F57C20" : "none",
+                    }}
+                  />
+                ))}
+                <span className="ml-1 text-xs font-bold" style={{ color: "#1B4332" }}>
+                  {avgRating.toFixed(1)}
+                </span>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {reviews.map((r) => {
+                const stars = Math.max(r.cookRating ?? 0, r.riderRating ?? 0);
+                const text = r.cookComment || r.riderComment || r.comment || "";
+                const author = r.author?.name || "Client NYAMA";
+                return (
+                  <article
+                    key={r.id}
+                    className="rounded-xl bg-white p-4 shadow-sm"
+                    style={{ border: "1px solid #f5f3ef" }}
+                  >
+                    <div className="mb-1.5 flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <Star
+                          key={i}
+                          className="h-3 w-3"
+                          style={{
+                            color: i <= stars ? "#F57C20" : "#e5e7eb",
+                            fill: i <= stars ? "#F57C20" : "none",
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-[13px] leading-relaxed text-black/70">
+                      « {text} »
+                    </p>
+                    <p className="mt-2 text-[11px] font-medium text-black/40">
+                      — {author}
+                    </p>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         <footer className="mt-10 text-center text-[11px] text-black/40">
           © NYAMA · Cuisine camerounaise · Yaoundé / Douala
