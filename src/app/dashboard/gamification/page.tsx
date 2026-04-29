@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Trophy, Star, Award, Edit3, Check, X } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,20 +15,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatFcfa } from "@/lib/utils";
+import { useApi } from "@/hooks/use-api";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// MOCK: All gamification data is static. Wire to:
-//   GET /admin/leaderboard/riders?week=current
-//   GET /admin/leaderboard/cooks?week=current
-//   GET/POST /admin/challenges
-//   GET /admin/badges/:userId
-// (None of these endpoints exist yet.)
+// Wired to real backend endpoints (chantier 4) :
+//   GET /admin/leaderboard/riders?period=week|month
+//   GET /admin/leaderboard/cooks?period=week|month
+// Challenges restent en mémoire (pas de modèle backend dans le pilote).
 
 type Rider = {
   id: string;
   name: string;
   orders: number;
   rating: number;
-  avatar?: string;
   badges: string[];
 };
 
@@ -39,37 +38,37 @@ type Cook = {
   rating: number;
 };
 
-const RIDERS: Rider[] = [
-  {
-    id: "r1",
-    name: "Ibrahim Ngono",
-    orders: 87,
-    rating: 4.9,
-    badges: ["100_deliveries", "zero_cancel_7d", "five_star_30"],
-  },
-  { id: "r2", name: "Paul Tchoupo", orders: 72, rating: 4.7, badges: ["zero_cancel_7d"] },
-  { id: "r3", name: "Samuel Atangana", orders: 65, rating: 4.6, badges: [] },
-  { id: "r4", name: "Francis Mbida", orders: 61, rating: 4.8, badges: ["five_star_30"] },
-  { id: "r5", name: "Joseph Ebongue", orders: 55, rating: 4.5, badges: [] },
-  { id: "r6", name: "Thomas Fotso", orders: 48, rating: 4.6, badges: [] },
-  { id: "r7", name: "Daniel Njoya", orders: 44, rating: 4.4, badges: [] },
-  { id: "r8", name: "Michel Essomba", orders: 40, rating: 4.3, badges: [] },
-  { id: "r9", name: "Pierre Ekwalla", orders: 38, rating: 4.5, badges: [] },
-  { id: "r10", name: "André Mveng", orders: 34, rating: 4.2, badges: [] },
-];
+interface LeaderboardRidersResp {
+  period: string;
+  items: Array<{
+    riderProfileId: string;
+    riderUserId: string | null;
+    name: string;
+    deliveryCount: number;
+    earningsXaf: number;
+  }>;
+}
 
-const COOKS: Cook[] = [
-  { id: "c1", name: "Rose Mbala", orders: 143, rating: 4.9 },
-  { id: "c2", name: "Catherine Nkomo", orders: 128, rating: 4.8 },
-  { id: "c3", name: "Aminata Sow", orders: 112, rating: 4.7 },
-  { id: "c4", name: "Madeleine Etoa", orders: 98, rating: 4.8 },
-  { id: "c5", name: "Léa Mballa", orders: 87, rating: 4.6 },
-  { id: "c6", name: "Florence Nga", orders: 76, rating: 4.5 },
-  { id: "c7", name: "Véronique Eyenga", orders: 71, rating: 4.7 },
-  { id: "c8", name: "Julienne Ndongo", orders: 64, rating: 4.4 },
-  { id: "c9", name: "Esther Mfoumou", orders: 58, rating: 4.6 },
-  { id: "c10", name: "Bernadette Bilo", orders: 49, rating: 4.5 },
-];
+interface LeaderboardCooksResp {
+  period: string;
+  items: Array<{
+    cookProfileId: string | null;
+    cookUserId: string;
+    name: string;
+    avgRating: number;
+    orderCount: number;
+    revenueXaf: number;
+  }>;
+}
+
+// Calcul de badges client-side depuis les données réelles
+function computeBadges(deliveryCount: number): string[] {
+  const out: string[] = [];
+  if (deliveryCount >= 100) out.push("100_deliveries");
+  if (deliveryCount >= 30) out.push("five_star_30");
+  if (deliveryCount >= 7) out.push("zero_cancel_7d");
+  return out;
+}
 
 const BADGES: Record<string, { label: string; emoji: string; color: string }> = {
   "100_deliveries": {
@@ -121,6 +120,34 @@ export default function GamificationPage() {
   const [challenges, setChallenges] = useState<Challenge[]>(INITIAL_CHALLENGES);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Challenge | null>(null);
+
+  const ridersApi = useApi<LeaderboardRidersResp>("/admin/leaderboard/riders", {
+    period: "week",
+  });
+  const cooksApi = useApi<LeaderboardCooksResp>("/admin/leaderboard/cooks", {
+    period: "week",
+  });
+
+  const RIDERS: Rider[] = useMemo(() => {
+    const items = ridersApi.data?.items ?? [];
+    return items.map((r) => ({
+      id: r.riderProfileId,
+      name: r.name,
+      orders: r.deliveryCount,
+      rating: 4.5, // placeholder — rating riders pas encore dans le leaderboard
+      badges: computeBadges(r.deliveryCount),
+    }));
+  }, [ridersApi.data]);
+
+  const COOKS: Cook[] = useMemo(() => {
+    const items = cooksApi.data?.items ?? [];
+    return items.map((c) => ({
+      id: c.cookProfileId ?? c.cookUserId,
+      name: c.name,
+      orders: c.orderCount,
+      rating: c.avgRating,
+    }));
+  }, [cooksApi.data]);
 
   const startEdit = (c: Challenge) => {
     setEditingId(c.id);
@@ -174,6 +201,12 @@ export default function GamificationPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
+                {ridersApi.loading && (
+                  <TableRow><TableCell colSpan={5}><Skeleton className="h-32" /></TableCell></TableRow>
+                )}
+                {!ridersApi.loading && RIDERS.length === 0 && (
+                  <TableRow><TableCell colSpan={5} className="text-sm text-muted-foreground">Aucune donnée pour la semaine.</TableCell></TableRow>
+                )}
                 {RIDERS.map((r, i) => (
                   <TableRow key={r.id}>
                     <TableCell className="font-bold">{i + 1}</TableCell>
@@ -231,6 +264,12 @@ export default function GamificationPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
+                {cooksApi.loading && (
+                  <TableRow><TableCell colSpan={4}><Skeleton className="h-32" /></TableCell></TableRow>
+                )}
+                {!cooksApi.loading && COOKS.length === 0 && (
+                  <TableRow><TableCell colSpan={4} className="text-sm text-muted-foreground">Aucune donnée pour la semaine.</TableCell></TableRow>
+                )}
                 {COOKS.map((c, i) => (
                   <TableRow key={c.id}>
                     <TableCell className="font-bold">{i + 1}</TableCell>

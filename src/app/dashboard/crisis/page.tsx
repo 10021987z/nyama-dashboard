@@ -18,11 +18,20 @@ import {
 } from "@/components/ui/table";
 import { apiClient } from "@/lib/api";
 
-// MOCK: Incident timeline is persisted in localStorage until the backend
-// exposes GET/POST /admin/crisis/incidents.
-// Contract that Agent A should implement:
-//   POST /admin/maintenance { minutes: number, reason: string } → { id, startedAt, endsAt }
-//   GET  /admin/crisis/incidents → CrisisIncident[]
+// Backend wired (chantier 4) :
+//   GET  /admin/crisis/status     → CrisisState
+//   POST /admin/crisis/activate   { minutes, reason }
+//   POST /admin/crisis/deactivate
+// L'historique local est conservé en localStorage (le backend n'a pas
+// d'historique persistant, juste l'état courant en mémoire).
+type CrisisState = {
+  active: boolean;
+  reason: string | null;
+  startedAt: string | null;
+  endsAt: string | null;
+  triggeredBy: string | null;
+};
+
 type CrisisIncident = {
   id: string;
   reason: string;
@@ -58,12 +67,46 @@ export default function CrisisPage() {
     null
   );
 
+  // Sync avec le backend au montage + polling 30s tant que crise active
   useEffect(() => {
     const list = loadIncidents();
     setIncidents(list);
-    const now = Date.now();
-    const active = list.find((i) => new Date(i.endsAt).getTime() > now);
-    if (active) setActiveIncident(active);
+
+    let timer: ReturnType<typeof setInterval> | undefined;
+
+    const fetchStatus = async () => {
+      try {
+        const status = await apiClient.get<CrisisState>("/admin/crisis/status");
+        if (status.active && status.startedAt && status.endsAt) {
+          const inc: CrisisIncident = {
+            id: `srv_${status.startedAt}`,
+            reason: status.reason ?? "—",
+            durationMinutes: Math.round(
+              (new Date(status.endsAt).getTime() -
+                new Date(status.startedAt).getTime()) /
+                60_000,
+            ),
+            startedAt: status.startedAt,
+            endsAt: status.endsAt,
+            triggeredBy: status.triggeredBy ?? undefined,
+          };
+          setActiveIncident(inc);
+        } else {
+          setActiveIncident(null);
+        }
+      } catch {
+        // Endpoint indisponible → fallback localStorage
+        const now = Date.now();
+        const active = list.find((i) => new Date(i.endsAt).getTime() > now);
+        if (active) setActiveIncident(active);
+      }
+    };
+
+    fetchStatus();
+    timer = setInterval(fetchStatus, 30_000);
+    return () => {
+      if (timer) clearInterval(timer);
+    };
   }, []);
 
   const activate = async () => {
@@ -77,24 +120,20 @@ export default function CrisisPage() {
     }
     setActivating(true);
     try {
-      // MOCK: Try real endpoint; if missing, we persist locally only.
-      try {
-        await apiClient.post("/admin/maintenance", {
-          minutes: duration,
-          reason,
-        });
-      } catch {
-        // ignore — fall through to local-only mode
-      }
-
-      const now = new Date();
-      const endsAt = new Date(now.getTime() + duration * 60_000);
-      const inc: CrisisIncident = {
-        id: `inc_${Date.now()}`,
+      const status = await apiClient.post<CrisisState>("/admin/crisis/activate", {
+        minutes: duration,
         reason,
+      });
+
+      const inc: CrisisIncident = {
+        id: `srv_${status.startedAt ?? Date.now()}`,
+        reason: status.reason ?? reason,
         durationMinutes: duration,
-        startedAt: now.toISOString(),
-        endsAt: endsAt.toISOString(),
+        startedAt: status.startedAt ?? new Date().toISOString(),
+        endsAt:
+          status.endsAt ??
+          new Date(Date.now() + duration * 60_000).toISOString(),
+        triggeredBy: status.triggeredBy ?? undefined,
       };
       const next = [inc, ...incidents].slice(0, 50);
       setIncidents(next);
@@ -111,8 +150,13 @@ export default function CrisisPage() {
     }
   };
 
-  const endEarly = () => {
+  const endEarly = async () => {
     if (!activeIncident) return;
+    try {
+      await apiClient.post("/admin/crisis/deactivate");
+    } catch {
+      // continuer même si backend indisponible
+    }
     const now = new Date().toISOString();
     const updated = incidents.map((i) =>
       i.id === activeIncident.id ? { ...i, endsAt: now } : i

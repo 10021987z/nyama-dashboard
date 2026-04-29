@@ -121,13 +121,17 @@ export default function HeatmapPage() {
     let cancelled = false;
     (async () => {
       try {
-        const d = await apiClient.get<{ points?: OrderCoord[] }>(
-          "/admin/live/map"
+        const d = await apiClient.get<{ points?: OrderCoord[]; count?: number }>(
+          "/admin/analytics/heatmap",
+          { period: "24h" },
         );
         if (!cancelled && d?.points?.length) {
           setOrders(d.points);
           setIsMock(false);
-        } else if (!cancelled) {
+          return;
+        }
+        // Si la heatmap est vide, on garde les mocks pour avoir une démo visuelle
+        if (!cancelled) {
           setOrders(generateMockOrders());
           setIsMock(true);
         }

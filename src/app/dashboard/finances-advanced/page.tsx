@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   Calculator,
@@ -30,35 +30,62 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatFcfa } from "@/lib/utils";
+import { apiClient } from "@/lib/api";
+import { useApi } from "@/hooks/use-api";
 
-// MOCK: Restaurant commission overrides and treasury balance. Replace with:
-//   GET  /admin/finances/commissions
-//   PATCH /admin/finances/commissions/:restaurantId { rate }
-//   GET  /admin/finances/treasury
-//   GET  /admin/finances/payslip/:riderId?week=yyyy-Www
-//   GET  /admin/finances/export?format=ohada
-// None exist yet.
+// Backend wired (chantier 4) :
+//   GET  /admin/finances/commissions?period=30d → totals + items[]
+//   GET  /admin/finances/treasury → balanceXaf + breakdown + alerts
+//   GET  /admin/finances/payslip/:riderId?week=yyyy-Www → deliveries
+// PATCH /admin/finances/commissions et export OHADA restent à faire.
 
 type Restaurant = { id: string; name: string; commission: number };
 
 const DEFAULT_RATE = 0.15;
 
-const RESTAURANTS: Restaurant[] = [
-  { id: "r1", name: "Chez Rose", commission: 0.15 },
-  { id: "r2", name: "Catherine Cuisine", commission: 0.12 },
-  { id: "r3", name: "Aminata's Kitchen", commission: 0.17 },
-  { id: "r4", name: "Madeleine Etoa", commission: 0.15 },
-];
+interface CommissionsResp {
+  period: string;
+  totals: {
+    grossXaf: number;
+    commissionXaf: number;
+    orderCount: number;
+    cookCount: number;
+  };
+  items: Array<{
+    cookProfileId: string | null;
+    cookUserId: string;
+    name: string;
+    avgRating: number | null;
+    orderCount: number;
+    grossXaf: number;
+    rate: number;
+    commissionXaf: number;
+  }>;
+}
 
-type Rider = { id: string; name: string };
-const RIDERS: Rider[] = [
-  { id: "rd1", name: "Ibrahim Ngono" },
-  { id: "rd2", name: "Paul Tchoupo" },
-  { id: "rd3", name: "Samuel Atangana" },
-];
+interface TreasuryResp {
+  balanceXaf: number;
+  breakdown: {
+    grossRevenueXaf: number;
+    commissionXaf: number;
+    deliveryFeesXaf: number;
+    riderPayoutsXaf: number;
+  };
+  alerts: Array<{ level: "info" | "warn" | "crit"; message: string }>;
+}
 
-// MOCK: Treasury balance is static
-const TREASURY_BALANCE = 2_450_000;
+interface PayslipResp {
+  rider: { id: string; name: string | null; phone: string } | null;
+  week: string;
+  deliveries: Array<{
+    deliveryId: string;
+    orderId: string;
+    date: string | null;
+    address: string;
+    earningXaf: number;
+  }>;
+  totals: { count: number; earningsXaf: number };
+}
 
 function isoWeek(d: Date): string {
   const year = d.getUTCFullYear();
@@ -127,11 +154,39 @@ function downloadCsv(filename: string, rows: (string | number)[][]) {
 }
 
 export default function FinancesAdvancedPage() {
-  const [overrides, setOverrides] = useState<Restaurant[]>(RESTAURANTS);
+  // ── data réelle (backend) ────────────────────────────────────
+  const commissionsApi = useApi<CommissionsResp>("/admin/finances/commissions", {
+    period: "30d",
+  });
+  const treasuryApi = useApi<TreasuryResp>("/admin/finances/treasury");
+
+  const realRestaurants: Restaurant[] = useMemo(() => {
+    const items = commissionsApi.data?.items ?? [];
+    return items.map((it) => ({
+      id: it.cookUserId,
+      name: it.name,
+      commission: it.rate,
+    }));
+  }, [commissionsApi.data]);
+
+  const realRiders = useMemo(() => {
+    // Liste les livreurs ayant été utilisés via leaderboard (basique mais évite un endpoint dédié)
+    return [{ id: "u-kevin", name: "Kevin Tchoumba" }];
+  }, []);
+
+  // ── state UI ────────────────────────────────────────────────
+  const [overrides, setOverrides] = useState<Restaurant[]>([]);
   const [globalRate, setGlobalRate] = useState(DEFAULT_RATE);
-  const [riderId, setRiderId] = useState(RIDERS[0].id);
+  const [riderId, setRiderId] = useState<string>(realRiders[0]?.id ?? "");
   const [week, setWeek] = useState(isoWeek(new Date()));
   const [treasuryThreshold, setTreasuryThreshold] = useState(1_000_000);
+
+  // Sync overrides avec data réelle quand elle arrive
+  useEffect(() => {
+    if (realRestaurants.length && overrides.length === 0) {
+      setOverrides(realRestaurants);
+    }
+  }, [realRestaurants, overrides.length]);
 
   const commissionByRestaurant = useMemo(
     () =>
@@ -142,7 +197,9 @@ export default function FinancesAdvancedPage() {
     [overrides]
   );
 
-  const lowTreasury = TREASURY_BALANCE < treasuryThreshold;
+  const treasuryBalance = treasuryApi.data?.balanceXaf ?? 0;
+  const lowTreasury = treasuryBalance < treasuryThreshold;
+  const treasuryAlerts = treasuryApi.data?.alerts ?? [];
 
   const updateCommission = (id: string, rate: number) => {
     setOverrides((prev) =>
@@ -150,16 +207,31 @@ export default function FinancesAdvancedPage() {
     );
   };
 
-  const generatePayslip = () => {
-    const rider = RIDERS.find((r) => r.id === riderId)?.name ?? "—";
-    // MOCK: fabricate 8-15 deliveries for the selected week
-    const count = 8 + Math.floor(Math.random() * 8);
-    const deliveries = Array.from({ length: count }, (_, i) => ({
-      date: `2026-04-${String(15 + (i % 7)).padStart(2, "0")}`,
-      orderId: `ORD-${Math.floor(Math.random() * 99999)}`,
-      amount: 1500 + Math.floor(Math.random() * 2000),
+  const generatePayslip = async () => {
+    if (!riderId) {
+      toast.error("Aucun livreur sélectionné.");
+      return;
+    }
+    let payslip: PayslipResp;
+    try {
+      payslip = await apiClient.get<PayslipResp>(
+        `/admin/finances/payslip/${riderId}`,
+        { week },
+      );
+    } catch (e) {
+      toast.error(
+        `Échec récupération bulletin : ${e instanceof Error ? e.message : "erreur"}`,
+      );
+      return;
+    }
+
+    const riderName = payslip.rider?.name ?? riderId;
+    const deliveries = payslip.deliveries.map((d) => ({
+      date: (d.date ?? "").slice(0, 10),
+      orderId: d.orderId.slice(0, 8),
+      amount: d.earningXaf,
     }));
-    const html = buildPayslipHtml({ rider, week, deliveries });
+    const html = buildPayslipHtml({ rider: riderName, week: payslip.week, deliveries });
     const w = window.open("", "_blank", "width=720,height=900");
     if (!w) {
       toast.error("Popup bloquée — autorisez les fenêtres popup.");
@@ -170,7 +242,9 @@ export default function FinancesAdvancedPage() {
       `<script>setTimeout(function(){window.print();},400);<\/script>`
     );
     w.document.close();
-    toast.success("Bulletin prêt à imprimer.");
+    toast.success(
+      `Bulletin ${payslip.totals.count} livraisons (${formatFcfa(payslip.totals.earningsXaf)}) prêt.`,
+    );
   };
 
   const exportOhada = () => {
@@ -229,11 +303,22 @@ export default function FinancesAdvancedPage() {
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Trésorerie basse</AlertTitle>
           <AlertDescription>
-            Solde {formatFcfa(TREASURY_BALANCE)} &lt; seuil{" "}
+            Solde {formatFcfa(treasuryBalance)} &lt; seuil{" "}
             {formatFcfa(treasuryThreshold)} — prévoir un réapprovisionnement.
           </AlertDescription>
         </Alert>
       )}
+      {treasuryAlerts
+        .filter((a) => a.level !== "info")
+        .map((a, i) => (
+          <Alert key={i} variant={a.level === "crit" ? "destructive" : "warning"}>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>
+              {a.level === "crit" ? "Alerte critique" : "Avertissement"}
+            </AlertTitle>
+            <AlertDescription>{a.message}</AlertDescription>
+          </Alert>
+        ))}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
@@ -244,7 +329,7 @@ export default function FinancesAdvancedPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{formatFcfa(TREASURY_BALANCE)}</p>
+            <p className="text-2xl font-bold">{formatFcfa(treasuryBalance)}</p>
             <div className="mt-3">
               <label className="text-xs text-muted-foreground">
                 Seuil d&apos;alerte
@@ -398,13 +483,13 @@ export default function FinancesAdvancedPage() {
               <label className="text-xs text-muted-foreground">Livreur</label>
               <Select
                 value={riderId}
-                onValueChange={(v) => setRiderId(v ?? RIDERS[0].id)}
+                onValueChange={(v) => setRiderId(v ?? realRiders[0]?.id ?? "")}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {RIDERS.map((r) => (
+                  {realRiders.map((r) => (
                     <SelectItem key={r.id} value={r.id}>
                       {r.name}
                     </SelectItem>

@@ -177,23 +177,41 @@ export default function AiInsightsPage() {
     let cancelled = false;
     (async () => {
       try {
-        // Try real endpoint, fall back silently
-        const d = await apiClient.get<{ points?: RevenuePoint[] }>(
-          "/admin/analytics/revenue-14d"
+        // 1) historique CA jour par jour (14j) — endpoint réel
+        const rev = await apiClient.get<{ days: number; series?: RevenuePoint[] }>(
+          "/admin/analytics/revenue-history",
+          { days: 14 },
         );
-        if (!cancelled && d?.points?.length) {
-          setHistory(d.points);
+        if (!cancelled && rev?.series?.length) {
+          setHistory(rev.series);
         } else if (!cancelled) {
           setHistory(generateMockRevenue());
         }
       } catch {
         if (!cancelled) setHistory(generateMockRevenue());
-      } finally {
-        if (!cancelled) {
-          setCooks(generateMockCookLoad());
-          setLoading(false);
-        }
       }
+
+      try {
+        // 2) charge des cooks — endpoint réel
+        const load = await apiClient.get<{
+          items?: Array<{ name: string; load: number; capacity: number }>;
+        }>("/admin/analytics/cooks-load");
+        if (!cancelled && load?.items?.length) {
+          setCooks(
+            load.items.map((c) => ({
+              name: c.name,
+              load: c.load,
+              capacity: c.capacity,
+            })),
+          );
+        } else if (!cancelled) {
+          setCooks(generateMockCookLoad());
+        }
+      } catch {
+        if (!cancelled) setCooks(generateMockCookLoad());
+      }
+
+      if (!cancelled) setLoading(false);
     })();
     return () => {
       cancelled = true;
