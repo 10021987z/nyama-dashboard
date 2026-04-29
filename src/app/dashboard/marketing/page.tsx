@@ -435,7 +435,7 @@ export default function MarketingPage() {
   // Handlers
   const handleCreateCampaign = () => {
     if (!campName.trim() || !campMessage.trim()) return;
-    const audienceMap: Record<string, number> = { Tous: 15000, Douala: 8500, "Yaound\u00e9": 6500 };
+    const audienceMap: Record<string, number> = { Tous: 15000, Douala: 8500, "Yaoundé": 6500 };
     const newCampaign: Campaign = {
       id: `local-camp-${Date.now()}`,
       date: campDate || new Date().toISOString(),
@@ -446,7 +446,7 @@ export default function MarketingPage() {
     setLocalCampaigns((prev) => [...prev, newCampaign]);
     setShowNewCampaign(false);
     setCampName(""); setCampMessage(""); setCampAudience("Tous"); setCampDate(""); setCampType("Push");
-    setToast("Campagne cr\u00e9\u00e9e \u2705");
+    setToast("Campagne créée ✅");
   };
 
   const handleCreateInfluencer = () => {
@@ -464,7 +464,7 @@ export default function MarketingPage() {
     setShowNewInfluencer(false);
     setInfName(""); setInfCode(`INF-${Math.random().toString(36).slice(2, 8).toUpperCase()}`);
     setInfCommission(""); setInfDuration("");
-    setToast("Code influenceur cr\u00e9\u00e9 \u2705");
+    setToast("Code influenceur créé ✅");
   };
 
   const handleCreateEvent = () => {
@@ -479,7 +479,7 @@ export default function MarketingPage() {
     setLocalEvents((prev) => [...prev, newEvent]);
     setShowNewEvent(false);
     setEvTitle(""); setEvDate(""); setEvCode(""); setEvDescription("");
-    setToast("\u00c9v\u00e9nement ajout\u00e9 \u2705");
+    setToast("Événement ajouté ✅");
   };
 
   return (
@@ -517,21 +517,21 @@ export default function MarketingPage() {
         <StatCard
           icon={<TrendingUp className="h-5 w-5" style={{ color: "#F57C20" }} />}
           label={t("marketing.conversionRate")}
-          value={stats ? `${stats.conversionRate}%` : "\u2014"}
+          value={stats ? `${stats.conversionRate}%` : "—"}
           sub="+3.2% vs last month"
           loading={loading}
         />
         <StatCard
           icon={<Ticket className="h-5 w-5" style={{ color: "#b45309" }} />}
           label={t("marketing.activeCoupons")}
-          value={stats?.activeCoupons ?? "\u2014"}
+          value={stats?.activeCoupons ?? "—"}
           sub={`12 ${t("marketing.expiresSoon")}`}
           loading={loading}
         />
         <StatCard
           icon={<Bell className="h-5 w-5" style={{ color: "#2c694e" }} />}
           label={t("marketing.pushReach")}
-          value={stats ? formatNumber(stats.pushReach) : "\u2014"}
+          value={stats ? formatNumber(stats.pushReach) : "—"}
           badge="68% Open Rate"
           badgeColor="#dcfce7"
           loading={loading}
@@ -539,7 +539,7 @@ export default function MarketingPage() {
         <StatCard
           icon={<DollarSign className="h-5 w-5" style={{ color: "#ffffff" }} />}
           label={t("marketing.marketingRevenue")}
-          value={stats ? formatFcfa(stats.marketingRevenue) : "\u2014"}
+          value={stats ? formatFcfa(stats.marketingRevenue) : "—"}
           sub="15% ROI"
           highlight
           loading={loading}
@@ -763,7 +763,7 @@ export default function MarketingPage() {
             options={[
               { value: "Tous", label: "Tous" },
               { value: "Douala", label: "Douala" },
-              { value: "Yaound\u00e9", label: "Yaound\u00e9" },
+              { value: "Yaoundé", label: "Yaoundé" },
             ]}
           />
           <DialogInput label="Date d'envoi" value={campDate} onChange={setCampDate} type="date" />
@@ -778,7 +778,7 @@ export default function MarketingPage() {
             ]}
           />
           <DialogButton onClick={handleCreateCampaign} disabled={!campName.trim() || !campMessage.trim()}>
-            Cr\u00e9er
+            Créer
           </DialogButton>
         </DialogOverlay>
       )}
@@ -790,9 +790,9 @@ export default function MarketingPage() {
           <DialogInput label="Nom influenceur" value={infName} onChange={setInfName} placeholder="Ex: Chef Awa" />
           <DialogInput label="Code promo" value={infCode} onChange={setInfCode} />
           <DialogInput label="Commission (%)" value={infCommission} onChange={setInfCommission} type="number" placeholder="10" />
-          <DialogInput label="Dur\u00e9e validit\u00e9 (jours)" value={infDuration} onChange={setInfDuration} type="number" placeholder="30" />
+          <DialogInput label="Durée validité (jours)" value={infDuration} onChange={setInfDuration} type="number" placeholder="30" />
           <DialogButton onClick={handleCreateInfluencer} disabled={!infName.trim()}>
-            Cr\u00e9er
+            Créer
           </DialogButton>
         </DialogOverlay>
       )}
@@ -800,11 +800,11 @@ export default function MarketingPage() {
       {/* -- New Event Dialog -- */}
       {showNewEvent && (
         <DialogOverlay onClose={() => setShowNewEvent(false)}>
-          <DialogTitle>Ajouter un \u00e9v\u00e9nement</DialogTitle>
-          <DialogInput label="Titre \u00e9v\u00e9nement" value={evTitle} onChange={setEvTitle} placeholder="Ex: Festival du Ndol\u00e9" />
+          <DialogTitle>Ajouter un événement</DialogTitle>
+          <DialogInput label="Titre événement" value={evTitle} onChange={setEvTitle} placeholder="Ex: Festival du Ndolé" />
           <DialogInput label="Date" value={evDate} onChange={setEvDate} type="date" />
           <DialogInput label="Code promo (optionnel)" value={evCode} onChange={setEvCode} placeholder="Ex: NDOLE25" />
-          <DialogTextarea label="Description" value={evDescription} onChange={setEvDescription} placeholder="D\u00e9tails de l'\u00e9v\u00e9nement..." />
+          <DialogTextarea label="Description" value={evDescription} onChange={setEvDescription} placeholder="Détails de l'événement..." />
           <DialogButton onClick={handleCreateEvent} disabled={!evTitle.trim() || !evDate}>
             Ajouter
           </DialogButton>

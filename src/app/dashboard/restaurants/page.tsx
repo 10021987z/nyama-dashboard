@@ -105,7 +105,13 @@ function StatCard({
 // ── RestaurantCard ─────────────────────────────────────────────────────────────
 
 function displayName(r: Restaurant): string {
-  return r.name || `Restaurant #${(r.id ?? "").slice(0, 4)}`;
+  // L'API backend (CookProfile) expose displayName en priorité — `name` n'est
+  // utilisé que si on a édité localement un champ name.
+  return (
+    r.displayName ||
+    r.name ||
+    `Restaurant #${(r.id ?? "").slice(0, 4)}`
+  );
 }
 
 function RestaurantCard({
@@ -148,7 +154,7 @@ function RestaurantCard({
           </p>
           <p className="text-xs truncate" style={{ color: "#6B7280" }}>
             {r.neighborhood ? `${r.neighborhood}, ` : ""}
-            {r.city ?? "\u2014"}
+            {r.city ?? "—"}
           </p>
         </div>
         <div
@@ -335,7 +341,7 @@ function ViewDialog({
               {name}
             </p>
             <p className="text-xs" style={{ color: "#6B7280" }}>
-              {r.neighborhood ? `${r.neighborhood}, ` : ""}{r.city ?? "\u2014"}
+              {r.neighborhood ? `${r.neighborhood}, ` : ""}{r.city ?? "—"}
             </p>
           </div>
         </div>
@@ -344,7 +350,7 @@ function ViewDialog({
           {specs.length > 0 && (
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "#6B7280" }}>
-                Sp\u00e9cialit\u00e9s
+                Spécialités
               </p>
               <div className="flex flex-wrap gap-1">
                 {specs.map((s) => (
@@ -363,8 +369,8 @@ function ViewDialog({
           <div className="grid grid-cols-2 gap-3">
             <InfoRow label="Note moyenne" value={`${(r.avgRating ?? 0).toFixed(1)} / 5`} />
             <InfoRow label="Commandes" value={(r.totalOrders ?? 0).toLocaleString("fr-FR")} />
-            <InfoRow label="Chiffre d\u2019affaires" value={formatFcfaCompact(r.totalRevenue)} />
-            <InfoRow label="T\u00e9l\u00e9phone" value={r.phone || "\u2014"} />
+            <InfoRow label="Chiffre d’affaires" value={formatFcfaCompact(r.totalRevenue)} />
+            <InfoRow label="Téléphone" value={r.phone || "—"} />
           </div>
 
           <div className="flex items-center gap-2 pt-1">
@@ -485,7 +491,7 @@ function EditDialog({
 
           <div>
             <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: "#6B7280" }}>
-              Sp\u00e9cialit\u00e9s (s\u00e9par\u00e9es par des virgules)
+              Spécialités (séparées par des virgules)
             </label>
             <input
               type="text"
@@ -529,7 +535,7 @@ function EditDialog({
             }}
           >
             <Ban className="h-3.5 w-3.5" />
-            {r.isActive ? "Suspendre" : "R\u00e9activer"}
+            {r.isActive ? "Suspendre" : "Réactiver"}
           </button>
         </div>
       </div>
@@ -585,7 +591,7 @@ export default function RestaurantsPage() {
         return next;
       });
       setEditRestaurant(null);
-      setToast("Profil mis \u00e0 jour \u2705");
+      setToast("Profil mis à jour ✅");
     },
     [],
   );
@@ -600,7 +606,7 @@ export default function RestaurantsPage() {
       });
       void patchRestaurant(id, { isActive: newActive });
       setEditRestaurant(null);
-      setToast(newActive ? "Restaurant r\u00e9activ\u00e9" : "Restaurant suspendu");
+      setToast(newActive ? "Restaurant réactivé" : "Restaurant suspendu");
     },
     [],
   );
@@ -637,7 +643,7 @@ export default function RestaurantsPage() {
   }, []);
 
   const handleSendMessage = useCallback((r: Restaurant) => {
-    const body = typeof window !== "undefined" ? window.prompt(`Message à ${r.name || "ce restaurant"}`) : null;
+    const body = typeof window !== "undefined" ? window.prompt(`Message à ${displayName(r)}`) : null;
     if (!body) return;
     void sendMessage({ to: r.id, toType: "restaurant", channel: "push", body });
     sonnerToast.success("Message envoyé");

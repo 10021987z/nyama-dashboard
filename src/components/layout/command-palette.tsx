@@ -198,7 +198,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                 <Row
                   key={r.id}
                   icon={<UtensilsCrossed className="h-4 w-4" style={{ color: "#6B7280" }} />}
-                  label={r.name}
+                  label={r.displayName || r.name || `Restaurant #${r.id.slice(0, 4)}`}
                   onClick={() => go("/dashboard/restaurants")}
                 />
               ))}

@@ -36,7 +36,7 @@ function avatarColor(id?: string | null): string {
 }
 
 function quarterDisplay(quarter: Customer["quarter"]): string {
-  if (!quarter) return "\u2014";
+  if (!quarter) return "—";
   if (typeof quarter === "string") return quarter;
   return `${quarter.name}, ${quarter.city}`;
 }
@@ -48,7 +48,7 @@ function quarterDisplayCsv(quarter: Customer["quarter"]): string {
 }
 
 function downloadCsv(customers: Customer[]) {
-  const header = "Nom,T\u00e9l\u00e9phone,Quartier,Commandes,Total D\u00e9pens\u00e9 (FCFA),Statut\n";
+  const header = "Nom,Téléphone,Quartier,Commandes,Total Dépensé (FCFA),Statut\n";
   const rows = customers.map(c => {
     const q = quarterDisplayCsv(c.quarter);
     return `"${c.name}","${c.phone}","${q}",${c.totalOrders},${c.totalSpentXaf},"${c.status}"`;
@@ -150,12 +150,12 @@ function ViewClientDialog({ client, onClose }: { client: Customer; onClose: () =
 
   const rows: { label: string; value: string }[] = [
     { label: "Nom", value: client.name },
-    { label: "T\u00e9l\u00e9phone", value: client.phone },
+    { label: "Téléphone", value: client.phone },
     { label: "Quartier", value: quarterDisplay(client.quarter) },
     { label: "Inscrit le", value: formatDate(client.createdAt) },
     { label: "Commandes", value: String(client.totalOrders) },
-    { label: "Total d\u00e9pens\u00e9", value: formatFcfa(client.totalSpentXaf) },
-    { label: "Derni\u00e8re commande", value: client.lastOrderAt ? formatRelative(client.lastOrderAt) : "\u2014" },
+    { label: "Total dépensé", value: formatFcfa(client.totalSpentXaf) },
+    { label: "Dernière commande", value: client.lastOrderAt ? formatRelative(client.lastOrderAt) : "—" },
     { label: "Statut", value: client.status },
   ];
 
@@ -330,7 +330,7 @@ function EditClientDialog({
                 : { backgroundColor: "#dcfce7", color: "#166534" }
             }
           >
-            {client.status === "ACTIF" ? "Suspendre" : "R\u00e9activer"}
+            {client.status === "ACTIF" ? "Suspendre" : "Réactiver"}
           </button>
         </div>
       </div>
@@ -554,7 +554,7 @@ export default function CustomersPage() {
       ...prev,
       [id]: { ...prev[id], ...updates },
     }));
-    setToast("Client mis \u00e0 jour \u2705");
+    setToast("Client mis à jour ✅");
   };
 
   const handleToggleStatus = (id: string, newStatus: Customer["status"]) => {
@@ -563,7 +563,7 @@ export default function CustomersPage() {
       [id]: { ...prev[id], status: newStatus },
     }));
     void patchUser(id, { status: newStatus === "ACTIF" ? "ACTIVE" : "SUSPENDED" });
-    setToast(newStatus === "ACTIF" ? "Client r\u00e9activ\u00e9 \u2705" : "Client suspendu \u2705");
+    setToast(newStatus === "ACTIF" ? "Client réactivé ✅" : "Client suspendu ✅");
   };
 
   const handleOpenCampaign = useCallback((segment: SegmentKey) => {
@@ -602,7 +602,7 @@ export default function CustomersPage() {
         <StatCard
           icon={<Users className="h-5 w-5" style={{ color: "#F57C20" }} />}
           label={t("customers.totalClients")}
-          value={stats?.totalClients.toLocaleString("fr-FR") ?? "\u2014"}
+          value={stats?.totalClients.toLocaleString("fr-FR") ?? "—"}
           badge="+8%"
           badgeColor="#dcfce7"
           loading={loading}
@@ -610,7 +610,7 @@ export default function CustomersPage() {
         <StatCard
           icon={<Zap className="h-5 w-5" style={{ color: "#b45309" }} />}
           label={t("customers.activeClients")}
-          value={stats?.activeClients30d.toLocaleString("fr-FR") ?? "\u2014"}
+          value={stats?.activeClients30d.toLocaleString("fr-FR") ?? "—"}
           loading={loading}
           sub={
             stats ? (
@@ -634,13 +634,13 @@ export default function CustomersPage() {
         <StatCard
           icon={<UserPlus className="h-5 w-5" style={{ color: "#2c694e" }} />}
           label={t("customers.newThisMonth")}
-          value={stats?.newClientsThisMonth.toLocaleString("fr-FR") ?? "\u2014"}
+          value={stats?.newClientsThisMonth.toLocaleString("fr-FR") ?? "—"}
           loading={loading}
         />
         <StatCard
           icon={<ShieldCheck className="h-5 w-5" style={{ color: "#2563eb" }} />}
           label={t("customers.retention")}
-          value={stats ? `${stats.retentionRate}%` : "\u2014"}
+          value={stats ? `${stats.retentionRate}%` : "—"}
           badge={stats ? (stats.retentionRate > 70 ? t("customers.performing") : t("customers.toImprove")) : undefined}
           badgeColor={stats && stats.retentionRate > 70 ? "#dcfce7" : "#ffedd5"}
           loading={loading}
@@ -780,7 +780,7 @@ export default function CustomersPage() {
                           </td>
                           <td className="px-4 py-3 hidden sm:table-cell">
                             <span className="text-xs" style={{ color: "#6B7280" }}>
-                              {c.lastOrderAt ? formatRelative(c.lastOrderAt) : "\u2014"}
+                              {c.lastOrderAt ? formatRelative(c.lastOrderAt) : "—"}
                             </span>
                           </td>
                           <td className="px-4 py-3">
@@ -807,7 +807,7 @@ export default function CustomersPage() {
                               <button
                                 onClick={() => setEditClient(c)}
                                 className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#f5f3ef]"
-                                title="\u00c9diter"
+                                title="Éditer"
                               >
                                 <Pencil className="h-3.5 w-3.5" style={{ color: "#6B7280" }} />
                               </button>

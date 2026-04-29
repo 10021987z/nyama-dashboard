@@ -163,15 +163,25 @@ export interface RidersResponse {
 
 export interface Restaurant {
   id: string;
-  name: string;
-  phone: string;
-  city: string;
+  // L'API backend renvoie displayName (CookProfile.displayName). On garde
+  // `name` pour rétrocompat (formulaires d'édition) mais l'affichage doit
+  // préférer displayName si présent.
+  name?: string;
+  displayName?: string;
+  phone?: string;
+  city?: string;
   neighborhood?: string;
-  specialty?: string;
+  specialty?: string | string[];
+  description?: string;
   avgRating: number;
   totalOrders: number;
   totalRevenue: number;
   isActive: boolean;
+  isVerified?: boolean;
+  status?: string;
+  pendingOrders?: number;
+  menuItemsCount?: number;
+  quarter?: { name?: string; city?: string };
   createdAt: string;
 }
 
