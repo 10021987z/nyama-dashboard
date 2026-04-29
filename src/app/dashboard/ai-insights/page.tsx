@@ -26,8 +26,9 @@ import { Badge } from "@/components/ui/badge";
 import { formatFcfaCompact } from "@/lib/utils";
 import { apiClient } from "@/lib/api";
 
-// MOCK: historical revenue + load rows — replace with GET /admin/analytics/revenue?days=14
-// and GET /admin/analytics/cooks/load (backend endpoints do not yet exist).
+// Câblé sur GET /admin/analytics/revenue-history?days=14 et GET /admin/analytics/cooks-load.
+// Les générateurs ci-dessous servent UNIQUEMENT de fallback quand l'API tombe
+// ou retourne vide — `isMock` signale à l'UI qu'on est en mode démo.
 type RevenuePoint = { date: string; revenue: number; orders: number };
 
 type CookLoad = { name: string; load: number; capacity: number };
@@ -43,7 +44,7 @@ const DAY_LABEL_FR = [
 ];
 
 function generateMockRevenue(): RevenuePoint[] {
-  // MOCK: deterministic pseudo-random 14-day history around 380k FCFA/day
+  // Fallback démo: 14j pseudo-random autour de 380k FCFA/jour (déterministe)
   const base = 380_000;
   const out: RevenuePoint[] = [];
   const now = new Date();
@@ -66,7 +67,7 @@ function generateMockRevenue(): RevenuePoint[] {
 }
 
 function generateMockCookLoad(): CookLoad[] {
-  // MOCK: Cook load — wire to real cook load endpoint
+  // Fallback démo si /admin/analytics/cooks-load ne renvoie rien
   return [
     { name: "Rose Mbala", load: 92, capacity: 100 },
     { name: "Catherine Nkomo", load: 54, capacity: 100 },
@@ -172,27 +173,32 @@ export default function AiInsightsPage() {
   const [history, setHistory] = useState<RevenuePoint[]>([]);
   const [cooks, setCooks] = useState<CookLoad[]>([]);
   const [loading, setLoading] = useState(true);
+  const [revenueIsMock, setRevenueIsMock] = useState(false);
+  const [cooksIsMock, setCooksIsMock] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        // 1) historique CA jour par jour (14j) — endpoint réel
         const rev = await apiClient.get<{ days: number; series?: RevenuePoint[] }>(
           "/admin/analytics/revenue-history",
           { days: 14 },
         );
         if (!cancelled && rev?.series?.length) {
           setHistory(rev.series);
+          setRevenueIsMock(false);
         } else if (!cancelled) {
           setHistory(generateMockRevenue());
+          setRevenueIsMock(true);
         }
       } catch {
-        if (!cancelled) setHistory(generateMockRevenue());
+        if (!cancelled) {
+          setHistory(generateMockRevenue());
+          setRevenueIsMock(true);
+        }
       }
 
       try {
-        // 2) charge des cooks — endpoint réel
         const load = await apiClient.get<{
           items?: Array<{ name: string; load: number; capacity: number }>;
         }>("/admin/analytics/cooks-load");
@@ -204,11 +210,16 @@ export default function AiInsightsPage() {
               capacity: c.capacity,
             })),
           );
+          setCooksIsMock(false);
         } else if (!cancelled) {
           setCooks(generateMockCookLoad());
+          setCooksIsMock(true);
         }
       } catch {
-        if (!cancelled) setCooks(generateMockCookLoad());
+        if (!cancelled) {
+          setCooks(generateMockCookLoad());
+          setCooksIsMock(true);
+        }
       }
 
       if (!cancelled) setLoading(false);
@@ -270,6 +281,20 @@ export default function AiInsightsPage() {
           <Sparkles className="h-3 w-3" /> Heuristique locale
         </Badge>
       </div>
+
+      {(revenueIsMock || cooksIsMock) && (
+        <Alert variant="warning">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Données de démonstration</AlertTitle>
+          <AlertDescription>
+            {revenueIsMock && cooksIsMock
+              ? "Les endpoints /admin/analytics/revenue-history et /admin/analytics/cooks-load n'ont retourné aucune donnée — affichage d'un jeu de démo."
+              : revenueIsMock
+                ? "L'historique CA (/admin/analytics/revenue-history) est vide — courbe de démo affichée."
+                : "La charge cuisinières (/admin/analytics/cooks-load) est vide — données de démo affichées."}
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="md:col-span-1">

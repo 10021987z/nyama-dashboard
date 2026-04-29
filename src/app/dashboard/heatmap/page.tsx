@@ -36,9 +36,9 @@ type OrderCoord = {
   weight?: number;
 };
 
-// MOCK: Client order coordinates from the last 24h. Replace with
-// GET /admin/live/map (Agent A) returning an array of {lat,lng,cookLat,cookLng}.
-// Current mock clusters around Douala & Yaoundé neighborhoods.
+// Fallback: cluster Douala/Yaoundé pour avoir une démo visuelle quand
+// /admin/analytics/heatmap renvoie 0 points (DB vide). Le `isMock` flag
+// signale à l'UI qu'on est en mode démo.
 function generateMockOrders(): OrderCoord[] {
   const clusters = [
     { lat: 4.0511, lng: 9.7679, r: 0.02 }, // Douala centre
@@ -188,9 +188,8 @@ export default function HeatmapPage() {
           <Flame className="h-4 w-4" />
           <AlertTitle>Données simulées</AlertTitle>
           <AlertDescription>
-            Endpoint <code>/admin/live/map</code> indisponible — affichage d&apos;un
-            jeu de données client-side. Activer côté backend pour les vraies
-            coordonnées.
+            Aucune commande sur les dernières 24h dans <code>/admin/analytics/heatmap</code> —
+            affichage d&apos;un jeu de données client-side pour la démo.
           </AlertDescription>
         </Alert>
       )}
