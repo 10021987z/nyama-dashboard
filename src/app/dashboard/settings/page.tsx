@@ -405,14 +405,15 @@ export default function SettingsPage() {
         ) : data && settings ? (
           <>
             <SettingRow label={t("settings.cashOnDelivery")}>
-              <Toggle
-                checked={settings.cashOnDelivery}
-                onClick={() => {
-                  const next = !settings.cashOnDelivery;
-                  updateSetting("cashOnDelivery", next);
-                  showToast(next ? "Paiement cash activé ✅" : "Paiement cash désactivé");
-                }}
-              />
+              <div className="flex items-center gap-2">
+                <Toggle
+                  checked={false}
+                  onClick={() => {
+                    showToast("Le paiement en espèces n'est plus accepté (NotchPay live).");
+                  }}
+                />
+                <span className="text-xs text-neutral-500">Désactivé</span>
+              </div>
             </SettingRow>
             <SettingRow label={t("settings.platformCommission")}>
               <div className="flex items-center gap-1">

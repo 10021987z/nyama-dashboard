@@ -115,7 +115,7 @@ function HomeContent() {
           {[
             { emoji: "🍲", title: "100+ plats", desc: "Du poulet DG au eru, en passant par le ndolè." },
             { emoji: "🛵", title: "Livraison 45 min", desc: "Une flotte de livreurs partout dans Douala et Yaoundé." },
-            { emoji: "📱", title: "Mobile Money", desc: "Paie avec Orange Money, MTN MoMo ou cash." },
+            { emoji: "📱", title: "Mobile Money", desc: "Paiement sécurisé via Orange Money ou MTN MoMo." },
           ].map((f) => (
             <div
               key={f.title}
