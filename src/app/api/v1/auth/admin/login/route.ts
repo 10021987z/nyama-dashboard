@@ -69,12 +69,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Success — generate JWT
+  // Success — generate JWT (include granular permissions for frontend
+  // checks ; SUPER_ADMIN bypass via hasPermission so list can be empty).
   const token = signAdminToken({
     sub: account.id,
     username: account.username,
     adminRole: account.role,
     displayName: account.displayName,
+    permissions: account.permissions ?? [],
   });
 
   // Update account stats
@@ -98,6 +100,7 @@ export async function POST(request: NextRequest) {
       username: account.username,
       displayName: account.displayName,
       role: account.role,
+      permissions: account.permissions ?? [],
     },
   });
 }

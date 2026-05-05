@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { authenticateAdmin } from "@/lib/admin-guard";
+import { sanitizePermissions } from "@/lib/permissions";
 
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
 const PASSWORD_EXPIRY_DAYS = 90;
@@ -21,7 +22,13 @@ export async function PATCH(
     return NextResponse.json({ message: "Compte introuvable" }, { status: 404 });
   }
 
-  let body: { role?: string; isActive?: boolean; password?: string; displayName?: string };
+  let body: {
+    role?: string;
+    isActive?: boolean;
+    password?: string;
+    displayName?: string;
+    permissions?: string[];
+  };
   try {
     body = await request.json();
   } catch {
@@ -46,6 +53,10 @@ export async function PATCH(
     updateData.displayName = body.displayName;
   }
 
+  if (body.permissions !== undefined) {
+    updateData.permissions = sanitizePermissions(body.permissions);
+  }
+
   if (body.password !== undefined) {
     if (!PASSWORD_REGEX.test(body.password)) {
       return NextResponse.json(
@@ -67,6 +78,7 @@ export async function PATCH(
       username: true,
       displayName: true,
       role: true,
+      permissions: true,
       isActive: true,
       updatedAt: true,
     },

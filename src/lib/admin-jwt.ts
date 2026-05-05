@@ -22,6 +22,10 @@ export interface AdminJwtPayload {
   username: string;
   adminRole: string;
   displayName: string;
+  // Permissions granulaires au moment de la signature. SUPER_ADMIN les
+  // ignore (bypass via hasPermission). Présent dans le JWT pour que le
+  // frontend décide en local sans roundtrip.
+  permissions?: string[];
   // role is set to "ADMIN" so the backend RolesGuard accepts the token
   // on any @Roles(UserRole.ADMIN) endpoint. Kept inside the JWT payload
   // rather than derived at verify-time so the dashboard admin-guard and

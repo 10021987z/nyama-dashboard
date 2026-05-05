@@ -13,6 +13,9 @@ model AdminAccount {
   passwordHash     String
   displayName      String
   role             String    @default("ADMIN") // SUPER_ADMIN, ADMIN, MODERATOR, VIEWER
+  // Permissions granulaires par feature (cf. src/lib/permissions.ts).
+  // Vide pour SUPER_ADMIN (bypass), liste explicite pour les autres rôles.
+  permissions      String[]  @default([])
   isActive         Boolean   @default(true)
   lastLoginAt      DateTime?
   loginCount       Int       @default(0)

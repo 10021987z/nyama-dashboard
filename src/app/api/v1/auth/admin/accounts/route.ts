@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { authenticateAdmin } from "@/lib/admin-guard";
+import {
+  PERMISSION_PRESETS,
+  sanitizePermissions,
+} from "@/lib/permissions";
 
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
 const PASSWORD_EXPIRY_DAYS = 90;
@@ -17,6 +21,7 @@ export async function GET(request: NextRequest) {
       username: true,
       displayName: true,
       role: true,
+      permissions: true,
       isActive: true,
       lastLoginAt: true,
       loginCount: true,
@@ -36,14 +41,20 @@ export async function POST(request: NextRequest) {
   const auth = await authenticateAdmin(request, "SUPER_ADMIN");
   if (auth instanceof NextResponse) return auth;
 
-  let body: { username?: string; password?: string; displayName?: string; role?: string };
+  let body: {
+    username?: string;
+    password?: string;
+    displayName?: string;
+    role?: string;
+    permissions?: string[];
+  };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ message: "Body JSON invalide" }, { status: 400 });
   }
 
-  const { username, password, displayName, role } = body;
+  const { username, password, displayName, role, permissions } = body;
 
   if (!username || !password || !displayName) {
     return NextResponse.json(
@@ -75,12 +86,20 @@ export async function POST(request: NextRequest) {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + PASSWORD_EXPIRY_DAYS);
 
+  // Permissions : si le caller fournit une liste explicite, on
+  // sanitize contre le catalog. Sinon on applique le préset du rôle.
+  const sanitized =
+    permissions !== undefined
+      ? sanitizePermissions(permissions)
+      : PERMISSION_PRESETS[targetRole] ?? [];
+
   const account = await prisma.adminAccount.create({
     data: {
       username,
       passwordHash,
       displayName,
       role: targetRole,
+      permissions: sanitized,
       createdBy: auth.admin.sub,
       passwordExpiresAt: expiresAt,
     },
@@ -89,6 +108,7 @@ export async function POST(request: NextRequest) {
       username: true,
       displayName: true,
       role: true,
+      permissions: true,
       isActive: true,
       createdAt: true,
     },
