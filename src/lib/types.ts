@@ -396,6 +396,9 @@ export interface RevenueStats {
   conversionRate: number;
   avgBasketXaf: number;
   revenueTrend: number;
+  notchpaySuccessRate?: number;
+  notchpayAttempts?: number;
+  notchpaySuccess?: number;
 }
 
 export interface WeeklyRevenue {

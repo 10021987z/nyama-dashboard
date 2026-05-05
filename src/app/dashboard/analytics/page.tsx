@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import {
   TrendingUp, Banknote, ShoppingCart, Target, Download,
-  ArrowUpRight, ArrowDownRight, ShoppingBag, ChevronRight,
+  ArrowUpRight, ArrowDownRight, ShoppingBag, ChevronRight, CheckCircle2,
 } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
 import { toast } from "sonner";
@@ -25,7 +25,6 @@ type Period = "7d" | "30d" | "year";
 const PAYMENT_COLORS: Record<string, string> = {
   ORANGE_MONEY: "#FF6600",
   MTN_MOMO: "#FFCC00",
-  CASH: "#6B7280",
 };
 
 function getPaymentColor(method: string, fallbackColor?: string): string {
@@ -263,7 +262,7 @@ export default function AnalyticsPage() {
       {error && <ErrorState message={error} onRetry={fetchRevenue} />}
 
       {/* KPI Cards */}
-      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
         <StatCard
           icon={<TrendingUp className="h-5 w-5" style={{ color: "#F57C20" }} />}
           label={t("analytics.totalRevenue")}
@@ -290,6 +289,18 @@ export default function AnalyticsPage() {
           label={t("analytics.conversionRate")}
           value={stats ? `${stats.conversionRate}%` : "—"}
           progress={stats?.conversionRate}
+          loading={loading}
+        />
+        <StatCard
+          icon={<CheckCircle2 className="h-5 w-5" style={{ color: "#16a34a" }} />}
+          label="Réussite NotchPay"
+          value={stats?.notchpaySuccessRate !== undefined ? `${stats.notchpaySuccessRate}%` : "—"}
+          sub={
+            stats?.notchpayAttempts !== undefined && stats?.notchpaySuccess !== undefined
+              ? `${stats.notchpaySuccess}/${stats.notchpayAttempts} paiements`
+              : undefined
+          }
+          progress={stats?.notchpaySuccessRate}
           loading={loading}
         />
       </div>
