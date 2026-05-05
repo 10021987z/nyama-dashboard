@@ -34,13 +34,14 @@ import {
   MessagesSquare,
   Calculator,
   Bot,
-  FlaskConical,
   Smartphone,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/use-language";
 import { apiClient } from "@/lib/api";
 import type { DashboardData, PartnershipStats } from "@/lib/types";
+import { useAuth } from "@/hooks/use-auth";
 import { useSidebar } from "./sidebar-context";
 
 const NAV_ITEMS = [
@@ -74,10 +75,16 @@ const NAV_ITEMS = [
   { href: "/dashboard/chat", icon: MessagesSquare, labelKey: "nav.chat" },
   { href: "/dashboard/finances-advanced", icon: Calculator, labelKey: "nav.financesAdvanced" },
   { href: "/dashboard/support-ai", icon: Bot, labelKey: "nav.supportAi" },
-  { href: "/dashboard/ab-testing", icon: FlaskConical, labelKey: "nav.abTesting" },
   { href: "/dashboard/field-ops", icon: Smartphone, labelKey: "nav.fieldOps" },
   { href: "/dashboard/apps", icon: Smartphone, labelKey: "nav.apps" },
   { href: "/dashboard/settings", icon: Settings, labelKey: "nav.settings" },
+  // Réservé SUPER_ADMIN — filtré dans le rendu en fonction de useAuth().
+  {
+    href: "/dashboard/settings/admins",
+    icon: ShieldCheck,
+    labelKey: "nav.admins",
+    superAdminOnly: true as const,
+  },
 ];
 
 interface SidebarProps {
@@ -88,9 +95,14 @@ interface SidebarProps {
 export function Sidebar({ onNavigate, forceExpanded = false }: SidebarProps) {
   const pathname = usePathname();
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === "SUPER_ADMIN";
   const { collapsed: ctxCollapsed, toggle } = useSidebar();
   const collapsed = forceExpanded ? false : ctxCollapsed;
   const [pendingPartnerships, setPendingPartnerships] = useState<number>(0);
+  const visibleNavItems = NAV_ITEMS.filter(
+    (item) => !("superAdminOnly" in item && item.superAdminOnly) || isSuperAdmin,
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -187,7 +199,7 @@ export function Sidebar({ onNavigate, forceExpanded = false }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {NAV_ITEMS.map((item) => {
+        {visibleNavItems.map((item) => {
           const { href, icon: Icon, labelKey } = item;
           const badge = badgeCount(
             "badgeKey" in item ? item.badgeKey : undefined

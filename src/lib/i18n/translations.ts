@@ -55,6 +55,7 @@ export const translations = {
       abTesting: "A/B Testing",
       fieldOps: "Field Ops",
       apps: "Distribution Apps",
+      admins: "Admins & Permissions",
     },
     disputes: {
       title: "Centre de Litiges",
@@ -556,6 +557,7 @@ export const translations = {
       abTesting: "A/B Testing",
       fieldOps: "Field Ops",
       apps: "Distribution Apps",
+      admins: "Admins & Permissions",
     },
     disputes: {
       title: "Dispute Center",
